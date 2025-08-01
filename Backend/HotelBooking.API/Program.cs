@@ -5,13 +5,45 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using HotelBooking.API.Services.Interfaces;
 using HotelBooking.API.Services.Implementations;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// Configure Swagger with JWT support
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotel Booking API", Version = "v1" });
+    
+    // Add JWT authentication to Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter JWT with Bearer into field",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+    
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 // Add DbContext
 builder.Services.AddDbContext<HotelBookingContext>(options =>
@@ -31,7 +63,7 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JWT");
-var secretKey = Encoding.UTF8.GetBytes(jwtSettings["Secret"]);
+var secretKey = Encoding.UTF8.GetBytes(jwtSettings["Secret"]!);
 
 builder.Services.AddAuthentication(options =>
 {
