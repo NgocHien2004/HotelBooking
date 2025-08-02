@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1        .booking-item-actions {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+        }
+
+        .booking-item-actions .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .no-bookings {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .no-bookings i {
+            font-size: 3rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .no-bookings h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .no-bookings p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .booking-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .detail-section {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .detail-section h4 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-row span:first-child {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .detail-row span:last-child {
+            color: var(--text-primary);
+            text-align: right;
+        }
+
+        .star-rating-input {
+            display: flex;
+            gap: 0.25rem;
+            margin: 0.5rem 0;
+        }
+
+        .star-rating-input .fa-star {
+            font-size: 1.5rem;
+            color: #e5e7eb;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .star-rating-input .fa-star:hover,
+        .star-rating-input .fa-star.filled {
+            color: #fbbf24;
+        }
+
+        @media (max-width: 768px) {
+            .booking-stats {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+
+            .booking-filters {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .filter-select,
+            .filter-input {
+                min-width: auto;
+            }
+
+            .booking-item-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .booking-status {
+                text-align: left;
+            }
+
+            .booking-item-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .booking-detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>0" />
+    <title>Lịch sử đặt phòng - Hotel Booking</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="assets/css/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="navbar">
+        <div class="nav-container">
+          <div class="nav-logo">
+            <a href="index.html">
+              <i class="fas fa-hotel"></i>
+              <span>Hotel Booking</span>
+            </a>
+          </div>
+
+          <div class="nav-menu" id="nav-menu">
+            <ul class="nav-list">
+              <li class="nav-item">
+                <a href="index.html" class="nav-link">Trang chủ</a>
+              </li>
+              <li class="nav-item">
+                <a href="index.html#hotels" class="nav-link">Khách sạn</a>
+              </li>
+              <li class="nav-item">
+                <a href="#contact" class="nav-link">Liên hệ</a>
+              </li>
+            </ul>
+
+            <div class="nav-user" id="nav-user">
+              <div class="user-dropdown">
+                <button class="user-btn" id="user-btn">
+                  <i class="fas fa-user"></i>
+                  <span id="user-name">User</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu" id="dropdown-menu">
+                  <a href="profile.html" class="dropdown-item"> <i class="fas fa-user"></i> Thông tin cá nhân </a>
+                  <a href="booking-history.html" class="dropdown-item active"> <i class="fas fa-history"></i> Lịch sử đặt phòng </a>
+                  <div class="admin-menu hidden" id="admin-menu">
+                    <a href="admin/dashboard.html" class="dropdown-item"> <i class="fas fa-tachometer-alt"></i> Quản trị </a>
+                  </div>
+                  <hr />
+                  <button class="dropdown-item logout-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1>Lịch sử đặt phòng</h1>
+          <p>Quản lý tất cả các đặt phòng của bạn</p>
+        </div>
+
+        <!-- Booking Stats -->
+        <div class="booking-stats">
+          <div class="stat-card">
+            <div class="stat-icon pending">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="pending-count">0</h3>
+              <p>Chờ xác nhận</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon confirmed">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="confirmed-count">0</h3>
+              <p>Đã xác nhận</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon completed">
+              <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="completed-count">0</h3>
+              <p>Hoàn thành</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon cancelled">
+              <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="cancelled-count">0</h3>
+              <p>Đã hủy</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="booking-filters">
+          <div class="filter-group">
+            <label for="status-filter">Trạng thái:</label>
+            <select id="status-filter" class="filter-select">
+              <option value="">Tất cả trạng thái</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

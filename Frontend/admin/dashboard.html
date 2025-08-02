@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Hotel Booking Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="../assets/css/style.css" rel="stylesheet" />
+    <link href="../assets/css/admin.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="navbar">
+        <div class="nav-container">
+          <div class="nav-logo">
+            <a href="../index.html">
+              <i class="fas fa-hotel"></i>
+              <span>Hotel Booking Admin</span>
+            </a>
+          </div>
+
+          <div class="nav-menu" id="nav-menu">
+            <div class="nav-user" id="nav-user">
+              <div class="user-dropdown">
+                <button class="user-btn" id="user-btn">
+                  <i class="fas fa-user"></i>
+                  <span id="user-name">Admin</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu" id="dropdown-menu">
+                  <a href="../profile.html" class="dropdown-item"> <i class="fas fa-user"></i> Thông tin cá nhân </a>
+                  <a href="../index.html" class="dropdown-item"> <i class="fas fa-home"></i> Trang chủ </a>
+                  <hr />
+                  <button class="dropdown-item logout-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Admin Layout -->
+    <div class="admin-layout">
+      <!-- Sidebar -->
+      <aside class="admin-sidebar">
+        <ul class="sidebar-menu">
+          <li class="sidebar-item">
+            <a href="dashboard.html" class="sidebar-link active">
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="hotels.html" class="sidebar-link">
+              <i class="fas fa-hotel"></i>
+              <span>Quản lý khách sạn</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="rooms.html" class="sidebar-link">
+              <i class="fas fa-bed"></i>
+              <span>Quản lý phòng</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="bookings.html" class="sidebar-link">
+              <i class="fas fa-calendar-check"></i>
+              <span>Quản lý đặt phòng</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="users.html" class="sidebar-link">
+              <i class="fas fa-users"></i>
+              <span>Quản lý người dùng</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="reviews.html" class="sidebar-link">
+              <i class="fas fa-star"></i>
+              <span>Quản lý đánh giá</span>
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="admin-content">
+        <div class="admin-header">
+          <h1>Dashboard</h1>
+          <p>Tổng quan hệ thống Hotel Booking</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="admin-cards">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Tổng khách sạn</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-hotel"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="total-hotels">0</div>
+            <div class="admin-card-change positive">
+              <i class="fas fa-arrow-up"></i>
+              +12% so với tháng trước
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Tổng phòng</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-bed"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="total-rooms">0</div>
+            <div class="admin-card-change positive">
+              <i class="fas fa-arrow-up"></i>
+              +8% so với tháng trước
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Đặt phòng hôm nay</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="today-bookings">0</div>
+            <div class="admin-card-change positive">
+              <i class="fas fa-arrow-up"></i>
+              +25% so với hôm qua
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Doanh thu tháng</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="monthly-revenue">0 VNĐ</div>
+            <div class="admin-card-change positive">
+              <i class="fas fa-arrow-up"></i>
+              +15% so với tháng trước
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Người dùng</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-users"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="total-users">0</div>
+            <div class="admin-card-change positive">
+              <i class="fas fa-arrow-up"></i>
+              +18% so với tháng trước
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Đánh giá trung bình</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-star"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="avg-rating">0/5</div>
+            <div class="admin-card-change positive">
+              <i class="fas fa-arrow-up"></i>
+              +0.3 so với tháng trước
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="admin-charts">
+          <div class="chart-container">
+            <h3 class="chart-title">Đặt phòng theo tháng</h3>
+            <canvas id="bookings-chart" width="400" height="200"></canvas>
+          </div>
+
+          <div class="chart-container">
+            <h3 class="chart-title">Doanh thu theo tháng</h3>
+            <canvas id="revenue-chart" width="400" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="admin-table-container">
+          <div class="admin-table-header">
+            <h3 class="admin-table-title">Hoạt động gần đây</h3>
+            <button class="btn btn-primary" onclick="AdminDashboard.refreshActivities()">
+              <i class="fas fa-sync-alt"></i>
+              Làm mới
+            </button>
+          </div>
+
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Hoạt động</th>
+                <th>Người dùng</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody id="recent-activities">
+              <!-- Activities will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <h3>Thao tác nhanh</h3>
+          <div class="quick-actions-grid">
+            <button class="btn btn-primary" onclick="Utils.redirect('hotels.html')">
+              <i class="fas fa-plus"></i>
+              Thêm khách sạn mới
+            </button>
+            <button class="btn btn-secondary" onclick="Utils.redirect('rooms.html')">
+              <i class="fas fa-bed"></i>
+              Quản lý phòng
+            </button>
+            <button class="btn btn-success" onclick="Utils.redirect('bookings.html')">
+              <i class="fas fa-calendar"></i>
+              Xem đặt phòng
+            </button>
+            <button class="btn btn-warning" onclick="Utils.redirect('reviews.html')">
+              <i class="fas fa-star"></i>
+              Kiểm duyệt đánh giá
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/admin.js"></script>
+    <script src="../assets/js/app.js"></script>
+
+    <style>
+      .quick-actions {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .quick-actions h3 {
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+      }
+
+      .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+      }
+
+      .quick-actions-grid .btn {
+        padding: 1rem;
+        justify-content: center;
+        font-weight: 500;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+      }
+
+      .loading .spinner {
+        margin: 0 auto 1rem;
+      }
+    </style>
+  </body>
+</html>

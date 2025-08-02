@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý khách sạn - Hotel Booking Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="../assets/css/style.css" rel="stylesheet" />
+    <link href="../assets/css/admin.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="navbar">
+        <div class="nav-container">
+          <div class="nav-logo">
+            <a href="../index.html">
+              <i class="fas fa-hotel"></i>
+              <span>Hotel Booking Admin</span>
+            </a>
+          </div>
+
+          <div class="nav-menu" id="nav-menu">
+            <div class="nav-user" id="nav-user">
+              <div class="user-dropdown">
+                <button class="user-btn" id="user-btn">
+                  <i class="fas fa-user"></i>
+                  <span id="user-name">Admin</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu" id="dropdown-menu">
+                  <a href="../profile.html" class="dropdown-item"> <i class="fas fa-user"></i> Thông tin cá nhân </a>
+                  <a href="../index.html" class="dropdown-item"> <i class="fas fa-home"></i> Trang chủ </a>
+                  <hr />
+                  <button class="dropdown-item logout-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Admin Layout -->
+    <div class="admin-layout">
+      <!-- Sidebar -->
+      <aside class="admin-sidebar">
+        <ul class="sidebar-menu">
+          <li class="sidebar-item">
+            <a href="dashboard.html" class="sidebar-link">
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="hotels.html" class="sidebar-link active">
+              <i class="fas fa-hotel"></i>
+              <span>Quản lý khách sạn</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="rooms.html" class="sidebar-link">
+              <i class="fas fa-bed"></i>
+              <span>Quản lý phòng</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="bookings.html" class="sidebar-link">
+              <i class="fas fa-calendar-check"></i>
+              <span>Quản lý đặt phòng</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="users.html" class="sidebar-link">
+              <i class="fas fa-users"></i>
+              <span>Quản lý người dùng</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="reviews.html" class="sidebar-link">
+              <i class="fas fa-star"></i>
+              <span>Quản lý đánh giá</span>
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="admin-content">
+        <div class="admin-header">
+          <h1>Quản lý khách sạn</h1>
+          <p>Thêm, sửa, xóa thông tin khách sạn</p>
+        </div>
+
+        <!-- Hotels Table -->
+        <div class="admin-table-container">
+          <div class="admin-table-header">
+            <h3 class="admin-table-title">Danh sách khách sạn</h3>
+            <div class="admin-table-actions">
+              <input type="text" class="search-input" id="search-hotels" placeholder="Tìm kiếm khách sạn..." />
+              <button class="btn btn-primary" onclick="AdminHotels.showAddModal()">
+                <i class="fas fa-plus"></i>
+                Thêm khách sạn
+              </button>
+            </div>
+          </div>
+
+          <div class="loading" id="hotels-loading">
+            <div class="spinner"></div>
+            <p>Đang tải dữ liệu...</p>
+          </div>
+
+          <table class="admin-table" id="hotels-table" style="display: none">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên khách sạn</th>
+                <th>Địa chỉ</th>
+                <th>Thành phố</th>
+                <th>Đánh giá</th>
+                <th>Ngày tạo</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="hotels-table-body">
+              <!-- Hotels will be loaded here -->
+            </tbody>
+          </table>
+
+          <!-- Pagination -->
+          <div class="pagination" id="hotels-pagination">
+            <!-- Pagination will be loaded here -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Add/Edit Hotel Modal -->
+    <div class="modal admin-modal" id="hotel-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="hotel-modal-title">Thêm khách sạn mới</h3>
+          <button class="modal-close" onclick="Utils.hideModal('#hotel-modal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="hotel-form" class="admin-form">
+            <input type="hidden" id="hotel-id" name="id" />
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="hotel-name" class="form-label">Tên khách sạn *</label>
+                <input type="text" id="hotel-name" name="tenKhachSan" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label for="hotel-city" class="form-label">Thành phố *</label>
+                <input type="text" id="hotel-city" name="thanhPho" class="form-input" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="hotel-address" class="form-label">Địa chỉ *</label>
+              <input type="text" id="hotel-address" name="diaChi" class="form-input" required />
+            </div>
+
+            <div class="form-group">
+              <label for="hotel-description" class="form-label">Mô tả</label>
+              <textarea id="hotel-description" name="moTa" class="form-input" rows="4" placeholder="Mô tả về khách sạn..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="hotel-images" class="form-label">Hình ảnh</label>
+              <div class="file-upload" onclick="document.getElementById('hotel-images').click()">
+                <input type="file" id="hotel-images" name="images" class="file-upload-input" multiple accept="image/*" />
+                <div class="file-upload-icon">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="file-upload-text">Click để chọn hình ảnh</div>
+                <div class="file-upload-text">Hỗ trợ: JPG, PNG, GIF</div>
+              </div>
+              <div class="image-gallery" id="hotel-image-preview">
+                <!-- Image previews will be shown here -->
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="Utils.hideModal('#hotel-modal')">Hủy</button>
+          <button type="submit" form="hotel-form" class="btn btn-primary" id="hotel-save-btn">
+            <i class="fas fa-save"></i>
+            Lưu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="delete-hotel-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Xác nhận xóa</h3>
+          <button class="modal-close" onclick="Utils.hideModal('#delete-hotel-modal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Bạn có chắc chắn muốn xóa khách sạn này?</p>
+          <p class="text-error">Hành động này không thể hoàn tác!</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="Utils.hideModal('#delete-hotel-modal')">Hủy</button>
+          <button type="button" class="btn btn-error" id="confirm-delete-btn">
+            <i class="fas fa-trash"></i>
+            Xóa
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/hotel.js"></script>
+    <script src="../assets/js/admin.js"></script>
+    <script src="../assets/js/app.js"></script>
+
+    <script>
+      // Initialize Admin Hotels
+      class AdminHotels {
+        constructor() {
+          this.hotels = [];
+          this.currentPage = 1;
+          this.totalPages = 1;
+          this.selectedHotelId = null;
+
+          this.init();
+        }
+
+        async init() {
+          await this.loadHotels();
+          this.bindEvents();
+        }
+
+        async loadHotels() {
+          try {
+            Utils.show("#hotels-loading");
+            Utils.hide("#hotels-table");
+
+            this.hotels = await HotelService.getAllHotels();
+            this.renderHotelsTable();
+          } catch (error) {
+            Utils.handleApiError(error);
+          } finally {
+            Utils.hide("#hotels-loading");
+            Utils.show("#hotels-table");
+          }
+        }
+
+        renderHotelsTable() {
+          const tbody = Utils.$("#hotels-table-body");
+          if (!tbody) return;
+
+          if (this.hotels.length === 0) {
+            tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                Chưa có khách sạn nào
+                            </td>
+                        </tr>
+                    `;
+            return;
+          }
+
+          tbody.innerHTML = this.hotels
+            .map(
+              (hotel) => `
+                    <tr>
+                        <td>#${hotel.maKhachSan}</td>
+                        <td>${hotel.tenKhachSan}</td>
+                        <td>${hotel.diaChi}</td>
+                        <td>${hotel.thanhPho || "-"}</td>
+                        <td>
+                            <div class="rating">
+                                <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                ${hotel.danhGiaTrungBinh ? hotel.danhGiaTrungBinh.toFixed(1) : "0.0"}
+                            </div>
+                        </td>
+                        <td>${Utils.formatDate(hotel.ngayTao)}</td>
+                        <td class="actions">
+                            <button class="btn btn-sm btn-outline" onclick="AdminHotels.editHotel(${hotel.maKhachSan})" title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-error" onclick="AdminHotels.deleteHotel(${hotel.maKhachSan})" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `
+            )
+            .join("");
+        }
+
+        bindEvents() {
+          // Search functionality
+          const searchInput = Utils.$("#search-hotels");
+          if (searchInput) {
+            searchInput.addEventListener(
+              "input",
+              Utils.debounce((e) => {
+                this.searchHotels(e.target.value);
+              }, 300)
+            );
+          }
+
+          // Hotel form submission
+          const hotelForm = Utils.$("#hotel-form");
+          if (hotelForm) {
+            hotelForm.addEventListener("submit", (e) => {
+              e.preventDefault();
+              this.saveHotel();
+            });
+          }
+
+          // Image upload
+          const imageInput = Utils.$("#hotel-images");
+          if (imageInput) {
+            imageInput.addEventListener("change", (e) => {
+              this.previewImages(e.target.files);
+            });
+          }
+        }
+
+        searchHotels(searchTerm) {
+          if (!searchTerm.trim()) {
+            this.renderHotelsTable();
+            return;
+          }
+
+          const filteredHotels = this.hotels.filter(
+            (hotel) =>
+              hotel.tenKhachSan.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              hotel.diaChi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              (hotel.thanhPho && hotel.thanhPho.toLowerCase().includes(searchTerm.toLowerCase()))
+          );
+
+          const tbody = Utils.$("#hotels-table-body");
+          if (filteredHotels.length === 0) {
+            tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                Không tìm thấy khách sạn nào phù hợp
+                            </td>
+                        </tr>
+                    `;
+          } else {
+            tbody.innerHTML = filteredHotels
+              .map(
+                (hotel) => `
+                        <tr>
+                            <td>#${hotel.maKhachSan}</td>
+                            <td>${hotel.tenKhachSan}</td>
+                            <td>${hotel.diaChi}</td>
+                            <td>${hotel.thanhPho || "-"}</td>
+                            <td>
+                                <div class="rating">
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    ${hotel.danhGiaTrungBinh ? hotel.danhGiaTrungBinh.toFixed(1) : "0.0"}
+                                </div>
+                            </td>
+                            <td>${Utils.formatDate(hotel.ngayTao)}</td>
+                            <td class="actions">
+                                <button class="btn btn-sm btn-outline" onclick="AdminHotels.editHotel(${hotel.maKhachSan})" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-error" onclick="AdminHotels.deleteHotel(${hotel.maKhachSan})" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `
+              )
+              .join("");
+          }
+        }
+
+        static showAddModal() {
+          Utils.$("#hotel-modal-title").textContent = "Thêm khách sạn mới";
+          Utils.$("#hotel-save-btn").innerHTML = '<i class="fas fa-save"></i> Lưu';
+          Utils.clearForm("#hotel-form");
+          Utils.$("#hotel-image-preview").innerHTML = "";
+          Utils.showModal("#hotel-modal");
+        }
+
+        static async editHotel(hotelId) {
+          try {
+            const hotel = await HotelService.getHotelById(hotelId);
+            if (!hotel) {
+              Utils.showError("Không tìm thấy thông tin khách sạn");
+              return;
+            }
+
+            Utils.$("#hotel-modal-title").textContent = "Sửa thông tin khách sạn";
+            Utils.$("#hotel-save-btn").innerHTML = '<i class="fas fa-save"></i> Cập nhật';
+
+            // Fill form data
+            Utils.$("#hotel-id").value = hotel.maKhachSan;
+            Utils.$("#hotel-name").value = hotel.tenKhachSan;
+            Utils.$("#hotel-city").value = hotel.thanhPho || "";
+            Utils.$("#hotel-description").value = hotel.moTa || "";
+
+            // Show existing images
+            if (hotel.hinhAnhs && hotel.hinhAnhs.length > 0) {
+              const imagePreview = Utils.$("#hotel-image-preview");
+              imagePreview.innerHTML = hotel.hinhAnhs
+                .map(
+                  (img) => `
+                            <div class="image-item">
+                                <img src="${img.duongDanAnh}" alt="Hotel Image">
+                                <button type="button" class="image-delete" onclick="AdminHotels.removeExistingImage(${img.maAnh})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `
+                )
+                .join("");
+            }
+
+            Utils.showModal("#hotel-modal");
+          } catch (error) {
+            Utils.handleApiError(error);
+          }
+        }
+
+        static deleteHotel(hotelId) {
+          window.adminHotels.selectedHotelId = hotelId;
+          Utils.showModal("#delete-hotel-modal");
+
+          const confirmBtn = Utils.$("#confirm-delete-btn");
+          confirmBtn.onclick = async () => {
+            try {
+              const result = await HotelService.deleteHotel(hotelId);
+              if (result.success) {
+                Utils.showSuccess("Xóa khách sạn thành công");
+                Utils.hideModal("#delete-hotel-modal");
+                await window.adminHotels.loadHotels();
+              } else {
+                Utils.showError(result.message || "Có lỗi xảy ra khi xóa khách sạn");
+              }
+            } catch (error) {
+              Utils.handleApiError(error);
+            }
+          };
+        }
+
+        async saveHotel() {
+          const formData = Utils.getFormData("#hotel-form");
+          const hotelId = formData.id;
+
+          // Validate form
+          if (!formData.tenKhachSan.trim()) {
+            Utils.showError("Vui lòng nhập tên khách sạn");
+            return;
+          }
+
+          if (!formData.diaChi.trim()) {
+            Utils.showError("Vui lòng nhập địa chỉ");
+            return;
+          }
+
+          const saveBtn = Utils.$("#hotel-save-btn");
+          saveBtn.disabled = true;
+          saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+
+          try {
+            const hotelData = {
+              tenKhachSan: formData.tenKhachSan,
+              diaChi: formData.diaChi,
+              thanhPho: formData.thanhPho,
+              moTa: formData.moTa,
+            };
+
+            let result;
+            if (hotelId) {
+              result = await HotelService.updateHotel(hotelId, hotelData);
+            } else {
+              result = await HotelService.createHotel(hotelData);
+            }
+
+            if (result.success) {
+              Utils.showSuccess(hotelId ? "Cập nhật khách sạn thành công" : "Thêm khách sạn thành công");
+              Utils.hideModal("#hotel-modal");
+              await this.loadHotels();
+            } else {
+              Utils.showError(result.message || "Có lỗi xảy ra");
+            }
+          } catch (error) {
+            Utils.handleApiError(error);
+          } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = hotelId ? '<i class="fas fa-save"></i> Cập nhật' : '<i class="fas fa-save"></i> Lưu';
+          }
+        }
+
+        previewImages(files) {
+          const imagePreview = Utils.$("#hotel-image-preview");
+          imagePreview.innerHTML = "";
+
+          Array.from(files).forEach((file, index) => {
+            if (file.type.startsWith("image/")) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const imageItem = Utils.createElement("div", "image-item");
+                imageItem.innerHTML = `
+                                <img src="${e.target.result}" alt="Preview ${index + 1}">
+                                <button type="button" class="image-delete" onclick="this.parentElement.remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `;
+                imagePreview.appendChild(imageItem);
+              };
+              reader.readAsDataURL(file);
+            }
+          });
+        }
+
+        static removeExistingImage(imageId) {
+          if (confirm("Bạn có chắc chắn muốn xóa hình ảnh này?")) {
+            // Implementation for removing existing image
+            Utils.showInfo("Chức năng xóa hình ảnh đang được phát triển");
+          }
+        }
+      }
+
+      // Initialize when page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        if (Utils.requireAdmin()) {
+          window.adminHotels = new AdminHotels();
+        }
+      });
+    </script>
+  </body>
+</html>

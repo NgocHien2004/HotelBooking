@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hotel Booking - Trang chủ</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="assets/css/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="navbar">
+        <div class="nav-container">
+          <div class="nav-logo">
+            <a href="index.html">
+              <i class="fas fa-hotel"></i>
+              <span>Hotel Booking</span>
+            </a>
+          </div>
+
+          <div class="nav-menu" id="nav-menu">
+            <ul class="nav-list">
+              <li class="nav-item">
+                <a href="index.html" class="nav-link active">Trang chủ</a>
+              </li>
+              <li class="nav-item">
+                <a href="#hotels" class="nav-link">Khách sạn</a>
+              </li>
+              <li class="nav-item">
+                <a href="#about" class="nav-link">Về chúng tôi</a>
+              </li>
+              <li class="nav-item">
+                <a href="#contact" class="nav-link">Liên hệ</a>
+              </li>
+            </ul>
+
+            <div class="nav-auth" id="nav-auth">
+              <a href="login.html" class="btn-login">Đăng nhập</a>
+              <a href="register.html" class="btn-register">Đăng ký</a>
+            </div>
+
+            <div class="nav-user hidden" id="nav-user">
+              <div class="user-dropdown">
+                <button class="user-btn" id="user-btn">
+                  <i class="fas fa-user"></i>
+                  <span id="user-name">User</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu" id="dropdown-menu">
+                  <a href="profile.html" class="dropdown-item"> <i class="fas fa-user"></i> Thông tin cá nhân </a>
+                  <a href="booking-history.html" class="dropdown-item"> <i class="fas fa-history"></i> Lịch sử đặt phòng </a>
+                  <div class="admin-menu hidden" id="admin-menu">
+                    <a href="admin/dashboard.html" class="dropdown-item"> <i class="fas fa-tachometer-alt"></i> Quản trị </a>
+                  </div>
+                  <hr />
+                  <button class="dropdown-item logout-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="nav-toggle" id="nav-toggle">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1 class="hero-title">Tìm kiếm khách sạn tuyệt vời</h1>
+        <p class="hero-subtitle">Đặt phòng khách sạn với giá tốt nhất tại Việt Nam</p>
+
+        <!-- Search Form -->
+        <div class="search-container">
+          <form class="search-form" id="search-form">
+            <div class="search-field">
+              <label for="search-destination">Điểm đến</label>
+              <input type="text" id="search-destination" placeholder="Nhập tên thành phố hoặc khách sạn" required />
+            </div>
+
+            <div class="search-field">
+              <label for="check-in">Ngày nhận phòng</label>
+              <input type="date" id="check-in" required />
+            </div>
+
+            <div class="search-field">
+              <label for="check-out">Ngày trả phòng</label>
+              <input type="date" id="check-out" required />
+            </div>
+
+            <div class="search-field">
+              <label for="guests">Số khách</label>
+              <select id="guests">
+                <option value="1">1 khách</option>
+                <option value="2" selected>2 khách</option>
+                <option value="3">3 khách</option>
+                <option value="4">4 khách</option>
+                <option value="5">5+ khách</option>
+              </select>
+            </div>
+
+            <button type="submit" class="search-btn">
+              <i class="fas fa-search"></i>
+              Tìm kiếm
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hotels Section -->
+    <section class="section" id="hotels">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Khách sạn nổi bật</h2>
+          <p class="section-subtitle">Khám phá những khách sạn được đánh giá cao nhất</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+          <div class="filter-group">
+            <label for="city-filter">Thành phố:</label>
+            <select id="city-filter">
+              <option value="">Tất cả thành phố</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="price-filter">Giá:</label>
+            <select id="price-filter">
+              <option value="">Tất cả mức giá</option>
+              <option value="0-500000">Dưới 500,000 VNĐ</option>
+              <option value="500000-1000000">500,000 - 1,000,000 VNĐ</option>
+              <option value="1000000-2000000">1,000,000 - 2,000,000 VNĐ</option>
+              <option value="2000000+">Trên 2,000,000 VNĐ</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="rating-filter">Đánh giá:</label>
+            <select id="rating-filter">
+              <option value="">Tất cả đánh giá</option>
+              <option value="4">4+ sao</option>
+              <option value="3">3+ sao</option>
+              <option value="2">2+ sao</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading hidden" id="loading">
+          <div class="spinner"></div>
+          <p>Đang tải dữ liệu...</p>
+        </div>
+
+        <!-- Hotels Grid -->
+        <div class="hotels-grid" id="hotels-grid">
+          <!-- Hotels will be loaded here -->
+        </div>
+
+        <!-- Load More -->
+        <div class="load-more-container">
+          <button class="btn-load-more hidden" id="load-more-btn">Xem thêm</button>
+        </div>
+
+        <!-- No Results -->
+        <div class="no-results hidden" id="no-results">
+          <i class="fas fa-search"></i>
+          <h3>Không tìm thấy khách sạn nào</h3>
+          <p>Hãy thử thay đổi tiêu chí tìm kiếm của bạn</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section features-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Tại sao chọn chúng tôi?</h2>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Bảo mật tuyệt đối</h3>
+            <p>Thông tin của bạn được bảo vệ bằng công nghệ mã hóa tiên tiến</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <h3>Hỗ trợ 24/7</h3>
+            <p>Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ bạn mọi lúc</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-tags"></i>
+            </div>
+            <h3>Giá tốt nhất</h3>
+            <p>Cam kết mang đến giá tốt nhất cho mọi khách sạn</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-undo"></i>
+            </div>
+            <h3>Hủy miễn phí</h3>
+            <p>Hủy đặt phòng miễn phí trong thời gian quy định</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <div class="footer-logo">
+              <i class="fas fa-hotel"></i>
+              <span>Hotel Booking</span>
+            </div>
+            <p>Nền tảng đặt phòng khách sạn hàng đầu Việt Nam với hàng nghìn khách sạn chất lượng cao.</p>
+            <div class="social-links">
+              <a href="#"><i class="fab fa-facebook-f"></i></a>
+              <a href="#"><i class="fab fa-twitter"></i></a>
+              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab fa-youtube"></i></a>
+            </div>
+          </div>
+
+          <div class="footer-section">
+            <h3>Liên kết nhanh</h3>
+            <ul class="footer-links">
+              <li><a href="index.html">Trang chủ</a></li>
+              <li><a href="#hotels">Khách sạn</a></li>
+              <li><a href="#about">Về chúng tôi</a></li>
+              <li><a href="#contact">Liên hệ</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-section">
+            <h3>Hỗ trợ</h3>
+            <ul class="footer-links">
+              <li><a href="#">Trung tâm trợ giúp</a></li>
+              <li><a href="#">Chính sách bảo mật</a></li>
+              <li><a href="#">Điều khoản sử dụng</a></li>
+              <li><a href="#">Chính sách hủy</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-section">
+            <h3>Liên hệ</h3>
+            <div class="contact-info">
+              <div class="contact-item">
+                <i class="fas fa-phone"></i>
+                <span>1900 1234</span>
+              </div>
+              <div class="contact-item">
+                <i class="fas fa-envelope"></i>
+                <span>support@hotelbooking.vn</span>
+              </div>
+              <div class="contact-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>123 Nguyễn Văn A, Quận 1, TP.HCM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>&copy; 2025 Hotel Booking. Tất cả quyền được bảo lưu.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/hotel.js"></script>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>

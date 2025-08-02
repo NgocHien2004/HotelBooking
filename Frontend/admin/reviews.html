@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý đánh giá - Hotel Booking Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="../assets/css/style.css" rel="stylesheet" />
+    <link href="../assets/css/admin.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="navbar">
+        <div class="nav-container">
+          <div class="nav-logo">
+            <a href="../index.html">
+              <i class="fas fa-hotel"></i>
+              <span>Hotel Booking Admin</span>
+            </a>
+          </div>
+
+          <div class="nav-menu" id="nav-menu">
+            <div class="nav-user" id="nav-user">
+              <div class="user-dropdown">
+                <button class="user-btn" id="user-btn">
+                  <i class="fas fa-user"></i>
+                  <span id="user-name">Admin</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu" id="dropdown-menu">
+                  <a href="../profile.html" class="dropdown-item"> <i class="fas fa-user"></i> Thông tin cá nhân </a>
+                  <a href="../index.html" class="dropdown-item"> <i class="fas fa-home"></i> Trang chủ </a>
+                  <hr />
+                  <button class="dropdown-item logout-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Admin Layout -->
+    <div class="admin-layout">
+      <!-- Sidebar -->
+      <aside class="admin-sidebar">
+        <ul class="sidebar-menu">
+          <li class="sidebar-item">
+            <a href="dashboard.html" class="sidebar-link">
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="hotels.html" class="sidebar-link">
+              <i class="fas fa-hotel"></i>
+              <span>Quản lý khách sạn</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="rooms.html" class="sidebar-link">
+              <i class="fas fa-bed"></i>
+              <span>Quản lý phòng</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="bookings.html" class="sidebar-link">
+              <i class="fas fa-calendar-check"></i>
+              <span>Quản lý đặt phòng</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="users.html" class="sidebar-link">
+              <i class="fas fa-users"></i>
+              <span>Quản lý người dùng</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a href="reviews.html" class="sidebar-link active">
+              <i class="fas fa-star"></i>
+              <span>Quản lý đánh giá</span>
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="admin-content">
+        <div class="admin-header">
+          <h1>Quản lý đánh giá</h1>
+          <p>Kiểm duyệt và quản lý đánh giá khách hàng</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="admin-cards">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Tổng đánh giá</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-star"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="total-reviews">0</div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Chờ duyệt</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="pending-reviews">0</div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Đã duyệt</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="approved-reviews">0</div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3 class="admin-card-title">Đánh giá trung bình</h3>
+              <div class="admin-card-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+            </div>
+            <div class="admin-card-value" id="avg-rating">0.0</div>
+          </div>
+        </div>
+
+        <!-- Reviews Table -->
+        <div class="admin-table-container">
+          <div class="admin-table-header">
+            <h3 class="admin-table-title">Danh sách đánh giá</h3>
+            <div class="admin-table-actions">
+              <select id="status-filter" class="search-input">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Pending">Chờ duyệt</option>
+                <option value="Approved">Đã duyệt</option>
+                <option value="Rejected">Từ chối</option>
+              </select>
+              <select id="rating-filter" class="search-input">
+                <option value="">Tất cả đánh giá</option>
+                <option value="5">5 sao</option>
+                <option value="4">4 sao</option>
+                <option value="3">3 sao</option>
+                <option value="2">2 sao</option>
+                <option value="1">1 sao</option>
+              </select>
+              <input type="text" class="search-input" id="search-reviews" placeholder="Tìm kiếm đánh giá..." />
+            </div>
+          </div>
+
+          <div class="loading" id="reviews-loading">
+            <div class="spinner"></div>
+            <p>Đang tải dữ liệu...</p>
+          </div>
+
+          <table class="admin-table" id="reviews-table" style="display: none">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Người đánh giá</th>
+                <th>Khách sạn</th>
+                <th>Đánh giá</th>
+                <th>Ngày tạo</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="reviews-table-body">
+              <!-- Reviews will be loaded here -->
+            </tbody>
+          </table>
+
+          <!-- Pagination -->
+          <div class="pagination" id="reviews-pagination">
+            <!-- Pagination will be loaded here -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Review Detail Modal -->
+    <div class="modal admin-modal" id="review-detail-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Chi tiết đánh giá</h3>
+          <button class="modal-close" onclick="Utils.hideModal('#review-detail-modal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body" id="review-detail-content">
+          <!-- Review detail will be loaded here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="Utils.hideModal('#review-detail-modal')">Đóng</button>
+          <div id="review-actions">
+            <!-- Action buttons will be added here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Action Modal -->
+    <div class="modal" id="bulk-action-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="bulk-action-title">Xác nhận thao tác</h3>
+          <button class="modal-close" onclick="Utils.hideModal('#bulk-action-modal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="bulk-action-message">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
+          <div class="form-group" id="bulk-reason-group" style="display: none">
+            <label for="bulk-reason">Lý do (tùy chọn):</label>
+            <textarea id="bulk-reason" class="form-input" rows="3" placeholder="Nhập lý do..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="Utils.hideModal('#bulk-action-modal')">Hủy</button>
+          <button type="button" class="btn btn-primary" id="confirm-bulk-action">
+            <i class="fas fa-check"></i>
+            Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/admin.js"></script>
+    <script src="../assets/js/app.js"></script>
+
+    <script>
+      // Admin Reviews Page
+      class AdminReviewsPage {
+        constructor() {
+          this.reviews = [];
+          this.currentPage = 1;
+          this.totalPages = 1;
+          this.selectedReviewId = null;
+          this.selectedReviews = [];
+          this.stats = {
+            total: 0,
+            pending: 0,
+            approved: 0,
+            avgRating: 0,
+          };
+
+          this.init();
+        }
+
+        async init() {
+          await this.loadReviews();
+          this.bindEvents();
+        }
+
+        async loadReviews() {
+          try {
+            Utils.show("#reviews-loading");
+            Utils.hide("#reviews-table");
+
+            // Mock data - replace with actual API call
+            this.reviews = [
+              {
+                maDanhGia: 1,
+                hoTenNguoiDung: "Nguyễn Văn A",
+                emailNguoiDung: "nguyenvana@email.com",
+                tenKhachSan: "Hotel ABC",
+                diemDanhGia: 5,
+                binhLuan: "Khách sạn rất tuyệt vời, phòng sạch sẽ, nhân viên thân thiện. Tôi sẽ quay lại lần sau.",
+                ngayTao: "2024-12-20T15:30:00",
+                trangThai: "Approved",
+              },
+              {
+                maDanhGia: 2,
+                hoTenNguoiDung: "Trần Thị B",
+                emailNguoiDung: "tranthib@email.com",
+                tenKhachSan: "Hotel XYZ",
+                diemDanhGia: 4,
+                binhLuan: "Phòng đẹp, view đẹp nhưng wifi hơi chậm. Nhìn chung vẫn hài lòng.",
+                ngayTao: "2024-12-19T10:15:00",
+                trangThai: "Pending",
+              },
+              {
+                maDanhGia: 3,
+                hoTenNguoiDung: "Lê Văn C",
+                emailNguoiDung: "levanc@email.com",
+                tenKhachSan: "Hotel ABC",
+                diemDanhGia: 2,
+                binhLuan: "Dịch vụ kém, phòng không sạch, nhân viên không nhiệt tình.",
+                ngayTao: "2024-12-18T20:45:00",
+                trangThai: "Rejected",
+              },
+              {
+                maDanhGia: 4,
+                hoTenNguoiDung: "Phạm Thị D",
+                emailNguoiDung: "phamthid@email.com",
+                tenKhachSan: "Hotel DEF",
+                diemDanhGia: 3,
+                binhLuan: "Bình thường, không có gì đặc biệt.",
+                ngayTao: "2024-12-17T14:20:00",
+                trangThai: "Pending",
+              },
+            ];
+
+            this.calculateStats();
+            this.renderReviewsTable();
+            this.updateStatsCards();
+          } catch (error) {
+            Utils.handleApiError(error);
+          } finally {
+            Utils.hide("#reviews-loading");
+            Utils.show("#reviews-table");
+          }
+        }
+
+        calculateStats() {
+          this.stats.total = this.reviews.length;
+          this.stats.pending = this.reviews.filter((r) => r.trangThai === "Pending").length;
+          this.stats.approved = this.reviews.filter((r) => r.trangThai === "Approved").length;
+
+          // Calculate average rating for approved reviews
+          const approvedReviews = this.reviews.filter((r) => r.trangThai === "Approved");
+          if (approvedReviews.length > 0) {
+            const totalRating = approvedReviews.reduce((sum, r) => sum + r.diemDanhGia, 0);
+            this.stats.avgRating = (totalRating / approvedReviews.length).toFixed(1);
+          }
+        }
+
+        updateStatsCards() {
+          Utils.$("#total-reviews").textContent = this.stats.total;
+          Utils.$("#pending-reviews").textContent = this.stats.pending;
+          Utils.$("#approved-reviews").textContent = this.stats.approved;
+          Utils.$("#avg-rating").textContent = this.stats.avgRating;
+        }
+
+        renderReviewsTable() {
+          const tbody = Utils.$("#reviews-table-body");
+          if (!tbody) return;
+
+          if (this.reviews.length === 0) {
+            tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                Chưa có đánh giá nào
+                            </td>
+                        </tr>
+                    `;
+            return;
+          }
+
+          tbody.innerHTML = this.reviews
+            .map(
+              (review) => `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="review-checkbox" value="${review.maDanhGia}">
+                            #${review.maDanhGia}
+                        </td>
+                        <td>
+                            <div class="reviewer-info">
+                                <strong>${review.hoTenNguoiDung}</strong>
+                                <br>
+                                <small class="text-secondary">${review.emailNguoiDung}</small>
+                            </div>
+                        </td>
+                        <td>${review.tenKhachSan}</td>
+                        <td>
+                            <div class="rating-display">
+                                ${this.createStarRating(review.diemDanhGia)}
+                                <span class="rating-number">${review.diemDanhGia}/5</span>
+                            </div>
+                            <div class="review-preview">
+                                ${review.binhLuan.length > 50 ? review.binhLuan.substring(0, 50) + "..." : review.binhLuan}
+                            </div>
+                        </td>
+                        <td>${Utils.formatDate(review.ngayTao)}</td>
+                        <td>
+                            <span class="status-badge ${review.trangThai.toLowerCase()}">
+                                ${this.getReviewStatusText(review.trangThai)}
+                            </span>
+                        </td>
+                        <td class="actions">
+                            <button class="btn btn-sm btn-outline" onclick="AdminReviewsPage.viewReview(${review.maDanhGia})" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${
+                              review.trangThai === "Pending"
+                                ? `
+                                <button class="btn btn-sm btn-success" onclick="AdminReviewsPage.approveReview(${review.maDanhGia})" title="Duyệt">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-error" onclick="AdminReviewsPage.rejectReview(${review.maDanhGia})" title="Từ chối">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `
+                                : ""
+                            }
+                            <button class="btn btn-sm btn-error" onclick="AdminReviewsPage.deleteReview(${review.maDanhGia})" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `
+            )
+            .join("");
+        }
+
+        createStarRating(rating) {
+          let stars = "";
+          for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+              stars += '<i class="fas fa-star" style="color: #fbbf24;"></i>';
+            } else {
+              stars += '<i class="fas fa-star" style="color: #e5e7eb;"></i>';
+            }
+          }
+          return stars;
+        }
+
+        getReviewStatusText(status) {
+          const statusMap = {
+            Pending: "Chờ duyệt",
+            Approved: "Đã duyệt",
+            Rejected: "Từ chối",
+          };
+          return statusMap[status] || status;
+        }
+
+        bindEvents() {
+          // Filter events
+          const statusFilter = Utils.$("#status-filter");
+          const ratingFilter = Utils.$("#rating-filter");
+          const searchInput = Utils.$("#search-reviews");
+
+          if (statusFilter) {
+            statusFilter.addEventListener("change", () => {
+              this.applyFilters();
+            });
+          }
+
+          if (ratingFilter) {
+            ratingFilter.addEventListener("change", () => {
+              this.applyFilters();
+            });
+          }
+
+          if (searchInput) {
+            searchInput.addEventListener(
+              "input",
+              Utils.debounce(() => {
+                this.applyFilters();
+              }, 300)
+            );
+          }
+
+          // Checkbox events
+          document.addEventListener("change", (e) => {
+            if (e.target.classList.contains("review-checkbox")) {
+              this.updateSelectedReviews();
+            }
+          });
+
+          // Bulk action confirmation
+          const confirmBulkAction = Utils.$("#confirm-bulk-action");
+          if (confirmBulkAction) {
+            confirmBulkAction.addEventListener("click", () => {
+              this.executeBulkAction();
+            });
+          }
+        }
+
+        applyFilters() {
+          const statusFilter = Utils.$("#status-filter").value;
+          const ratingFilter = Utils.$("#rating-filter").value;
+          const searchTerm = Utils.$("#search-reviews").value.toLowerCase();
+
+          let filteredReviews = [...this.reviews];
+
+          // Filter by status
+          if (statusFilter) {
+            filteredReviews = filteredReviews.filter((review) => review.trangThai === statusFilter);
+          }
+
+          // Filter by rating
+          if (ratingFilter) {
+            filteredReviews = filteredReviews.filter((review) => review.diemDanhGia == ratingFilter);
+          }
+
+          // Filter by search term
+          if (searchTerm) {
+            filteredReviews = filteredReviews.filter(
+              (review) =>
+                review.hoTenNguoiDung.toLowerCase().includes(searchTerm) ||
+                review.tenKhachSan.toLowerCase().includes(searchTerm) ||
+                review.binhLuan.toLowerCase().includes(searchTerm)
+            );
+          }
+
+          this.renderFilteredReviewsTable(filteredReviews);
+        }
+
+        renderFilteredReviewsTable(reviews) {
+          const tbody = Utils.$("#reviews-table-body");
+          if (!tbody) return;
+
+          if (reviews.length === 0) {
+            tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                Không tìm thấy đánh giá nào phù hợp
+                            </td>
+                        </tr>
+                    `;
+            return;
+          }
+
+          tbody.innerHTML = reviews
+            .map(
+              (review) => `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="review-checkbox" value="${review.maDanhGia}">
+                            #${review.maDanhGia}
+                        </td>
+                        <td>
+                            <div class="reviewer-info">
+                                <strong>${review.hoTenNguoiDung}</strong>
+                                <br>
+                                <small class="text-secondary">${review.emailNguoiDung}</small>
+                            </div>
+                        </td>
+                        <td>${review.tenKhachSan}</td>
+                        <td>
+                            <div class="rating-display">
+                                ${this.createStarRating(review.diemDanhGia)}
+                                <span class="rating-number">${review.diemDanhGia}/5</span>
+                            </div>
+                            <div class="review-preview">
+                                ${review.binhLuan.length > 50 ? review.binhLuan.substring(0, 50) + "..." : review.binhLuan}
+                            </div>
+                        </td>
+                        <td>${Utils.formatDate(review.ngayTao)}</td>
+                        <td>
+                            <span class="status-badge ${review.trangThai.toLowerCase()}">
+                                ${this.getReviewStatusText(review.trangThai)}
+                            </span>
+                        </td>
+                        <td class="actions">
+                            <button class="btn btn-sm btn-outline" onclick="AdminReviewsPage.viewReview(${review.maDanhGia})" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${
+                              review.trangThai === "Pending"
+                                ? `
+                                <button class="btn btn-sm btn-success" onclick="AdminReviewsPage.approveReview(${review.maDanhGia})" title="Duyệt">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-error" onclick="AdminReviewsPage.rejectReview(${review.maDanhGia})" title="Từ chối">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `
+                                : ""
+                            }
+                            <button class="btn btn-sm btn-error" onclick="AdminReviewsPage.deleteReview(${review.maDanhGia})" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `
+            )
+            .join("");
+        }
+
+        updateSelectedReviews() {
+          const checkboxes = document.querySelectorAll(".review-checkbox:checked");
+          this.selectedReviews = Array.from(checkboxes).map((cb) => parseInt(cb.value));
+
+          // Show/hide bulk action buttons
+          this.toggleBulkActions();
+        }
+
+        toggleBulkActions() {
+          const bulkActions = Utils.$("#bulk-actions");
+          if (this.selectedReviews.length > 0) {
+            if (!bulkActions) {
+              this.createBulkActionsBar();
+            }
+            Utils.show("#bulk-actions");
+            Utils.$("#selected-count").textContent = this.selectedReviews.length;
+          } else {
+            Utils.hide("#bulk-actions");
+          }
+        }
+
+        createBulkActionsBar() {
+          const container = Utils.$(".admin-table-container");
+          const bulkActionsDiv = Utils.createElement("div", "bulk-actions");
+          bulkActionsDiv.id = "bulk-actions";
+          bulkActionsDiv.style.display = "none";
+
+          bulkActionsDiv.innerHTML = `
+                    <div class="bulk-actions-content">
+                        <span>Đã chọn <span id="selected-count">0</span> đánh giá</span>
+                        <div class="bulk-action-buttons">
+                            <button class="btn btn-sm btn-success" onclick="AdminReviewsPage.bulkApprove()">
+                                <i class="fas fa-check"></i>
+                                Duyệt
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="AdminReviewsPage.bulkReject()">
+                                <i class="fas fa-times"></i>
+                                Từ chối
+                            </button>
+                            <button class="btn btn-sm btn-error" onclick="AdminReviewsPage.bulkDelete()">
+                                <i class="fas fa-trash"></i>
+                                Xóa
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+          container.insertBefore(bulkActionsDiv, Utils.$("#reviews-table"));
+        }
+
+        // Static methods for UI actions
+        static viewReview(reviewId) {
+          const review = window.adminReviewsPage.reviews.find((r) => r.maDanhGia === reviewId);
+          if (!review) {
+            Utils.showError("Không tìm thấy đánh giá");
+            return;
+          }
+
+          const detailContent = Utils.$("#review-detail-content");
+          detailContent.innerHTML = `
+                    <div class="review-detail">
+                        <div class="review-header">
+                            <div class="reviewer-info">
+                                <h4>${review.hoTenNguoiDung}</h4>
+                                <p class="text-secondary">${review.emailNguoiDung}</p>
+                            </div>
+                            <div class="review-meta">
+                                <div class="rating-large">
+                                    ${window.adminReviewsPage.createStarRating(review.diemDanhGia)}
+                                    <span class="rating-text">${review.diemDanhGia}/5 sao</span>
+                                </div>
+                                <p class="review-date">${Utils.formatDateTime(review.ngayTao)}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="review-content">
+                            <h5>Khách sạn: ${review.tenKhachSan}</h5>
+                            <div class="review-comment">
+                                <p>${review.binhLuan}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="review-status">
+                            <span class="status-badge ${review.trangThai.toLowerCase()}">
+                                ${window.adminReviewsPage.getReviewStatusText(review.trangThai)}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+          // Add action buttons
+          const reviewActions = Utils.$("#review-actions");
+          if (review.trangThai === "Pending") {
+            reviewActions.innerHTML = `
+                        <button class="btn btn-success" onclick="AdminReviewsPage.approveReview(${review.maDanhGia}); Utils.hideModal('#review-detail-modal')">
+                            <i class="fas fa-check"></i>
+                            Duyệt
+                        </button>
+                        <button class="btn btn-error" onclick="AdminReviewsPage.rejectReview(${review.maDanhGia}); Utils.hideModal('#review-detail-modal')">
+                            <i class="fas fa-times"></i>
+                            Từ chối
+                        </button>
+                    `;
+          } else {
+            reviewActions.innerHTML = "";
+          }
+
+          Utils.showModal("#review-detail-modal");
+        }
+
+        static async approveReview(reviewId) {
+          try {
+            // Mock API call
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            const review = window.adminReviewsPage.reviews.find((r) => r.maDanhGia === reviewId);
+            if (review) {
+              review.trangThai = "Approved";
+              window.adminReviewsPage.calculateStats();
+              window.adminReviewsPage.renderReviewsTable();
+              window.adminReviewsPage.updateStatsCards();
+              Utils.showSuccess("Đã duyệt đánh giá");
+            }
+          } catch (error) {
+            Utils.handleApiError(error);
+          }
+        }
+
+        static async rejectReview(reviewId) {
+          if (!confirm("Bạn có chắc chắn muốn từ chối đánh giá này?")) {
+            return;
+          }
+
+          try {
+            // Mock API call
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            const review = window.adminReviewsPage.reviews.find((r) => r.maDanhGia === reviewId);
+            if (review) {
+              review.trangThai = "Rejected";
+              window.adminReviewsPage.calculateStats();
+              window.adminReviewsPage.renderReviewsTable();
+              window.adminReviewsPage.updateStatsCards();
+              Utils.showSuccess("Đã từ chối đánh giá");
+            }
+          } catch (error) {
+            Utils.handleApiError(error);
+          }
+        }
+
+        static async deleteReview(reviewId) {
+          if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này?")) {
+            return;
+          }
+
+          try {
+            // Mock API call
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            const index = window.adminReviewsPage.reviews.findIndex((r) => r.maDanhGia === reviewId);
+            if (index !== -1) {
+              window.adminReviewsPage.reviews.splice(index, 1);
+              window.adminReviewsPage.calculateStats();
+              window.adminReviewsPage.renderReviewsTable();
+              window.adminReviewsPage.updateStatsCards();
+              Utils.showSuccess("Đã xóa đánh giá");
+            }
+          } catch (error) {
+            Utils.handleApiError(error);
+          }
+        }
+
+        // Bulk actions
+        static bulkApprove() {
+          const selectedCount = window.adminReviewsPage.selectedReviews.length;
+          Utils.$("#bulk-action-title").textContent = "Duyệt đánh giá";
+          Utils.$("#bulk-action-message").textContent = `Bạn có chắc chắn muốn duyệt ${selectedCount} đánh giá đã chọn?`;
+          Utils.hide("#bulk-reason-group");
+
+          window.adminReviewsPage.currentBulkAction = "approve";
+          Utils.showModal("#bulk-action-modal");
+        }
+
+        static bulkReject() {
+          const selectedCount = window.adminReviewsPage.selectedReviews.length;
+          Utils.$("#bulk-action-title").textContent = "Từ chối đánh giá";
+          Utils.$("#bulk-action-message").textContent = `Bạn có chắc chắn muốn từ chối ${selectedCount} đánh giá đã chọn?`;
+          Utils.show("#bulk-reason-group");
+
+          window.adminReviewsPage.currentBulkAction = "reject";
+          Utils.showModal("#bulk-action-modal");
+        }
+
+        static bulkDelete() {
+          const selectedCount = window.adminReviewsPage.selectedReviews.length;
+          Utils.$("#bulk-action-title").textContent = "Xóa đánh giá";
+          Utils.$(
+            "#bulk-action-message"
+          ).textContent = `Bạn có chắc chắn muốn xóa ${selectedCount} đánh giá đã chọn? Hành động này không thể hoàn tác!`;
+          Utils.show("#bulk-reason-group");
+
+          window.adminReviewsPage.currentBulkAction = "delete";
+          Utils.showModal("#bulk-action-modal");
+        }
+
+        async executeBulkAction() {
+          const action = this.currentBulkAction;
+          const reason = Utils.$("#bulk-reason").value;
+
+          try {
+            // Mock API call
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            this.selectedReviews.forEach((reviewId) => {
+              const review = this.reviews.find((r) => r.maDanhGia === reviewId);
+              if (review) {
+                switch (action) {
+                  case "approve":
+                    review.trangThai = "Approved";
+                    break;
+                  case "reject":
+                    review.trangThai = "Rejected";
+                    break;
+                  case "delete":
+                    const index = this.reviews.findIndex((r) => r.maDanhGia === reviewId);
+                    if (index !== -1) {
+                      this.reviews.splice(index, 1);
+                    }
+                    break;
+                }
+              }
+            });
+
+            this.calculateStats();
+            this.renderReviewsTable();
+            this.updateStatsCards();
+            this.selectedReviews = [];
+            Utils.hide("#bulk-actions");
+
+            const actionText = {
+              approve: "duyệt",
+              reject: "từ chối",
+              delete: "xóa",
+            };
+
+            Utils.showSuccess(`Đã ${actionText[action]} ${this.selectedReviews.length} đánh giá`);
+            Utils.hideModal("#bulk-action-modal");
+          } catch (error) {
+            Utils.handleApiError(error);
+          }
+        }
+      }
+
+      // Initialize when page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        if (Utils.requireAdmin()) {
+          window.adminReviewsPage = new AdminReviewsPage();
+        }
+      });
+    </script>
+
+    <style>
+      .reviewer-info {
+        line-height: 1.4;
+      }
+
+      .rating-display {
+        margin-bottom: 0.5rem;
+      }
+
+      .rating-number {
+        margin-left: 0.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .review-preview {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+      }
+
+      .status-badge.pending {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      .status-badge.approved {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+
+      .status-badge.rejected {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+
+      .review-detail {
+        padding: 1rem 0;
+      }
+
+      .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .review-meta {
+        text-align: right;
+      }
+
+      .rating-large {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .rating-text {
+        margin-left: 0.5rem;
+        font-weight: 600;
+      }
+
+      .review-date {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      .review-content {
+        margin-bottom: 1.5rem;
+      }
+
+      .review-content h5 {
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+      }
+
+      .review-comment {
+        background: var(--bg-secondary);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        line-height: 1.6;
+      }
+
+      .bulk-actions {
+        background: var(--bg-secondary);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 1rem;
+        display: none;
+      }
+
+      .bulk-actions-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .bulk-action-buttons {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .review-checkbox {
+        margin-right: 0.5rem;
+      }
+    </style>
+  </body>
+</html>
