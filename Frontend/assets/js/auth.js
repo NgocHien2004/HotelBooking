@@ -11,6 +11,10 @@ class AuthService {
         const { token, user } = response.data;
         Utils.setToken(token);
         Utils.setUser(user);
+
+        // Update UI immediately after login
+        AuthUI.updateNavigation();
+
         return { success: true, user };
       } else {
         return { success: false, message: response.message || "Đăng nhập thất bại" };
@@ -34,6 +38,10 @@ class AuthService {
         const { token, user } = response.data;
         Utils.setToken(token);
         Utils.setUser(user);
+
+        // Update UI immediately after register
+        AuthUI.updateNavigation();
+
         return { success: true, user };
       } else {
         return { success: false, message: response.message || "Đăng ký thất bại" };
@@ -55,7 +63,14 @@ class AuthService {
   }
 
   static logout() {
-    Utils.logout();
+    Utils.removeToken();
+    Utils.removeUser();
+
+    // Update UI immediately after logout
+    AuthUI.updateNavigation();
+
+    // Redirect to home page
+    Utils.redirect("index.html");
   }
 
   static getCurrentUser() {
@@ -88,8 +103,15 @@ class AuthUI {
       const user = AuthService.getCurrentUser();
 
       // Hide auth buttons, show user menu
-      Utils.hide(navAuth);
-      Utils.show(navUser);
+      if (navAuth) {
+        navAuth.style.display = "none";
+        navAuth.classList.add("hidden");
+      }
+
+      if (navUser) {
+        navUser.style.display = "flex";
+        navUser.classList.remove("hidden");
+      }
 
       // Update user name
       if (userName) {
@@ -99,15 +121,24 @@ class AuthUI {
       // Show/hide admin menu
       if (adminMenu) {
         if (AuthService.isAdmin()) {
-          Utils.show(adminMenu);
+          adminMenu.style.display = "block";
+          adminMenu.classList.remove("hidden");
         } else {
-          Utils.hide(adminMenu);
+          adminMenu.style.display = "none";
+          adminMenu.classList.add("hidden");
         }
       }
     } else {
       // Show auth buttons, hide user menu
-      Utils.show(navAuth);
-      Utils.hide(navUser);
+      if (navAuth) {
+        navAuth.style.display = "flex";
+        navAuth.classList.remove("hidden");
+      }
+
+      if (navUser) {
+        navUser.style.display = "none";
+        navUser.classList.add("hidden");
+      }
     }
   }
 
@@ -151,7 +182,6 @@ class AuthUI {
   static handleLogout() {
     if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
       AuthService.logout();
-      Utils.showSuccess("Đăng xuất thành công");
     }
   }
 }
@@ -169,9 +199,7 @@ class LoginForm {
 
   init() {
     if (!this.form) return;
-
     this.bindEvents();
-    this.setupValidation();
   }
 
   bindEvents() {
@@ -181,72 +209,15 @@ class LoginForm {
     });
   }
 
-  setupValidation() {
-    // Email validation
-    this.emailField?.addEventListener("blur", () => {
-      this.validateEmail();
-    });
-
-    // Password validation
-    this.passwordField?.addEventListener("blur", () => {
-      this.validatePassword();
-    });
-
-    // Clear errors on input
-    this.emailField?.addEventListener("input", () => {
-      Utils.clearFieldError("email");
-    });
-
-    this.passwordField?.addEventListener("input", () => {
-      Utils.clearFieldError("password");
-    });
-  }
-
-  validateEmail() {
-    const email = this.emailField?.value?.trim();
-
-    if (!email) {
-      Utils.showFieldError("email", "Vui lòng nhập email");
-      return false;
-    }
-
-    if (!Utils.validateEmail(email)) {
-      Utils.showFieldError("email", "Email không hợp lệ");
-      return false;
-    }
-
-    Utils.clearFieldError("email");
-    return true;
-  }
-
-  validatePassword() {
-    const password = this.passwordField?.value;
-
-    if (!password) {
-      Utils.showFieldError("password", "Vui lòng nhập mật khẩu");
-      return false;
-    }
-
-    Utils.clearFieldError("password");
-    return true;
-  }
-
-  validate() {
-    const emailValid = this.validateEmail();
-    const passwordValid = this.validatePassword();
-
-    return emailValid && passwordValid;
-  }
-
   async handleSubmit() {
-    if (!this.validate()) return;
+    if (!this.validateForm()) return;
 
     const email = this.emailField.value.trim();
     const password = this.passwordField.value;
 
     // Disable submit button
     this.submitButton.disabled = true;
-    this.submitButton.textContent = "Đang đăng nhập...";
+    this.submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...';
 
     try {
       const result = await AuthService.login(email, password);
@@ -254,7 +225,7 @@ class LoginForm {
       if (result.success) {
         Utils.showSuccess("Đăng nhập thành công!");
 
-        // Redirect based on user role
+        // Redirect based on user role after a short delay
         setTimeout(() => {
           if (AuthService.isAdmin()) {
             Utils.redirect("admin/dashboard.html");
@@ -271,8 +242,33 @@ class LoginForm {
     } finally {
       // Re-enable submit button
       this.submitButton.disabled = false;
-      this.submitButton.textContent = "Đăng nhập";
+      this.submitButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng nhập';
     }
+  }
+
+  validateForm() {
+    const email = this.emailField.value.trim();
+    const password = this.passwordField.value;
+
+    if (!email) {
+      Utils.showError("Vui lòng nhập email");
+      this.emailField.focus();
+      return false;
+    }
+
+    if (!Utils.validateEmail(email)) {
+      Utils.showError("Email không hợp lệ");
+      this.emailField.focus();
+      return false;
+    }
+
+    if (!password) {
+      Utils.showError("Vui lòng nhập mật khẩu");
+      this.passwordField.focus();
+      return false;
+    }
+
+    return true;
   }
 }
 
@@ -313,135 +309,37 @@ class RegisterForm {
     this.confirmPasswordField?.addEventListener("blur", () => this.validateConfirmPassword());
 
     // Clear errors on input
-    [this.fullNameField, this.emailField, this.phoneField, this.passwordField, this.confirmPasswordField].forEach((field) => {
-      if (field) {
-        field.addEventListener("input", () => {
-          Utils.clearFieldError(field.name);
-        });
-      }
+    [this.fullNameField, this.emailField, this.phoneField, this.passwordField, this.confirmPasswordField].filter(Boolean).forEach((field) => {
+      field.addEventListener("input", () => {
+        Utils.clearFieldError(field.name);
+      });
     });
   }
 
-  validateFullName() {
-    const fullName = this.fullNameField?.value?.trim();
-
-    if (!fullName) {
-      Utils.showFieldError("fullName", "Vui lòng nhập họ tên");
-      return false;
-    }
-
-    if (fullName.length < 2) {
-      Utils.showFieldError("fullName", "Họ tên phải có ít nhất 2 ký tự");
-      return false;
-    }
-
-    Utils.clearFieldError("fullName");
-    return true;
-  }
-
-  validateEmail() {
-    const email = this.emailField?.value?.trim();
-
-    if (!email) {
-      Utils.showFieldError("email", "Vui lòng nhập email");
-      return false;
-    }
-
-    if (!Utils.validateEmail(email)) {
-      Utils.showFieldError("email", "Email không hợp lệ");
-      return false;
-    }
-
-    Utils.clearFieldError("email");
-    return true;
-  }
-
-  validatePhone() {
-    const phone = this.phoneField?.value?.trim();
-
-    if (phone && !Utils.validatePhone(phone)) {
-      Utils.showFieldError("phone", "Số điện thoại không hợp lệ");
-      return false;
-    }
-
-    Utils.clearFieldError("phone");
-    return true;
-  }
-
-  validatePassword() {
-    const password = this.passwordField?.value;
-
-    if (!password) {
-      Utils.showFieldError("password", "Vui lòng nhập mật khẩu");
-      return false;
-    }
-
-    if (!Utils.validatePassword(password)) {
-      Utils.showFieldError("password", "Mật khẩu phải có ít nhất 6 ký tự");
-      return false;
-    }
-
-    Utils.clearFieldError("password");
-    return true;
-  }
-
-  validateConfirmPassword() {
-    const password = this.passwordField?.value;
-    const confirmPassword = this.confirmPasswordField?.value;
-
-    if (!confirmPassword) {
-      Utils.showFieldError("confirmPassword", "Vui lòng xác nhận mật khẩu");
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      Utils.showFieldError("confirmPassword", "Mật khẩu xác nhận không khớp");
-      return false;
-    }
-
-    Utils.clearFieldError("confirmPassword");
-    return true;
-  }
-
-  validate() {
-    const fullNameValid = this.validateFullName();
-    const emailValid = this.validateEmail();
-    const phoneValid = this.validatePhone();
-    const passwordValid = this.validatePassword();
-    const confirmPasswordValid = this.validateConfirmPassword();
-
-    return fullNameValid && emailValid && phoneValid && passwordValid && confirmPasswordValid;
-  }
-
   async handleSubmit() {
-    if (!this.validate()) return;
+    if (!this.validateForm()) return;
 
-    const formData = Utils.getFormData(this.form);
-
-    // Check if email already exists
-    const emailExists = await AuthService.checkEmailExists(formData.email);
-    if (emailExists) {
-      Utils.showFieldError("email", "Email này đã được sử dụng");
-      return;
-    }
+    const formData = {
+      fullName: this.fullNameField.value.trim(),
+      email: this.emailField.value.trim(),
+      phone: this.phoneField.value.trim(),
+      password: this.passwordField.value,
+    };
 
     // Disable submit button
     this.submitButton.disabled = true;
-    this.submitButton.textContent = "Đang đăng ký...";
+    this.submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng ký...';
 
     try {
       const result = await AuthService.register(formData);
 
       if (result.success) {
-        Utils.showSuccess("Đăng ký thành công!");
+        Utils.showSuccess("Đăng ký thành công! Chào mừng bạn đến với Hotel Booking!");
 
+        // Redirect to home page after a short delay
         setTimeout(() => {
-          if (AuthService.isAdmin()) {
-            Utils.redirect("admin/dashboard.html");
-          } else {
-            Utils.redirect("index.html");
-          }
-        }, 1000);
+          Utils.redirect("index.html");
+        }, 1500);
       } else {
         Utils.showError(result.message);
       }
@@ -450,13 +348,97 @@ class RegisterForm {
     } finally {
       // Re-enable submit button
       this.submitButton.disabled = false;
-      this.submitButton.textContent = "Đăng ký";
+      this.submitButton.innerHTML = '<i class="fas fa-user-plus"></i> Đăng ký';
     }
   }
-}
 
-// Export for global use
-window.AuthService = AuthService;
-window.AuthUI = AuthUI;
-window.LoginForm = LoginForm;
-window.RegisterForm = RegisterForm;
+  validateForm() {
+    return this.validateFullName() && this.validateEmail() && this.validatePhone() && this.validatePassword() && this.validateConfirmPassword();
+  }
+
+  validateFullName() {
+    const fullName = this.fullNameField.value.trim();
+
+    if (!fullName) {
+      Utils.setFieldError("fullName", "Vui lòng nhập họ tên");
+      return false;
+    }
+
+    if (fullName.length < 2) {
+      Utils.setFieldError("fullName", "Họ tên phải có ít nhất 2 ký tự");
+      return false;
+    }
+
+    Utils.clearFieldError("fullName");
+    return true;
+  }
+
+  validateEmail() {
+    const email = this.emailField.value.trim();
+
+    if (!email) {
+      Utils.setFieldError("email", "Vui lòng nhập email");
+      return false;
+    }
+
+    if (!Utils.validateEmail(email)) {
+      Utils.setFieldError("email", "Email không hợp lệ");
+      return false;
+    }
+
+    Utils.clearFieldError("email");
+    return true;
+  }
+
+  validatePhone() {
+    const phone = this.phoneField.value.trim();
+
+    if (!phone) {
+      Utils.setFieldError("phone", "Vui lòng nhập số điện thoại");
+      return false;
+    }
+
+    if (!Utils.validatePhone(phone)) {
+      Utils.setFieldError("phone", "Số điện thoại không hợp lệ");
+      return false;
+    }
+
+    Utils.clearFieldError("phone");
+    return true;
+  }
+
+  validatePassword() {
+    const password = this.passwordField.value;
+
+    if (!password) {
+      Utils.setFieldError("password", "Vui lòng nhập mật khẩu");
+      return false;
+    }
+
+    if (password.length < 6) {
+      Utils.setFieldError("password", "Mật khẩu phải có ít nhất 6 ký tự");
+      return false;
+    }
+
+    Utils.clearFieldError("password");
+    return true;
+  }
+
+  validateConfirmPassword() {
+    const password = this.passwordField.value;
+    const confirmPassword = this.confirmPasswordField.value;
+
+    if (!confirmPassword) {
+      Utils.setFieldError("confirmPassword", "Vui lòng xác nhận mật khẩu");
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      Utils.setFieldError("confirmPassword", "Mật khẩu xác nhận không khớp");
+      return false;
+    }
+
+    Utils.clearFieldError("confirmPassword");
+    return true;
+  }
+}

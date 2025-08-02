@@ -88,8 +88,10 @@ class App {
   }
 
   initHomePage() {
-    // Initialize hotel list
-    const hotelUI = new HotelUI("#hotels");
+    // Initialize hotel list if HotelUI class exists
+    if (typeof HotelUI !== "undefined") {
+      const hotelUI = new HotelUI("#hotels");
+    }
 
     // Smooth scrolling for navigation links
     const navLinks = Utils.$$('a[href^="#"]');
@@ -110,31 +112,37 @@ class App {
   }
 
   initLoginPage() {
-    // Check if already logged in
-    if (AuthService.isLoggedIn()) {
-      const returnUrl = Utils.getUrlParams().returnUrl || "index.html";
-      Utils.redirect(returnUrl);
-      return;
-    }
+    // ✅ XÓA PHẦN KIỂM TRA REDIRECT - Để user có thể vào trang login
+    // if (AuthService.isLoggedIn()) {
+    //   const returnUrl = Utils.getUrlParams().returnUrl || "index.html";
+    //   Utils.redirect(returnUrl);
+    //   return;
+    // }
 
     // Initialize login form
-    new LoginForm("#login-form");
+    if (typeof LoginForm !== "undefined") {
+      new LoginForm("#login-form");
+    }
   }
 
   initRegisterPage() {
-    // Check if already logged in
-    if (AuthService.isLoggedIn()) {
-      Utils.redirect("index.html");
-      return;
-    }
+    // ✅ XÓA PHẦN KIỂM TRA REDIRECT - Để user có thể vào trang register
+    // if (AuthService.isLoggedIn()) {
+    //   Utils.redirect("index.html");
+    //   return;
+    // }
 
     // Initialize register form
-    new RegisterForm("#register-form");
+    if (typeof RegisterForm !== "undefined") {
+      new RegisterForm("#register-form");
+    }
   }
 
   initHotelDetailPage() {
     // Initialize hotel detail
-    new HotelDetailUI();
+    if (typeof HotelDetailUI !== "undefined") {
+      new HotelDetailUI();
+    }
   }
 
   initBookingPage() {
@@ -142,7 +150,11 @@ class App {
     if (!Utils.requireAuth()) return;
 
     // Initialize booking
-    new BookingUI();
+    if (typeof BookingUI !== "undefined") {
+      new BookingUI();
+    } else {
+      this.renderBookingPlaceholder();
+    }
   }
 
   initProfilePage() {
@@ -150,7 +162,9 @@ class App {
     if (!Utils.requireAuth()) return;
 
     // Initialize profile
-    new ProfileUI();
+    if (typeof ProfileUI !== "undefined") {
+      new ProfileUI();
+    }
   }
 
   initBookingHistoryPage() {
@@ -158,7 +172,9 @@ class App {
     if (!Utils.requireAuth()) return;
 
     // Initialize booking history
-    new BookingHistoryUI();
+    if (typeof BookingHistoryUI !== "undefined") {
+      new BookingHistoryUI();
+    }
   }
 
   initAdminPage() {
@@ -169,22 +185,34 @@ class App {
     const adminPage = this.currentPage.split("/")[1];
     switch (adminPage) {
       case "dashboard":
-        new AdminDashboard();
+        if (typeof AdminDashboard !== "undefined") {
+          new AdminDashboard();
+        }
         break;
       case "hotels":
-        new AdminHotels();
+        if (typeof AdminHotels !== "undefined") {
+          new AdminHotels();
+        }
         break;
       case "rooms":
-        new AdminRooms();
+        if (typeof AdminRooms !== "undefined") {
+          new AdminRooms();
+        }
         break;
       case "bookings":
-        new AdminBookings();
+        if (typeof AdminBookings !== "undefined") {
+          new AdminBookings();
+        }
         break;
       case "users":
-        new AdminUsers();
+        if (typeof AdminUsers !== "undefined") {
+          new AdminUsers();
+        }
         break;
       case "reviews":
-        new AdminReviews();
+        if (typeof AdminReviews !== "undefined") {
+          new AdminReviews();
+        }
         break;
     }
   }
@@ -219,210 +247,72 @@ class App {
     document.addEventListener("keydown", (e) => {
       this.handleKeyboardShortcuts(e);
     });
-
-    // Handle clicks outside modals to close them
-    document.addEventListener("click", (e) => {
-      this.handleModalClicks(e);
-    });
   }
 
   handleResize() {
-    // Update mobile navigation if needed
-    const navMenu = Utils.$("#nav-menu");
-    if (window.innerWidth > 768 && navMenu) {
-      navMenu.classList.remove("active");
-    }
+    // Handle responsive behavior
+    const isMobile = window.innerWidth <= 768;
+    document.body.classList.toggle("mobile", isMobile);
   }
 
   handleScroll() {
-    // Add shadow to header when scrolling
+    // Handle scroll effects
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const header = Utils.$(".header");
-    if (header) {
-      if (window.scrollY > 0) {
-        header.classList.add("scrolled");
-      } else {
-        header.classList.remove("scrolled");
-      }
-    }
 
-    // Show/hide back to top button
-    const backToTop = Utils.$("#back-to-top");
-    if (backToTop) {
-      if (window.scrollY > 300) {
-        Utils.show(backToTop);
-      } else {
-        Utils.hide(backToTop);
-      }
+    if (header) {
+      header.classList.toggle("scrolled", scrollTop > 100);
     }
   }
 
   handleKeyboardShortcuts(e) {
-    // ESC key to close modals
+    // Global keyboard shortcuts
+    if (e.ctrlKey) {
+      switch (e.key) {
+        case "/":
+          e.preventDefault();
+          const searchInput = Utils.$("#search-input");
+          if (searchInput) {
+            searchInput.focus();
+          }
+          break;
+      }
+    }
+
+    // Escape key to close modals/dropdowns
     if (e.key === "Escape") {
-      const activeModal = Utils.$(".modal.active");
-      if (activeModal) {
-        Utils.hideModal(`#${activeModal.id}`);
-      }
-    }
-
-    // Ctrl+/ for search shortcut
-    if (e.ctrlKey && e.key === "/") {
-      e.preventDefault();
-      const searchInput = Utils.$("#search-destination");
-      if (searchInput) {
-        searchInput.focus();
-      }
-    }
-  }
-
-  handleModalClicks(e) {
-    // Close modal when clicking outside
-    if (e.target.classList.contains("modal")) {
-      Utils.hideModal(`#${e.target.id}`);
-    }
-  }
-}
-
-// Review Service (needed for hotel detail page)
-class ReviewService {
-  static async getReviewsByHotel(hotelId) {
-    try {
-      const response = await Utils.get(`/reviews/hotel/${hotelId}`);
-      return response.success ? response.data : [];
-    } catch (error) {
-      console.error("Get reviews error:", error);
-      return [];
-    }
-  }
-
-  static async createReview(reviewData) {
-    try {
-      const response = await Utils.post("/reviews", reviewData);
-      return response;
-    } catch (error) {
-      console.error("Create review error:", error);
-      throw error;
-    }
-  }
-
-  static async updateReview(id, reviewData) {
-    try {
-      const response = await Utils.put(`/reviews/${id}`, reviewData);
-      return response;
-    } catch (error) {
-      console.error("Update review error:", error);
-      throw error;
-    }
-  }
-
-  static async deleteReview(id) {
-    try {
-      const response = await Utils.delete(`/reviews/${id}`);
-      return response;
-    } catch (error) {
-      console.error("Delete review error:", error);
-      throw error;
-    }
-  }
-}
-
-// Profile UI (placeholder for profile page)
-class ProfileUI {
-  constructor() {
-    this.user = AuthService.getCurrentUser();
-    this.init();
-  }
-
-  init() {
-    this.renderProfile();
-    this.bindEvents();
-  }
-
-  renderProfile() {
-    const container = Utils.$("#profile-content");
-    if (!container) return;
-
-    container.innerHTML = `
-            <div class="profile-header">
-                <h1>Thông tin cá nhân</h1>
-            </div>
-            <form id="profile-form" class="profile-form">
-                <div class="form-group">
-                    <label for="fullName">Họ tên:</label>
-                    <input type="text" id="fullName" name="fullName" value="${this.user.hoTen}" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" value="${this.user.email}" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Số điện thoại:</label>
-                    <input type="tel" id="phone" name="phone" value="${this.user.soDienThoai || ""}">
-                </div>
-                <button type="submit" class="btn-primary">Cập nhật thông tin</button>
-            </form>
-        `;
-  }
-
-  bindEvents() {
-    const form = Utils.$("#profile-form");
-    if (form) {
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        this.handleSubmit();
+      const dropdowns = Utils.$$(".dropdown-menu.show");
+      dropdowns.forEach((dropdown) => {
+        dropdown.classList.remove("show");
       });
     }
   }
 
-  async handleSubmit() {
-    // Implementation for updating profile
-    Utils.showInfo("Chức năng cập nhật thông tin đang được phát triển");
-  }
-}
-
-// Booking History UI (placeholder)
-class BookingHistoryUI {
-  constructor() {
-    this.init();
-  }
-
-  init() {
-    this.loadBookingHistory();
-  }
-
-  async loadBookingHistory() {
-    const container = Utils.$("#booking-history-content");
+  // Placeholder methods for missing components
+  renderHotelListPlaceholder() {
+    const container = Utils.$("#hotels");
     if (!container) return;
 
     container.innerHTML = `
-            <div class="booking-history-header">
-                <h1>Lịch sử đặt phòng</h1>
-            </div>
-            <div class="booking-history-list">
-                <p>Chức năng lịch sử đặt phòng đang được phát triển...</p>
-            </div>
-        `;
-  }
-}
-
-// Booking UI (placeholder)
-class BookingUI {
-  constructor() {
-    this.init();
+      <div class="hotel-placeholder">
+        <h2>Danh sách khách sạn</h2>
+        <p>Chức năng đang được phát triển...</p>
+      </div>
+    `;
   }
 
-  init() {
+  renderBookingPlaceholder() {
     const container = Utils.$("#booking-content");
     if (!container) return;
 
     container.innerHTML = `
-            <div class="booking-header">
-                <h1>Đặt phòng</h1>
-            </div>
-            <div class="booking-form">
-                <p>Chức năng đặt phòng đang được phát triển...</p>
-            </div>
-        `;
+      <div class="booking-header">
+        <h1>Đặt phòng</h1>
+      </div>
+      <div class="booking-form">
+        <p>Chức năng đặt phòng đang được phát triển...</p>
+      </div>
+    `;
   }
 }
 
@@ -481,7 +371,4 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Export classes for global use
-window.ReviewService = ReviewService;
-window.ProfileUI = ProfileUI;
-window.BookingHistoryUI = BookingHistoryUI;
-window.BookingUI = BookingUI;
+window.App = App;

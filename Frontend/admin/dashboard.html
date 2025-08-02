@@ -3,286 +3,1990 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Hotel Booking Admin</title>
+    <title>Quản trị - Hotel Booking</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-    <link href="../assets/css/style.css" rel="stylesheet" />
-    <link href="../assets/css/admin.css" rel="stylesheet" />
+    <style>
+      :root {
+        --primary-color: #3b82f6;
+        --primary-dark: #1d4ed8;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --error-color: #ef4444;
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        --border-radius: 8px;
+        --transition: all 0.2s ease;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
+
+      .admin-layout {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* Sidebar */
+      .admin-sidebar {
+        width: 250px;
+        background: var(--bg-primary);
+        border-right: 1px solid var(--border-color);
+        padding: 1rem 0;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+      }
+
+      .admin-logo {
+        padding: 0 1.5rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+      }
+
+      .admin-logo h2 {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+      }
+
+      .admin-nav {
+        list-style: none;
+      }
+
+      .admin-nav-item {
+        margin-bottom: 0.5rem;
+      }
+
+      .admin-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1.5rem;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: var(--transition);
+      }
+
+      .admin-nav-link:hover,
+      .admin-nav-link.active {
+        background-color: var(--bg-secondary);
+        color: var(--primary-color);
+      }
+
+      .admin-nav-link i {
+        width: 20px;
+        text-align: center;
+      }
+
+      /* Main Content */
+      .admin-main {
+        flex: 1;
+        margin-left: 250px;
+        padding: 2rem;
+      }
+
+      .admin-header {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .admin-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .admin-header p {
+        color: var(--text-secondary);
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: var(--bg-primary);
+        padding: 0.75rem 1rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+      }
+
+      /* Cards */
+      .admin-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .admin-card {
+        background: var(--bg-primary);
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        text-align: center;
+        transition: var(--transition);
+        cursor: pointer;
+        border: 2px solid transparent;
+      }
+
+      .admin-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-color);
+      }
+
+      .admin-card-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 1.5rem;
+      }
+
+      .admin-card h3 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .admin-card p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      /* Table */
+      .data-table {
+        background: var(--bg-primary);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+      }
+
+      .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .table-header h3 {
+        font-size: 1.25rem;
+      }
+
+      .table-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: var(--transition);
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-primary {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: var(--primary-dark);
+      }
+
+      .btn-success {
+        background: var(--success-color);
+        color: white;
+      }
+
+      .btn-warning {
+        background: var(--warning-color);
+        color: white;
+      }
+
+      .btn-error {
+        background: var(--error-color);
+        color: white;
+      }
+
+      .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .search-input {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        width: 250px;
+        font-size: 0.9rem;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+      }
+
+      th {
+        background: var(--bg-secondary);
+        font-weight: 600;
+        color: var(--text-primary);
+        position: sticky;
+        top: 0;
+      }
+
+      tr:hover {
+        background: var(--bg-secondary);
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        overflow-y: auto;
+      }
+
+      .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+
+      .modal-content {
+        background: var(--bg-primary);
+        border-radius: var(--border-radius);
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .modal-body {
+        padding: 1.5rem;
+      }
+
+      .modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        text-align: right;
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: var(--transition);
+      }
+
+      .modal-close:hover {
+        background: var(--bg-secondary);
+      }
+
+      /* Form */
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .form-input,
+      .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        transition: var(--transition);
+      }
+
+      .form-input:focus,
+      .form-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      textarea.form-input {
+        resize: vertical;
+        min-height: 100px;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      .form-error {
+        color: var(--error-color);
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+      }
+
+      /* Loading */
+      .loading {
+        text-align: center;
+        padding: 3rem;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--border-color);
+        border-top: 4px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Hide sections */
+      .section {
+        display: none;
+      }
+
+      .section.active {
+        display: block;
+      }
+
+      /* Badge */
+      .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 0.25rem;
+        text-transform: uppercase;
+      }
+
+      .badge-primary {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .badge-success {
+        background-color: var(--success-color);
+        color: white;
+      }
+
+      .badge-warning {
+        background-color: var(--warning-color);
+        color: white;
+      }
+
+      .badge-error {
+        background-color: var(--error-color);
+        color: white;
+      }
+
+      /* Stars */
+      .stars {
+        display: inline-flex;
+        gap: 2px;
+      }
+
+      .star {
+        color: #fbbf24;
+      }
+
+      .star.empty {
+        color: var(--border-color);
+      }
+
+      /* Stats */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: var(--bg-primary);
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      /* Empty state */
+      .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+      }
+
+      .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .admin-sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+
+        .admin-sidebar.open {
+          transform: translateX(0);
+        }
+
+        .admin-main {
+          margin-left: 0;
+          padding: 1rem;
+        }
+
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+
+        .search-input {
+          width: 100%;
+        }
+
+        .table-header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .table-actions {
+          flex-direction: column;
+        }
+
+        .action-buttons {
+          flex-direction: column;
+        }
+
+        .admin-header {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 1rem;
+        }
+      }
+
+      /* Mobile menu toggle */
+      .mobile-toggle {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1001;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+      }
+
+      @media (max-width: 768px) {
+        .mobile-toggle {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      /* Notifications */
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: var(--border-radius);
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+        max-width: 400px;
+        word-wrap: break-word;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+
+      .notification.success {
+        background-color: var(--success-color);
+      }
+
+      .notification.error {
+        background-color: var(--error-color);
+      }
+
+      .notification.warning {
+        background-color: var(--warning-color);
+      }
+
+      .notification.info {
+        background-color: var(--primary-color);
+      }
+    </style>
   </head>
   <body>
-    <!-- Header -->
-    <header class="header">
-      <nav class="navbar">
-        <div class="nav-container">
-          <div class="nav-logo">
-            <a href="../index.html">
-              <i class="fas fa-hotel"></i>
-              <span>Hotel Booking Admin</span>
-            </a>
-          </div>
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle" onclick="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
 
-          <div class="nav-menu" id="nav-menu">
-            <div class="nav-user" id="nav-user">
-              <div class="user-dropdown">
-                <button class="user-btn" id="user-btn">
-                  <i class="fas fa-user"></i>
-                  <span id="user-name">Admin</span>
-                  <i class="fas fa-chevron-down"></i>
-                </button>
-                <div class="dropdown-menu" id="dropdown-menu">
-                  <a href="../profile.html" class="dropdown-item"> <i class="fas fa-user"></i> Thông tin cá nhân </a>
-                  <a href="../index.html" class="dropdown-item"> <i class="fas fa-home"></i> Trang chủ </a>
-                  <hr />
-                  <button class="dropdown-item logout-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </header>
-
-    <!-- Admin Layout -->
     <div class="admin-layout">
       <!-- Sidebar -->
-      <aside class="admin-sidebar">
-        <ul class="sidebar-menu">
-          <li class="sidebar-item">
-            <a href="dashboard.html" class="sidebar-link active">
-              <i class="fas fa-tachometer-alt"></i>
-              <span>Dashboard</span>
-            </a>
-          </li>
-          <li class="sidebar-item">
-            <a href="hotels.html" class="sidebar-link">
-              <i class="fas fa-hotel"></i>
-              <span>Quản lý khách sạn</span>
-            </a>
-          </li>
-          <li class="sidebar-item">
-            <a href="rooms.html" class="sidebar-link">
-              <i class="fas fa-bed"></i>
-              <span>Quản lý phòng</span>
-            </a>
-          </li>
-          <li class="sidebar-item">
-            <a href="bookings.html" class="sidebar-link">
-              <i class="fas fa-calendar-check"></i>
-              <span>Quản lý đặt phòng</span>
-            </a>
-          </li>
-          <li class="sidebar-item">
-            <a href="users.html" class="sidebar-link">
-              <i class="fas fa-users"></i>
-              <span>Quản lý người dùng</span>
-            </a>
-          </li>
-          <li class="sidebar-item">
-            <a href="reviews.html" class="sidebar-link">
-              <i class="fas fa-star"></i>
-              <span>Quản lý đánh giá</span>
-            </a>
-          </li>
-        </ul>
+      <aside class="admin-sidebar" id="sidebar">
+        <div class="admin-logo">
+          <h2><i class="fas fa-hotel"></i> Admin Panel</h2>
+        </div>
+        <nav>
+          <ul class="admin-nav">
+            <li class="admin-nav-item">
+              <a href="#" class="admin-nav-link active" data-section="overview">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Tổng quan</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="#" class="admin-nav-link" data-section="hotels">
+                <i class="fas fa-hotel"></i>
+                <span>Quản lý khách sạn</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="#" class="admin-nav-link" data-section="users">
+                <i class="fas fa-users"></i>
+                <span>Quản lý người dùng</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="#" class="admin-nav-link" data-section="reviews">
+                <i class="fas fa-star"></i>
+                <span>Quản lý đánh giá</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="../index.html" class="admin-nav-link">
+                <i class="fas fa-arrow-left"></i>
+                <span>Về trang chủ</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
       </aside>
 
       <!-- Main Content -->
-      <main class="admin-content">
-        <div class="admin-header">
-          <h1>Dashboard</h1>
-          <p>Tổng quan hệ thống Hotel Booking</p>
-        </div>
+      <main class="admin-main">
+        <!-- Overview Section -->
+        <section id="overview" class="section active">
+          <div class="admin-header">
+            <div>
+              <h1>Tổng quan</h1>
+              <p>Quản lý hệ thống hotel booking</p>
+            </div>
+            <div class="user-info">
+              <i class="fas fa-user-shield"></i>
+              <span id="admin-name">Admin</span>
+            </div>
+          </div>
 
-        <!-- Stats Cards -->
-        <div class="admin-cards">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <h3 class="admin-card-title">Tổng khách sạn</h3>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value" id="total-hotels">0</div>
+              <div class="stat-label">Tổng khách sạn</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="total-users">0</div>
+              <div class="stat-label">Tổng người dùng</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="total-reviews">0</div>
+              <div class="stat-label">Tổng đánh giá</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="pending-reviews">0</div>
+              <div class="stat-label">Đánh giá chờ duyệt</div>
+            </div>
+          </div>
+
+          <div class="admin-cards">
+            <div class="admin-card" data-section="hotels">
               <div class="admin-card-icon">
                 <i class="fas fa-hotel"></i>
               </div>
+              <h3>Quản lý khách sạn</h3>
+              <p>Thêm, sửa, xóa thông tin khách sạn và quản lý hình ảnh</p>
             </div>
-            <div class="admin-card-value" id="total-hotels">0</div>
-            <div class="admin-card-change positive">
-              <i class="fas fa-arrow-up"></i>
-              +12% so với tháng trước
-            </div>
-          </div>
 
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <h3 class="admin-card-title">Tổng phòng</h3>
-              <div class="admin-card-icon">
-                <i class="fas fa-bed"></i>
-              </div>
-            </div>
-            <div class="admin-card-value" id="total-rooms">0</div>
-            <div class="admin-card-change positive">
-              <i class="fas fa-arrow-up"></i>
-              +8% so với tháng trước
-            </div>
-          </div>
-
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <h3 class="admin-card-title">Đặt phòng hôm nay</h3>
-              <div class="admin-card-icon">
-                <i class="fas fa-calendar-check"></i>
-              </div>
-            </div>
-            <div class="admin-card-value" id="today-bookings">0</div>
-            <div class="admin-card-change positive">
-              <i class="fas fa-arrow-up"></i>
-              +25% so với hôm qua
-            </div>
-          </div>
-
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <h3 class="admin-card-title">Doanh thu tháng</h3>
-              <div class="admin-card-icon">
-                <i class="fas fa-dollar-sign"></i>
-              </div>
-            </div>
-            <div class="admin-card-value" id="monthly-revenue">0 VNĐ</div>
-            <div class="admin-card-change positive">
-              <i class="fas fa-arrow-up"></i>
-              +15% so với tháng trước
-            </div>
-          </div>
-
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <h3 class="admin-card-title">Người dùng</h3>
+            <div class="admin-card" data-section="users">
               <div class="admin-card-icon">
                 <i class="fas fa-users"></i>
               </div>
+              <h3>Quản lý người dùng</h3>
+              <p>Xem danh sách người dùng và quản lý quyền truy cập</p>
             </div>
-            <div class="admin-card-value" id="total-users">0</div>
-            <div class="admin-card-change positive">
-              <i class="fas fa-arrow-up"></i>
-              +18% so với tháng trước
-            </div>
-          </div>
 
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <h3 class="admin-card-title">Đánh giá trung bình</h3>
+            <div class="admin-card" data-section="reviews">
               <div class="admin-card-icon">
                 <i class="fas fa-star"></i>
               </div>
-            </div>
-            <div class="admin-card-value" id="avg-rating">0/5</div>
-            <div class="admin-card-change positive">
-              <i class="fas fa-arrow-up"></i>
-              +0.3 so với tháng trước
+              <h3>Quản lý đánh giá</h3>
+              <p>Kiểm duyệt đánh giá khách hàng và quản lý phản hồi</p>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Charts Section -->
-        <div class="admin-charts">
-          <div class="chart-container">
-            <h3 class="chart-title">Đặt phòng theo tháng</h3>
-            <canvas id="bookings-chart" width="400" height="200"></canvas>
+        <!-- Hotels Section -->
+        <section id="hotels" class="section">
+          <div class="admin-header">
+            <div>
+              <h1>Quản lý khách sạn</h1>
+              <p>Thêm, sửa, xóa thông tin khách sạn</p>
+            </div>
           </div>
 
-          <div class="chart-container">
-            <h3 class="chart-title">Doanh thu theo tháng</h3>
-            <canvas id="revenue-chart" width="400" height="200"></canvas>
+          <div class="data-table">
+            <div class="table-header">
+              <h3>Danh sách khách sạn</h3>
+              <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Tìm kiếm khách sạn..." id="hotel-search" />
+                <button class="btn btn-primary" onclick="showAddHotelModal()">
+                  <i class="fas fa-plus"></i>
+                  Thêm khách sạn
+                </button>
+              </div>
+            </div>
+
+            <div id="hotels-loading" class="loading">
+              <div class="spinner"></div>
+              <p>Đang tải dữ liệu...</p>
+            </div>
+
+            <div id="hotels-empty" class="empty-state" style="display: none">
+              <i class="fas fa-hotel"></i>
+              <h3>Chưa có khách sạn nào</h3>
+              <p>Hãy thêm khách sạn đầu tiên của bạn</p>
+              <button class="btn btn-primary" onclick="showAddHotelModal()">
+                <i class="fas fa-plus"></i>
+                Thêm khách sạn
+              </button>
+            </div>
+
+            <div style="overflow-x: auto">
+              <table id="hotels-table" style="display: none">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tên khách sạn</th>
+                    <th>Địa chỉ</th>
+                    <th>Thành phố</th>
+                    <th>Đánh giá</th>
+                    <th>Ngày tạo</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="hotels-tbody"></tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Recent Activities -->
-        <div class="admin-table-container">
-          <div class="admin-table-header">
-            <h3 class="admin-table-title">Hoạt động gần đây</h3>
-            <button class="btn btn-primary" onclick="AdminDashboard.refreshActivities()">
-              <i class="fas fa-sync-alt"></i>
-              Làm mới
-            </button>
+        <!-- Users Section -->
+        <section id="users" class="section">
+          <div class="admin-header">
+            <div>
+              <h1>Quản lý người dùng</h1>
+              <p>Xem danh sách và quản lý người dùng</p>
+            </div>
           </div>
 
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Thời gian</th>
-                <th>Hoạt động</th>
-                <th>Người dùng</th>
-                <th>Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody id="recent-activities">
-              <!-- Activities will be loaded here -->
-            </tbody>
-          </table>
-        </div>
+          <div class="data-table">
+            <div class="table-header">
+              <h3>Danh sách người dùng</h3>
+              <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Tìm kiếm người dùng..." id="user-search" />
+              </div>
+            </div>
 
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-          <h3>Thao tác nhanh</h3>
-          <div class="quick-actions-grid">
-            <button class="btn btn-primary" onclick="Utils.redirect('hotels.html')">
-              <i class="fas fa-plus"></i>
-              Thêm khách sạn mới
-            </button>
-            <button class="btn btn-secondary" onclick="Utils.redirect('rooms.html')">
-              <i class="fas fa-bed"></i>
-              Quản lý phòng
-            </button>
-            <button class="btn btn-success" onclick="Utils.redirect('bookings.html')">
-              <i class="fas fa-calendar"></i>
-              Xem đặt phòng
-            </button>
-            <button class="btn btn-warning" onclick="Utils.redirect('reviews.html')">
+            <div id="users-loading" class="loading">
+              <div class="spinner"></div>
+              <p>Đang tải dữ liệu...</p>
+            </div>
+
+            <div id="users-empty" class="empty-state" style="display: none">
+              <i class="fas fa-users"></i>
+              <h3>Không có người dùng nào</h3>
+              <p>Danh sách người dùng sẽ hiển thị ở đây</p>
+            </div>
+
+            <div style="overflow-x: auto">
+              <table id="users-table" style="display: none">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reviews Section -->
+        <section id="reviews" class="section">
+          <div class="admin-header">
+            <div>
+              <h1>Quản lý đánh giá</h1>
+              <p>Kiểm duyệt và quản lý đánh giá khách hàng</p>
+            </div>
+          </div>
+
+          <div class="data-table">
+            <div class="table-header">
+              <h3>Danh sách đánh giá</h3>
+              <div class="table-actions">
+                <select class="form-select" id="review-status-filter" style="width: auto">
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="Pending">Chờ duyệt</option>
+                  <option value="Approved">Đã duyệt</option>
+                  <option value="Rejected">Đã từ chối</option>
+                </select>
+                <input type="text" class="search-input" placeholder="Tìm kiếm đánh giá..." id="review-search" />
+              </div>
+            </div>
+
+            <div id="reviews-loading" class="loading">
+              <div class="spinner"></div>
+              <p>Đang tải dữ liệu...</p>
+            </div>
+
+            <div id="reviews-empty" class="empty-state" style="display: none">
               <i class="fas fa-star"></i>
-              Kiểm duyệt đánh giá
-            </button>
+              <h3>Chưa có đánh giá nào</h3>
+              <p>Đánh giá từ khách hàng sẽ hiển thị ở đây</p>
+            </div>
+
+            <div style="overflow-x: auto">
+              <table id="reviews-table" style="display: none">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Người dùng</th>
+                    <th>Khách sạn</th>
+                    <th>Đánh giá</th>
+                    <th>Bình luận</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="reviews-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Add/Edit Hotel Modal -->
+    <div id="hotel-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="hotel-modal-title">Thêm khách sạn mới</h3>
+          <button class="modal-close" onclick="closeModal('hotel-modal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="hotel-form">
+            <input type="hidden" id="hotel-id" />
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Tên khách sạn <span style="color: red">*</span></label>
+                <input type="text" id="hotel-name" class="form-input" required />
+                <div class="form-error" id="hotel-name-error"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Thành phố <span style="color: red">*</span></label>
+                <input type="text" id="hotel-city" class="form-input" required />
+                <div class="form-error" id="hotel-city-error"></div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Địa chỉ <span style="color: red">*</span></label>
+              <input type="text" id="hotel-address" class="form-input" required />
+              <div class="form-error" id="hotel-address-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Mô tả</label>
+              <textarea id="hotel-description" class="form-input" rows="4" placeholder="Mô tả về khách sạn..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Hình ảnh URL</label>
+              <input type="url" id="hotel-image" class="form-input" placeholder="https://example.com/image.jpg" />
+              <div class="form-error" id="hotel-image-error"></div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeModal('hotel-modal')">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="saveHotel()" id="save-hotel-btn">
+            <i class="fas fa-save"></i>
+            Lưu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Details Modal -->
+    <div id="review-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Chi tiết đánh giá</h3>
+          <button class="modal-close" onclick="closeModal('review-modal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="review-details">
+            <!-- Review details will be loaded here -->
           </div>
         </div>
-      </main>
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeModal('review-modal')">Đóng</button>
+          <button type="button" class="btn btn-success" onclick="approveCurrentReview()" id="approve-review-btn" style="display: none">
+            <i class="fas fa-check"></i>
+            Duyệt
+          </button>
+          <button type="button" class="btn btn-warning" onclick="rejectCurrentReview()" id="reject-review-btn" style="display: none">
+            <i class="fas fa-times"></i>
+            Từ chối
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Scripts -->
     <script src="../assets/js/utils.js"></script>
     <script src="../assets/js/auth.js"></script>
-    <script src="../assets/js/admin.js"></script>
-    <script src="../assets/js/app.js"></script>
+    <script>
+      // Simple Admin App
+      class SimpleAdmin {
+        constructor() {
+          this.currentSection = "overview";
+          this.hotels = [];
+          this.users = [];
+          this.reviews = [];
+          this.filteredHotels = [];
+          this.filteredUsers = [];
+          this.filteredReviews = [];
+          this.currentReview = null;
+          this.init();
+        }
 
-    <style>
-      .quick-actions {
-        margin-top: 2rem;
-        padding: 1.5rem;
-        background: white;
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow-sm);
+        init() {
+          this.checkAuth();
+          this.bindEvents();
+          this.loadMockData();
+          this.updateStats();
+          this.setUserName();
+        }
+
+        checkAuth() {
+          // Check if user is admin
+          if (!Utils.isAdmin()) {
+            Utils.showNotification("Bạn không có quyền truy cập trang này!", "error");
+            setTimeout(() => {
+              window.location.href = "../index.html";
+            }, 2000);
+            return;
+          }
+        }
+
+        setUserName() {
+          const user = Utils.getUser();
+          const adminNameEl = document.getElementById("admin-name");
+          if (adminNameEl && user) {
+            adminNameEl.textContent = user.hoTen || user.email || "Admin";
+          }
+        }
+
+        bindEvents() {
+          // Navigation
+          document.querySelectorAll(".admin-nav-link, .admin-card").forEach((link) => {
+            link.addEventListener("click", (e) => {
+              const section = e.currentTarget.dataset.section;
+              if (section) {
+                e.preventDefault();
+                this.showSection(section);
+              }
+            });
+          });
+
+          // Search functionality
+          const hotelSearch = document.getElementById("hotel-search");
+          if (hotelSearch) {
+            hotelSearch.addEventListener("input", (e) => {
+              this.searchHotels(e.target.value);
+            });
+          }
+
+          const userSearch = document.getElementById("user-search");
+          if (userSearch) {
+            userSearch.addEventListener("input", (e) => {
+              this.searchUsers(e.target.value);
+            });
+          }
+
+          const reviewSearch = document.getElementById("review-search");
+          if (reviewSearch) {
+            reviewSearch.addEventListener("input", (e) => {
+              this.searchReviews(e.target.value);
+            });
+          }
+
+          // Review status filter
+          const statusFilter = document.getElementById("review-status-filter");
+          if (statusFilter) {
+            statusFilter.addEventListener("change", (e) => {
+              this.filterReviews(e.target.value);
+            });
+          }
+
+          // Form validation
+          const hotelForm = document.getElementById("hotel-form");
+          if (hotelForm) {
+            hotelForm.addEventListener("input", this.validateHotelForm.bind(this));
+          }
+
+          // Modal close on background click
+          document.querySelectorAll(".modal").forEach((modal) => {
+            modal.addEventListener("click", (e) => {
+              if (e.target === modal) {
+                this.closeModal(modal.id);
+              }
+            });
+          });
+
+          // Keyboard shortcuts
+          document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+              document.querySelectorAll(".modal.show").forEach((modal) => {
+                this.closeModal(modal.id);
+              });
+            }
+          });
+        }
+
+        showSection(sectionName) {
+          // Update navigation
+          document.querySelectorAll(".admin-nav-link").forEach((link) => {
+            link.classList.remove("active");
+          });
+          const activeLink = document.querySelector(`[data-section="${sectionName}"]`);
+          if (activeLink) {
+            activeLink.classList.add("active");
+          }
+
+          // Update content
+          document.querySelectorAll(".section").forEach((section) => {
+            section.classList.remove("active");
+          });
+          const activeSection = document.getElementById(sectionName);
+          if (activeSection) {
+            activeSection.classList.add("active");
+          }
+
+          this.currentSection = sectionName;
+
+          // Load section data
+          switch (sectionName) {
+            case "hotels":
+              this.loadHotels();
+              break;
+            case "users":
+              this.loadUsers();
+              break;
+            case "reviews":
+              this.loadReviews();
+              break;
+          }
+
+          // Close mobile sidebar
+          this.closeSidebar();
+        }
+
+        loadMockData() {
+          // Mock hotels data
+          this.hotels = [
+            {
+              id: 1,
+              name: "Hotel Luxury Saigon",
+              address: "123 Nguyễn Huệ, Quận 1",
+              city: "Hồ Chí Minh",
+              rating: 4.5,
+              description: "Khách sạn sang trọng tại trung tâm thành phố với view sông Sài Gòn tuyệt đẹp",
+              image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400",
+              createdAt: "2024-01-15",
+            },
+            {
+              id: 2,
+              name: "Hanoi Grand Hotel",
+              address: "456 Hoàn Kiếm, Quận Hoàn Kiếm",
+              city: "Hà Nội",
+              rating: 4.2,
+              description: "Khách sạn tuyệt vời gần hồ Hoàn Kiếm với kiến trúc cổ điển",
+              image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400",
+              createdAt: "2024-02-20",
+            },
+            {
+              id: 3,
+              name: "Da Nang Beach Resort",
+              address: "789 Võ Nguyên Giáp, Ngũ Hành Sơn",
+              city: "Đà Nẵng",
+              rating: 4.8,
+              description: "Resort biển với bãi cát trắng và dịch vụ spa cao cấp",
+              image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400",
+              createdAt: "2024-03-10",
+            },
+          ];
+
+          // Mock users data
+          this.users = [
+            {
+              id: 1,
+              name: "Nguyễn Văn An",
+              email: "nguyenvanan@email.com",
+              phone: "0123456789",
+              role: "Customer",
+              status: "Active",
+              createdAt: "2024-01-15",
+            },
+            {
+              id: 2,
+              name: "Trần Thị Bình",
+              email: "tranthibinh@email.com",
+              phone: "0987654321",
+              role: "Customer",
+              status: "Active",
+              createdAt: "2024-02-20",
+            },
+            {
+              id: 3,
+              name: "Lê Minh Cường",
+              email: "leminhcuong@email.com",
+              phone: "0166778899",
+              role: "Customer",
+              status: "Inactive",
+              createdAt: "2024-03-05",
+            },
+            {
+              id: 4,
+              name: "Admin System",
+              email: "admin@hotel.com",
+              phone: "0111222333",
+              role: "Admin",
+              status: "Active",
+              createdAt: "2024-01-01",
+            },
+          ];
+
+          // Mock reviews data
+          this.reviews = [
+            {
+              id: 1,
+              userName: "Nguyễn Văn An",
+              hotelName: "Hotel Luxury Saigon",
+              rating: 5,
+              comment:
+                "Khách sạn tuyệt vời! Phòng rộng rãi, sạch sẽ, nhân viên phục vụ rất tận tình. View từ phòng nhìn ra sông Sài Gòn rất đẹp. Chắc chắn sẽ quay lại!",
+              status: "Approved",
+              createdAt: "2024-12-20",
+            },
+            {
+              id: 2,
+              userName: "Trần Thị Bình",
+              hotelName: "Hanoi Grand Hotel",
+              rating: 4,
+              comment: "Phòng đẹp, vị trí thuận tiện gần hồ Hoàn Kiếm. Tuy nhiên wifi hơi chậm và âm thanh cách âm chưa tốt lắm.",
+              status: "Pending",
+              createdAt: "2024-12-19",
+            },
+            {
+              id: 3,
+              userName: "Lê Minh Cường",
+              hotelName: "Da Nang Beach Resort",
+              rating: 5,
+              comment: "Resort tuyệt vời với bãi biển riêng. Spa và dịch vụ massage rất chuyên nghiệp. Buffet sáng đa dạng và ngon.",
+              status: "Approved",
+              createdAt: "2024-12-18",
+            },
+            {
+              id: 4,
+              userName: "Nguyễn Văn An",
+              hotelName: "Hanoi Grand Hotel",
+              rating: 2,
+              comment: "Dịch vụ kém, phòng không được sạch như mong đợi. Nhân viên lễ tân không thân thiện.",
+              status: "Pending",
+              createdAt: "2024-12-17",
+            },
+            {
+              id: 5,
+              userName: "Trần Thị Bình",
+              hotelName: "Hotel Luxury Saigon",
+              rating: 4,
+              comment: "Khách sạn đẹp nhưng giá hơi cao so với dịch vụ. Bữa sáng ngon.",
+              status: "Approved",
+              createdAt: "2024-12-16",
+            },
+          ];
+
+          this.filteredHotels = [...this.hotels];
+          this.filteredUsers = [...this.users];
+          this.filteredReviews = [...this.reviews];
+        }
+
+        updateStats() {
+          document.getElementById("total-hotels").textContent = this.hotels.length;
+          document.getElementById("total-users").textContent = this.users.length;
+          document.getElementById("total-reviews").textContent = this.reviews.length;
+          document.getElementById("pending-reviews").textContent = this.reviews.filter((r) => r.status === "Pending").length;
+        }
+
+        loadHotels() {
+          this.showLoading("hotels");
+
+          setTimeout(() => {
+            this.renderHotels(this.filteredHotels);
+            this.hideLoading("hotels");
+          }, 500);
+        }
+
+        renderHotels(hotels) {
+          const tbody = document.getElementById("hotels-tbody");
+          const table = document.getElementById("hotels-table");
+          const empty = document.getElementById("hotels-empty");
+
+          if (hotels.length === 0) {
+            table.style.display = "none";
+            empty.style.display = "block";
+            return;
+          }
+
+          empty.style.display = "none";
+          table.style.display = "table";
+
+          tbody.innerHTML = hotels
+            .map(
+              (hotel) => `
+                    <tr>
+                        <td>${hotel.id}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                ${
+                                  hotel.image
+                                    ? `<img src="${hotel.image}" alt="${hotel.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">`
+                                    : ""
+                                }
+                                <div>
+                                    <strong>${hotel.name}</strong>
+                                    ${
+                                      hotel.description
+                                        ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">${hotel.description.substring(
+                                            0,
+                                            50
+                                          )}${hotel.description.length > 50 ? "..." : ""}</div>`
+                                        : ""
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td>${hotel.address}</td>
+                        <td>${hotel.city}</td>
+                        <td>
+                            <div class="stars">
+                                ${this.generateStars(hotel.rating)}
+                            </div>
+                            <small style="color: var(--text-secondary);">${hotel.rating}/5</small>
+                        </td>
+                        <td>${this.formatDate(hotel.createdAt)}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-sm btn-warning" onclick="editHotel(${hotel.id})" title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-error" onclick="deleteHotel(${hotel.id})" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `
+            )
+            .join("");
+        }
+
+        loadUsers() {
+          this.showLoading("users");
+
+          setTimeout(() => {
+            this.renderUsers(this.filteredUsers);
+            this.hideLoading("users");
+          }, 500);
+        }
+
+        renderUsers(users) {
+          const tbody = document.getElementById("users-tbody");
+          const table = document.getElementById("users-table");
+          const empty = document.getElementById("users-empty");
+
+          if (users.length === 0) {
+            table.style.display = "none";
+            empty.style.display = "block";
+            return;
+          }
+
+          empty.style.display = "none";
+          table.style.display = "table";
+
+          tbody.innerHTML = users
+            .map(
+              (user) => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phone}</td>
+                        <td>
+                            <span class="badge ${user.role === "Admin" ? "badge-warning" : "badge-primary"}">
+                                ${user.role === "Admin" ? "Quản trị" : "Khách hàng"}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge ${user.status === "Active" ? "badge-success" : "badge-error"}">
+                                ${user.status === "Active" ? "Hoạt động" : "Ngưng hoạt động"}
+                            </span>
+                        </td>
+                        <td>${this.formatDate(user.createdAt)}</td>
+                        <td class="action-buttons">
+                            ${
+                              user.role !== "Admin"
+                                ? `
+                                <button class="btn btn-sm btn-warning" onclick="toggleUserStatus(${user.id})" title="${
+                                    user.status === "Active" ? "Khóa" : "Mở khóa"
+                                  }">
+                                    <i class="fas fa-${user.status === "Active" ? "lock" : "unlock"}"></i>
+                                </button>
+                                <button class="btn btn-sm btn-error" onclick="deleteUser(${user.id})" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            `
+                                : `
+                                <span style="color: var(--text-secondary); font-size: 0.8rem;">Quản trị viên</span>
+                            `
+                            }
+                        </td>
+                    </tr>
+                `
+            )
+            .join("");
+        }
+
+        loadReviews() {
+          this.showLoading("reviews");
+
+          setTimeout(() => {
+            this.renderReviews(this.filteredReviews);
+            this.hideLoading("reviews");
+          }, 500);
+        }
+
+        renderReviews(reviews) {
+          const tbody = document.getElementById("reviews-tbody");
+          const table = document.getElementById("reviews-table");
+          const empty = document.getElementById("reviews-empty");
+
+          if (reviews.length === 0) {
+            table.style.display = "none";
+            empty.style.display = "block";
+            return;
+          }
+
+          empty.style.display = "none";
+          table.style.display = "table";
+
+          tbody.innerHTML = reviews
+            .map(
+              (review) => `
+                    <tr>
+                        <td>${review.id}</td>
+                        <td>${review.userName}</td>
+                        <td>${review.hotelName}</td>
+                        <td>
+                            <div class="stars">
+                                ${this.generateStars(review.rating)}
+                            </div>
+                            <small style="color: var(--text-secondary);">${review.rating}/5</small>
+                        </td>
+                        <td>
+                            <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                                ${review.comment.substring(0, 80)}${review.comment.length > 80 ? "..." : ""}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge ${this.getStatusBadgeClass(review.status)}">
+                                ${this.getStatusText(review.status)}
+                            </span>
+                        </td>
+                        <td>${this.formatDate(review.createdAt)}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-sm btn-primary" onclick="viewReview(${review.id})" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${
+                              review.status === "Pending"
+                                ? `
+                                <button class="btn btn-sm btn-success" onclick="approveReview(${review.id})" title="Duyệt">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning" onclick="rejectReview(${review.id})" title="Từ chối">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `
+                                : ""
+                            }
+                            <button class="btn btn-sm btn-error" onclick="deleteReview(${review.id})" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `
+            )
+            .join("");
+        }
+
+        // Search and filter functions
+        searchHotels(searchTerm) {
+          this.filteredHotels = this.hotels.filter(
+            (hotel) =>
+              hotel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              hotel.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              hotel.address.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          this.renderHotels(this.filteredHotels);
+        }
+
+        searchUsers(searchTerm) {
+          this.filteredUsers = this.users.filter(
+            (user) =>
+              user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              user.phone.includes(searchTerm)
+          );
+          this.renderUsers(this.filteredUsers);
+        }
+
+        searchReviews(searchTerm) {
+          this.filteredReviews = this.reviews.filter(
+            (review) =>
+              review.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              review.hotelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              review.comment.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          this.renderReviews(this.filteredReviews);
+        }
+
+        filterReviews(status) {
+          if (status) {
+            this.filteredReviews = this.reviews.filter((review) => review.status === status);
+          } else {
+            this.filteredReviews = [...this.reviews];
+          }
+          this.renderReviews(this.filteredReviews);
+        }
+
+        // CRUD operations
+        addHotel(hotelData) {
+          const newHotel = {
+            id: Math.max(...this.hotels.map((h) => h.id), 0) + 1,
+            name: hotelData.name,
+            address: hotelData.address,
+            city: hotelData.city,
+            rating: 0,
+            description: hotelData.description || "",
+            image: hotelData.image || "",
+            createdAt: new Date().toISOString().split("T")[0],
+          };
+          this.hotels.push(newHotel);
+          this.filteredHotels = [...this.hotels];
+          this.renderHotels(this.filteredHotels);
+          this.updateStats();
+          this.showNotification("Thêm khách sạn thành công!", "success");
+        }
+
+        updateHotel(id, hotelData) {
+          const index = this.hotels.findIndex((h) => h.id === id);
+          if (index !== -1) {
+            this.hotels[index] = {
+              ...this.hotels[index],
+              name: hotelData.name,
+              address: hotelData.address,
+              city: hotelData.city,
+              description: hotelData.description || "",
+              image: hotelData.image || "",
+            };
+            this.filteredHotels = [...this.hotels];
+            this.renderHotels(this.filteredHotels);
+            this.showNotification("Cập nhật khách sạn thành công!", "success");
+          }
+        }
+
+        deleteHotelById(id) {
+          this.hotels = this.hotels.filter((h) => h.id !== id);
+          this.filteredHotels = [...this.hotels];
+          this.renderHotels(this.filteredHotels);
+          this.updateStats();
+          this.showNotification("Xóa khách sạn thành công!", "success");
+        }
+
+        toggleUserStatusById(id) {
+          const user = this.users.find((u) => u.id === id);
+          if (user && user.role !== "Admin") {
+            user.status = user.status === "Active" ? "Inactive" : "Active";
+            this.filteredUsers = [...this.users];
+            this.renderUsers(this.filteredUsers);
+            this.showNotification(`${user.status === "Active" ? "Kích hoạt" : "Khóa"} người dùng thành công!`, "success");
+          }
+        }
+
+        deleteUserById(id) {
+          const user = this.users.find((u) => u.id === id);
+          if (user && user.role !== "Admin") {
+            this.users = this.users.filter((u) => u.id !== id);
+            this.filteredUsers = [...this.users];
+            this.renderUsers(this.filteredUsers);
+            this.updateStats();
+            this.showNotification("Xóa người dùng thành công!", "success");
+          }
+        }
+
+        approveReviewById(id) {
+          const review = this.reviews.find((r) => r.id === id);
+          if (review) {
+            review.status = "Approved";
+            this.filteredReviews = [...this.reviews];
+            this.renderReviews(this.filteredReviews);
+            this.updateStats();
+            this.showNotification("Duyệt đánh giá thành công!", "success");
+          }
+        }
+
+        rejectReviewById(id) {
+          const review = this.reviews.find((r) => r.id === id);
+          if (review) {
+            review.status = "Rejected";
+            this.filteredReviews = [...this.reviews];
+            this.renderReviews(this.filteredReviews);
+            this.updateStats();
+            this.showNotification("Từ chối đánh giá thành công!", "warning");
+          }
+        }
+
+        deleteReviewById(id) {
+          this.reviews = this.reviews.filter((r) => r.id !== id);
+          this.filteredReviews = [...this.reviews];
+          this.renderReviews(this.filteredReviews);
+          this.updateStats();
+          this.showNotification("Xóa đánh giá thành công!", "success");
+        }
+
+        viewReviewById(id) {
+          const review = this.reviews.find((r) => r.id === id);
+          if (review) {
+            this.currentReview = review;
+            this.showReviewDetails(review);
+          }
+        }
+
+        showReviewDetails(review) {
+          const modal = document.getElementById("review-modal");
+          const details = document.getElementById("review-details");
+          const approveBtn = document.getElementById("approve-review-btn");
+          const rejectBtn = document.getElementById("reject-review-btn");
+
+          details.innerHTML = `
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Người đánh giá:</strong> ${review.userName}
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Khách sạn:</strong> ${review.hotelName}
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Đánh giá:</strong> 
+                        <div class="stars" style="display: inline-flex; margin-left: 0.5rem;">
+                            ${this.generateStars(review.rating)}
+                        </div>
+                        <span style="margin-left: 0.5rem;">${review.rating}/5</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Trạng thái:</strong> 
+                        <span class="badge ${this.getStatusBadgeClass(review.status)}">
+                            ${this.getStatusText(review.status)}
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Ngày tạo:</strong> ${this.formatDateTime(review.createdAt)}
+                    </div>
+                    <div>
+                        <strong>Bình luận:</strong>
+                        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--border-radius); margin-top: 0.5rem; line-height: 1.6;">
+                            ${review.comment}
+                        </div>
+                    </div>
+                `;
+
+          if (review.status === "Pending") {
+            approveBtn.style.display = "inline-flex";
+            rejectBtn.style.display = "inline-flex";
+          } else {
+            approveBtn.style.display = "none";
+            rejectBtn.style.display = "none";
+          }
+
+          this.showModal("review-modal");
+        }
+
+        // Form validation
+        validateHotelForm() {
+          const nameField = document.getElementById("hotel-name");
+          const cityField = document.getElementById("hotel-city");
+          const addressField = document.getElementById("hotel-address");
+          const imageField = document.getElementById("hotel-image");
+
+          this.clearFormErrors();
+
+          let isValid = true;
+
+          if (!nameField.value.trim()) {
+            this.showFormError("hotel-name-error", "Tên khách sạn không được để trống");
+            isValid = false;
+          }
+
+          if (!cityField.value.trim()) {
+            this.showFormError("hotel-city-error", "Thành phố không được để trống");
+            isValid = false;
+          }
+
+          if (!addressField.value.trim()) {
+            this.showFormError("hotel-address-error", "Địa chỉ không được để trống");
+            isValid = false;
+          }
+
+          if (imageField.value && !this.isValidUrl(imageField.value)) {
+            this.showFormError("hotel-image-error", "URL hình ảnh không hợp lệ");
+            isValid = false;
+          }
+
+          return isValid;
+        }
+
+        clearFormErrors() {
+          document.querySelectorAll(".form-error").forEach((error) => {
+            error.textContent = "";
+          });
+        }
+
+        showFormError(elementId, message) {
+          const element = document.getElementById(elementId);
+          if (element) {
+            element.textContent = message;
+          }
+        }
+
+        isValidUrl(string) {
+          try {
+            new URL(string);
+            return true;
+          } catch (_) {
+            return false;
+          }
+        }
+
+        // Utility functions
+        generateStars(rating) {
+          const fullStars = Math.floor(rating);
+          const hasHalfStar = rating % 1 !== 0;
+          const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+          let stars = "";
+          for (let i = 0; i < fullStars; i++) {
+            stars += '<i class="fas fa-star star"></i>';
+          }
+          if (hasHalfStar) {
+            stars += '<i class="fas fa-star-half-alt star"></i>';
+          }
+          for (let i = 0; i < emptyStars; i++) {
+            stars += '<i class="far fa-star star empty"></i>';
+          }
+          return stars;
+        }
+
+        getStatusBadgeClass(status) {
+          switch (status) {
+            case "Approved":
+              return "badge-success";
+            case "Pending":
+              return "badge-warning";
+            case "Rejected":
+              return "badge-error";
+            default:
+              return "badge-primary";
+          }
+        }
+
+        getStatusText(status) {
+          switch (status) {
+            case "Approved":
+              return "Đã duyệt";
+            case "Pending":
+              return "Chờ duyệt";
+            case "Rejected":
+              return "Đã từ chối";
+            default:
+              return status;
+          }
+        }
+
+        formatDate(dateString) {
+          const date = new Date(dateString);
+          return date.toLocaleDateString("vi-VN");
+        }
+
+        formatDateTime(dateString) {
+          const date = new Date(dateString);
+          return date.toLocaleString("vi-VN");
+        }
+
+        // Loading states
+        showLoading(section) {
+          const loading = document.getElementById(`${section}-loading`);
+          const table = document.getElementById(`${section}-table`);
+          const empty = document.getElementById(`${section}-empty`);
+
+          if (loading) loading.style.display = "block";
+          if (table) table.style.display = "none";
+          if (empty) empty.style.display = "none";
+        }
+
+        hideLoading(section) {
+          const loading = document.getElementById(`${section}-loading`);
+          if (loading) loading.style.display = "none";
+        }
+
+        // Modal functions
+        showModal(modalId) {
+          const modal = document.getElementById(modalId);
+          if (modal) {
+            modal.classList.add("show");
+            document.body.style.overflow = "hidden";
+          }
+        }
+
+        closeModal(modalId) {
+          const modal = document.getElementById(modalId);
+          if (modal) {
+            modal.classList.remove("show");
+            document.body.style.overflow = "";
+          }
+        }
+
+        // Sidebar functions
+        toggleSidebar() {
+          const sidebar = document.getElementById("sidebar");
+          if (sidebar) {
+            sidebar.classList.toggle("open");
+          }
+        }
+
+        closeSidebar() {
+          const sidebar = document.getElementById("sidebar");
+          if (sidebar) {
+            sidebar.classList.remove("open");
+          }
+        }
+
+        // Notification system
+        showNotification(message, type = "info") {
+          const notification = document.createElement("div");
+          notification.className = `notification ${type}`;
+          notification.textContent = message;
+
+          document.body.appendChild(notification);
+
+          setTimeout(() => {
+            notification.classList.add("show");
+          }, 100);
+
+          setTimeout(() => {
+            notification.classList.remove("show");
+            setTimeout(() => notification.remove(), 300);
+          }, 3000);
+        }
       }
 
-      .quick-actions h3 {
-        margin-bottom: 1rem;
-        color: var(--text-primary);
+      // Global functions for onclick handlers
+      function showAddHotelModal() {
+        document.getElementById("hotel-modal-title").textContent = "Thêm khách sạn mới";
+        document.getElementById("hotel-form").reset();
+        document.getElementById("hotel-id").value = "";
+        window.admin.clearFormErrors();
+        window.admin.showModal("hotel-modal");
       }
 
-      .quick-actions-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
+      function editHotel(id) {
+        const hotel = window.admin.hotels.find((h) => h.id === id);
+        if (hotel) {
+          document.getElementById("hotel-modal-title").textContent = "Sửa thông tin khách sạn";
+          document.getElementById("hotel-id").value = hotel.id;
+          document.getElementById("hotel-name").value = hotel.name;
+          document.getElementById("hotel-city").value = hotel.city;
+          document.getElementById("hotel-address").value = hotel.address;
+          document.getElementById("hotel-description").value = hotel.description || "";
+          document.getElementById("hotel-image").value = hotel.image || "";
+          window.admin.clearFormErrors();
+          window.admin.showModal("hotel-modal");
+        }
       }
 
-      .quick-actions-grid .btn {
-        padding: 1rem;
-        justify-content: center;
-        font-weight: 500;
+      function deleteHotel(id) {
+        const hotel = window.admin.hotels.find((h) => h.id === id);
+        if (hotel && confirm(`Bạn có chắc chắn muốn xóa khách sạn "${hotel.name}"?`)) {
+          window.admin.deleteHotelById(id);
+        }
       }
 
-      .loading {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-secondary);
+      function toggleUserStatus(id) {
+        const user = window.admin.users.find((u) => u.id === id);
+        if (user && user.role !== "Admin") {
+          const action = user.status === "Active" ? "khóa" : "kích hoạt";
+          if (confirm(`Bạn có chắc chắn muốn ${action} người dùng "${user.name}"?`)) {
+            window.admin.toggleUserStatusById(id);
+          }
+        }
       }
 
-      .loading .spinner {
-        margin: 0 auto 1rem;
+      function deleteUser(id) {
+        const user = window.admin.users.find((u) => u.id === id);
+        if (user && user.role !== "Admin" && confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.name}"?`)) {
+          window.admin.deleteUserById(id);
+        }
       }
-    </style>
+
+      function viewReview(id) {
+        window.admin.viewReviewById(id);
+      }
+
+      function approveReview(id) {
+        window.admin.approveReviewById(id);
+      }
+
+      function rejectReview(id) {
+        const review = window.admin.reviews.find((r) => r.id === id);
+        if (review && confirm(`Bạn có chắc chắn muốn từ chối đánh giá này?`)) {
+          window.admin.rejectReviewById(id);
+        }
+      }
+
+      function deleteReview(id) {
+        const review = window.admin.reviews.find((r) => r.id === id);
+        if (review && confirm(`Bạn có chắc chắn muốn xóa đánh giá này?`)) {
+          window.admin.deleteReviewById(id);
+        }
+      }
+
+      function approveCurrentReview() {
+        if (window.admin.currentReview) {
+          window.admin.approveReviewById(window.admin.currentReview.id);
+          window.admin.closeModal("review-modal");
+        }
+      }
+
+      function rejectCurrentReview() {
+        if (window.admin.currentReview && confirm("Bạn có chắc chắn muốn từ chối đánh giá này?")) {
+          window.admin.rejectReviewById(window.admin.currentReview.id);
+          window.admin.closeModal("review-modal");
+        }
+      }
+
+      function saveHotel() {
+        const saveBtn = document.getElementById("save-hotel-btn");
+
+        if (!window.admin.validateHotelForm()) {
+          return;
+        }
+
+        // Disable save button
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+
+        const hotelData = {
+          name: document.getElementById("hotel-name").value.trim(),
+          city: document.getElementById("hotel-city").value.trim(),
+          address: document.getElementById("hotel-address").value.trim(),
+          description: document.getElementById("hotel-description").value.trim(),
+          image: document.getElementById("hotel-image").value.trim(),
+        };
+
+        const hotelId = document.getElementById("hotel-id").value;
+
+        setTimeout(() => {
+          if (hotelId) {
+            window.admin.updateHotel(parseInt(hotelId), hotelData);
+          } else {
+            window.admin.addHotel(hotelData);
+          }
+
+          // Re-enable save button
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="fas fa-save"></i> Lưu';
+
+          window.admin.closeModal("hotel-modal");
+        }, 500);
+      }
+
+      function showModal(modalId) {
+        window.admin.showModal(modalId);
+      }
+
+      function closeModal(modalId) {
+        window.admin.closeModal(modalId);
+      }
+
+      function toggleSidebar() {
+        window.admin.toggleSidebar();
+      }
+
+      // Initialize app
+      document.addEventListener("DOMContentLoaded", () => {
+        window.admin = new SimpleAdmin();
+      });
+    </script>
   </body>
 </html>

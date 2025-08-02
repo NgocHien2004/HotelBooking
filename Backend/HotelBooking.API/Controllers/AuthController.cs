@@ -16,44 +16,77 @@ namespace HotelBooking.API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponseDto>> Login(LoginDto loginDto)
+        public async Task<ActionResult> Login(LoginDto loginDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
+                }
 
-            var result = await _authService.LoginAsync(loginDto);
-            if (result == null)
+                var result = await _authService.LoginAsync(loginDto);
+                if (result == null)
+                {
+                    return Ok(new { success = false, message = "Email hoặc mật khẩu không đúng" });
+                }
+
+                return Ok(new { 
+                    success = true, 
+                    data = new { 
+                        token = result.Token, 
+                        user = result.User 
+                    } 
+                });
+            }
+            catch (Exception ex)
             {
-                return Unauthorized(new { success = false, message = "Email hoặc mật khẩu không đúng" });
+                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
             }
-
-            return Ok(new { success = true, data = result });
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto)
+        public async Task<ActionResult> Register(RegisterDto registerDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
+                }
 
-            var result = await _authService.RegisterAsync(registerDto);
-            if (result == null)
+                var result = await _authService.RegisterAsync(registerDto);
+                if (result == null)
+                {
+                    return Ok(new { success = false, message = "Email đã tồn tại" });
+                }
+
+                return Ok(new { 
+                    success = true, 
+                    data = new { 
+                        token = result.Token, 
+                        user = result.User 
+                    } 
+                });
+            }
+            catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = "Email đã tồn tại" });
+                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
             }
-
-            return Ok(new { success = true, data = result });
         }
 
         [HttpGet("check-email/{email}")]
-        public async Task<ActionResult<bool>> CheckEmailExists(string email)
+        public async Task<ActionResult> CheckEmailExists(string email)
         {
-            var exists = await _authService.UserExistsAsync(email);
-            return Ok(new { success = true, exists });
+            try
+            {
+                var exists = await _authService.UserExistsAsync(email);
+                return Ok(new { success = true, exists });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
+            }
         }
     }
 }
