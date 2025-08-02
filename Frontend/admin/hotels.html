@@ -454,16 +454,20 @@
         }
 
         async saveHotel() {
-          const formData = Utils.getFormData("#hotel-form");
-          const hotelId = formData.id;
+          const form = Utils.$("#hotel-form");
+          const hotelId = Utils.$("#hotel-id").value;
 
           // Validate form
-          if (!formData.tenKhachSan.trim()) {
+          const tenKhachSan = Utils.$("#hotel-name").value.trim();
+          const diaChi = Utils.$("#hotel-address").value.trim();
+          const thanhPho = Utils.$("#hotel-city").value.trim();
+
+          if (!tenKhachSan) {
             Utils.showError("Vui lòng nhập tên khách sạn");
             return;
           }
 
-          if (!formData.diaChi.trim()) {
+          if (!diaChi) {
             Utils.showError("Vui lòng nhập địa chỉ");
             return;
           }
@@ -473,24 +477,37 @@
           saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
 
           try {
-            const hotelData = {
-              tenKhachSan: formData.tenKhachSan,
-              diaChi: formData.diaChi,
-              thanhPho: formData.thanhPho,
-              moTa: formData.moTa,
-            };
+            // Tạo FormData để gửi cả text và files
+            const formData = new FormData();
+            formData.append("tenKhachSan", tenKhachSan);
+            formData.append("diaChi", diaChi);
+            formData.append("thanhPho", thanhPho);
+            formData.append("moTa", Utils.$("#hotel-description").value.trim());
+
+            // Thêm files nếu có
+            const imageFiles = Utils.$("#hotel-images").files;
+            if (imageFiles && imageFiles.length > 0) {
+              Array.from(imageFiles).forEach((file) => {
+                formData.append("images", file);
+              });
+            }
 
             let result;
             if (hotelId) {
-              result = await HotelService.updateHotel(hotelId, hotelData);
+              formData.append("id", hotelId);
+              result = await HotelService.updateHotelWithImages(hotelId, formData);
             } else {
-              result = await HotelService.createHotel(hotelData);
+              result = await HotelService.createHotelWithImages(formData);
             }
 
             if (result.success) {
               Utils.showSuccess(hotelId ? "Cập nhật khách sạn thành công" : "Thêm khách sạn thành công");
               Utils.hideModal("#hotel-modal");
               await this.loadHotels();
+
+              // Reset form và preview
+              form.reset();
+              Utils.$("#hotel-image-preview").innerHTML = "";
             } else {
               Utils.showError(result.message || "Có lỗi xảy ra");
             }
@@ -501,7 +518,6 @@
             saveBtn.innerHTML = hotelId ? '<i class="fas fa-save"></i> Cập nhật' : '<i class="fas fa-save"></i> Lưu';
           }
         }
-
         previewImages(files) {
           const imagePreview = Utils.$("#hotel-image-preview");
           imagePreview.innerHTML = "";

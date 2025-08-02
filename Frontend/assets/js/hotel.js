@@ -775,6 +775,96 @@ class ReviewService {
       throw error;
     }
   }
+  static async createHotelWithImages(formData) {
+    try {
+      const response = await fetch(`${Utils.API_BASE_URL}/hotels`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          // Không set Content-Type để browser tự động set multipart/form-data
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Có lỗi xảy ra");
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Create hotel with images error:", error);
+      throw error;
+    }
+  }
+
+  // Method mới để cập nhật khách sạn với ảnh
+  static async updateHotelWithImages(id, formData) {
+    try {
+      const response = await fetch(`${Utils.API_BASE_URL}/hotels/${id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          // Không set Content-Type để browser tự động set multipart/form-data
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Có lỗi xảy ra");
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Update hotel with images error:", error);
+      throw error;
+    }
+  }
+
+  // Method để upload ảnh riêng biệt
+  static async uploadHotelImages(hotelId, files) {
+    try {
+      const formData = new FormData();
+      formData.append("maKhachSan", hotelId);
+
+      Array.from(files).forEach((file) => {
+        formData.append("images", file);
+      });
+
+      const response = await fetch(`${Utils.API_BASE_URL}/hotels/images`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Có lỗi xảy ra");
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Upload hotel images error:", error);
+      throw error;
+    }
+  }
+
+  // Method để xóa ảnh khách sạn
+  static async deleteHotelImage(imageId) {
+    try {
+      const response = await Utils.delete(`/hotels/images/${imageId}`);
+      return response;
+    } catch (error) {
+      console.error("Delete hotel image error:", error);
+      throw error;
+    }
+  }
 }
 
 // Export for global use
