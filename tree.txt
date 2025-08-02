@@ -1,0 +1,40 @@
+Frontend/
+├── admin/
+│   ├── index.html                 # Trang chủ admin dashboard
+│   ├── hotels/
+│   │   ├── index.html            # Danh sách khách sạn
+│   │   ├── create.html           # Thêm khách sạn mới
+│   │   ├── edit.html             # Sửa thông tin khách sạn
+│   │   └── view.html             # Xem chi tiết khách sạn
+│   ├── rooms/
+│   │   ├── index.html            # Quản lý phòng
+│   │   ├── create.html           # Thêm phòng mới
+│   │   └── edit.html             # Sửa thông tin phòng
+│   ├── bookings/
+│   │   ├── index.html            # Quản lý đặt phòng
+│   │   └── view.html             # Chi tiết đặt phòng
+│   └── users/
+│       ├── index.html            # Quản lý người dùng
+│       └── create.html           # Thêm người dùng
+├── assets/
+│   ├── css/
+│   │   ├── bootstrap.min.css     # Bootstrap CSS
+│   │   ├── admin.css             # CSS cho admin
+│   │   └── style.css             # CSS chung
+│   ├── js/
+│   │   ├── bootstrap.bundle.min.js
+│   │   ├── jquery.min.js
+│   │   ├── admin.js              # JS cho admin
+│   │   ├── api.js                # API calls
+│   │   └── utils.js              # Utilities
+│   └── images/
+│       ├── logo.png
+│       ├── default-hotel.jpg
+│       └── placeholder.jpg
+├── public/
+│   ├── index.html                # Trang chủ website
+│   ├── hotels.html               # Danh sách khách sạn công khai
+│   ├── hotel-detail.html         # Chi tiết khách sạn
+│   ├── booking.html              # Đặt phòng
+│   └── login.html                # Đăng nhập
+└── login.html                    # Đăng nhập admin

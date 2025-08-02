@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập Admin - Hotel Booking</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <style>
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .login-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .login-header i {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+      }
+
+      .login-header h2 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .login-header p {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .form-floating label {
+        color: #666;
+      }
+
+      .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+      }
+
+      .btn-login {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .alert {
+        border-radius: 10px;
+        border: none;
+      }
+
+      .loading-spinner {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-header">
+        <i class="fas fa-hotel"></i>
+        <h2>Admin Panel</h2>
+        <p>Đăng nhập để quản lý hệ thống</p>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <form id="loginForm">
+        <div class="form-floating mb-3">
+          <input type="email" class="form-control" id="email" placeholder="Email" required />
+          <label for="email"><i class="fas fa-envelope me-2"></i>Email</label>
+        </div>
+
+        <div class="form-floating mb-4">
+          <input type="password" class="form-control" id="password" placeholder="Mật khẩu" required />
+          <label for="password"><i class="fas fa-lock me-2"></i>Mật khẩu</label>
+        </div>
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary btn-login">
+            <span class="login-text">Đăng nhập</span>
+            <span class="loading-spinner"> <i class="fas fa-spinner fa-spin"></i> Đang xử lý... </span>
+          </button>
+        </div>
+      </form>
+
+      <div class="text-center mt-4">
+        <small class="text-muted">
+          <i class="fas fa-shield-alt me-1"></i>
+          Chỉ dành cho quản trị viên
+        </small>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // API Configuration
+      const API_BASE_URL = "https://localhost:7081/api"; // Thay đổi theo cấu hình backend
+
+      // DOM Elements
+      const loginForm = document.getElementById("loginForm");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const alertContainer = document.getElementById("alertContainer");
+      const loginText = document.querySelector(".login-text");
+      const loadingSpinner = document.querySelector(".loading-spinner");
+
+      // Show Alert Function
+      function showAlert(message, type = "danger") {
+        alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${type === "success" ? "check-circle" : "exclamation-triangle"} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+      }
+
+      // Show Loading State
+      function setLoading(isLoading) {
+        if (isLoading) {
+          loginText.style.display = "none";
+          loadingSpinner.style.display = "inline";
+          loginForm.querySelector("button").disabled = true;
+        } else {
+          loginText.style.display = "inline";
+          loadingSpinner.style.display = "none";
+          loginForm.querySelector("button").disabled = false;
+        }
+      }
+
+      // Login Function
+      async function login(email, password) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/Auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: email,
+              password: password,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            // Lưu token và thông tin user
+            localStorage.setItem("adminToken", data.token);
+            localStorage.setItem("adminUser", JSON.stringify(data.user));
+
+            showAlert("Đăng nhập thành công! Đang chuyển hướng...", "success");
+
+            // Chuyển hướng sau 1.5 giây
+            setTimeout(() => {
+              window.location.href = "./admin/index.html";
+            }, 1500);
+          } else {
+            showAlert(data.message || "Email hoặc mật khẩu không đúng!");
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+          showAlert("Lỗi kết nối! Vui lòng thử lại.");
+        }
+      }
+
+      // Form Submit Handler
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!email || !password) {
+          showAlert("Vui lòng nhập đầy đủ thông tin!");
+          return;
+        }
+
+        setLoading(true);
+        await login(email, password);
+        setLoading(false);
+      });
+
+      // Check if already logged in
+      window.addEventListener("load", () => {
+        const token = localStorage.getItem("adminToken");
+        if (token) {
+          // Có thể kiểm tra token có hợp lệ không
+          window.location.href = "./admin/index.html";
+        }
+      });
+
+      // Demo credentials (remove in production)
+      console.log("Demo: admin@hotel.com / admin123");
+    </script>
+  </body>
+</html>
