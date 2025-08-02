@@ -1,381 +1,272 @@
-/**
- * Admin Panel JavaScript
- * Shared functions and utilities for hotel booking admin
- */
+// Load dashboard data
+async function loadDashboardData() {
+  try {
+    // Get total hotels
+    const hotelsResponse = await fetch(`${API_URL}/hotels`, {
+      headers: getAuthHeaders(),
+    });
+    const hotels = await hotelsResponse.json();
+    document.getElementById("totalHotels").textContent = hotels.length;
 
-// API Configuration
-const API_CONFIG = {
-  BASE_URL: "https://localhost:5233/api",
-  ENDPOINTS: {
-    AUTH: "/Auth",
-    HOTELS: "/KhachSan",
-    ROOMS: "/Phong",
-    ROOM_TYPES: "/LoaiPhong",
-    BOOKINGS: "/DatPhong",
-    USERS: "/User",
-    PAYMENTS: "/ThanhToan",
-    REVIEWS: "/DanhGia",
-    UPLOAD: "/Upload",
-  },
-};
+    // Calculate available rooms (mock data for now)
+    const availableRooms = hotels.reduce((sum, hotel) => sum + (hotel.availableRooms || 10), 0);
+    document.getElementById("availableRooms").textContent = availableRooms;
 
-// Global Admin Class
-class HotelAdmin {
-  constructor() {
-    this.token = localStorage.getItem("adminToken");
-    this.user = this.getCurrentUser();
-    this.init();
-  }
+    // Get today's bookings (mock data)
+    document.getElementById("todayBookings").textContent = Math.floor(Math.random() * 20) + 5;
 
-  init() {
-    this.setupEventListeners();
-    this.checkAuthentication();
-  }
+    // Get total users (mock data)
+    document.getElementById("totalUsers").textContent = Math.floor(Math.random() * 100) + 50;
 
-  // ========== AUTHENTICATION ==========
-  checkAuthentication() {
-    if (!this.token || !this.user) {
-      this.redirectToLogin();
-      return false;
-    }
+    // Load recent hotels
+    const recentHotels = hotels.slice(-5).reverse();
+    const tbody = document.getElementById("recentHotels");
+    tbody.innerHTML = "";
 
-    // Update user display
-    const adminNameElement = document.getElementById("adminName");
-    if (adminNameElement && this.user) {
-      adminNameElement.textContent = this.user.hoTen || "Admin";
-    }
-
-    return true;
-  }
-
-  getCurrentUser() {
-    try {
-      const userData = localStorage.getItem("adminUser");
-      return userData ? JSON.parse(userData) : null;
-    } catch (error) {
-      console.error("Error parsing user data:", error);
-      return null;
-    }
-  }
-
-  redirectToLogin() {
-    const currentPath = window.location.pathname;
-    const depth = currentPath.split("/").length - 2; // Calculate folder depth
-    const loginPath = "../".repeat(depth) + "login.html";
-    window.location.href = loginPath;
-  }
-
-  logout() {
-    if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("adminUser");
-      this.redirectToLogin();
-    }
-  }
-
-  // ========== API METHODS ==========
-  async makeRequest(endpoint, options = {}) {
-    const url = API_CONFIG.BASE_URL + endpoint;
-    const config = {
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    // Remove Content-Type for FormData
-    if (options.body instanceof FormData) {
-      delete config.headers["Content-Type"];
-    }
-
-    try {
-      const response = await fetch(url, config);
-
-      if (response.status === 401) {
-        this.redirectToLogin();
-        return null;
-      }
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || `HTTP Error: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("API Request Error:", error);
-      throw error;
-    }
-  }
-
-  // ========== UI HELPERS ==========
-  showAlert(message, type = "danger", containerId = "alertContainer") {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    const alertIcons = {
-      success: "check-circle",
-      warning: "exclamation-triangle",
-      danger: "exclamation-circle",
-      info: "info-circle",
-    };
-
-    container.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                <i class="fas fa-${alertIcons[type]} me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
-
-    // Auto dismiss after 5 seconds
-    setTimeout(() => {
-      const alert = container.querySelector(".alert");
-      if (alert) {
-        const bsAlert = new bootstrap.Alert(alert);
-        bsAlert.close();
-      }
-    }, 5000);
-  }
-
-  showLoading(show, elementId = "loadingState") {
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.style.display = show ? "block" : "none";
-    }
-  }
-
-  setButtonLoading(button, isLoading, originalText = "") {
-    if (isLoading) {
-      button.disabled = true;
-      button.dataset.originalText = button.innerHTML;
-      button.innerHTML = `
-                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                Đang xử lý...
+    recentHotels.forEach((hotel) => {
+      tbody.innerHTML += `
+                <tr>
+                    <td>${hotel.id}</td>
+                    <td>${hotel.name}</td>
+                    <td>${hotel.address}</td>
+                    <td>${formatCurrency(hotel.price)}</td>
+                    <td>${new Date(hotel.createdAt).toLocaleDateString("vi-VN")}</td>
+                    <td>
+                        <a href="hotels.html" class="btn btn-sm btn-primary">Xem</a>
+                    </td>
+                </tr>
             `;
-    } else {
-      button.disabled = false;
-      button.innerHTML = button.dataset.originalText || originalText;
-    }
+    });
+  } catch (error) {
+    console.error("Error loading dashboard data:", error);
   }
+}
 
-  // ========== EVENT LISTENERS ==========
-  setupEventListeners() {
-    // Sidebar toggle for mobile
-    document.addEventListener("click", (e) => {
-      if (e.target.closest('[data-toggle="sidebar"]')) {
-        this.toggleSidebar();
-      }
+// Load hotels for admin management
+async function loadAdminHotels() {
+  try {
+    const response = await fetch(`${API_URL}/hotels`, {
+      headers: getAuthHeaders(),
+    });
+    const hotels = await response.json();
 
-      // Close sidebar when clicking outside
-      const sidebar = document.getElementById("sidebar");
-      if (sidebar && !sidebar.contains(e.target) && !e.target.closest('[data-toggle="sidebar"]') && sidebar.classList.contains("show")) {
-        sidebar.classList.remove("show");
-      }
+    const tbody = document.getElementById("hotelsTableBody");
+    tbody.innerHTML = "";
+
+    hotels.forEach((hotel) => {
+      const imageUrl =
+        hotel.images && hotel.images.length > 0 ? `http://localhost:3000${hotel.images[0]}` : "https://via.placeholder.com/60x60?text=No+Image";
+
+      tbody.innerHTML += `
+                <tr>
+                    <td>${hotel.id}</td>
+                    <td><img src="${imageUrl}" class="table-img" alt="${hotel.name}"></td>
+                    <td>${hotel.name}</td>
+                    <td>${hotel.address}</td>
+                    <td>${hotel.city}</td>
+                    <td>${formatCurrency(hotel.price)}</td>
+                    <td>${hotel.rating || "4.0"}</td>
+                    <td>
+                        <span class="badge bg-success">Hoạt động</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary btn-action" onclick="editHotel(${hotel.id})">
+                            <i class="bi bi-pencil"></i> Sửa
+                        </button>
+                        <button class="btn btn-sm btn-danger btn-action" onclick="deleteHotel(${hotel.id})">
+                            <i class="bi bi-trash"></i> Xóa
+                        </button>
+                    </td>
+                </tr>
+            `;
     });
 
-    // Global logout buttons
-    document.addEventListener("click", (e) => {
-      if (e.target.closest('[data-action="logout"]')) {
-        e.preventDefault();
-        this.logout();
-      }
+    // Search functionality
+    document.getElementById("searchInput").addEventListener("input", function (e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const rows = tbody.getElementsByTagName("tr");
+
+      Array.from(rows).forEach((row) => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? "" : "none";
+      });
     });
+  } catch (error) {
+    console.error("Error loading hotels:", error);
   }
+}
 
-  toggleSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    if (sidebar) {
-      sidebar.classList.toggle("show");
-    }
-  }
+// Add new hotel
+if (document.getElementById("addHotelForm")) {
+  document.getElementById("addHotelForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  // ========== UTILITY FUNCTIONS ==========
-  formatDate(dateString, options = {}) {
-    const defaultOptions = {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      ...options,
-    };
+    const formData = new FormData();
+    formData.append("name", document.getElementById("name").value);
+    formData.append("city", document.getElementById("city").value);
+    formData.append("address", document.getElementById("address").value);
+    formData.append("price", document.getElementById("price").value);
+    formData.append("rating", document.getElementById("rating").value);
+    formData.append("description", document.getElementById("description").value);
+    formData.append("amenities", document.getElementById("amenities").value);
 
-    return new Date(dateString).toLocaleDateString("vi-VN", defaultOptions);
-  }
-
-  formatDateTime(dateString) {
-    return new Date(dateString).toLocaleString("vi-VN");
-  }
-
-  formatCurrency(amount) {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
-  }
-
-  generateStars(rating, showNumber = true) {
-    const stars = [];
-    const fullStars = Math.floor(rating || 0);
-    const hasHalfStar = (rating || 0) % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push('<i class="fas fa-star text-warning"></i>');
+    // Add images
+    const images = document.getElementById("images").files;
+    for (let i = 0; i < images.length; i++) {
+      formData.append("images", images[i]);
     }
 
-    if (hasHalfStar) {
-      stars.push('<i class="fas fa-star-half-alt text-warning"></i>');
-    }
-
-    const emptyStars = 5 - Math.ceil(rating || 0);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push('<i class="far fa-star text-warning"></i>');
-    }
-
-    const starsHtml = stars.join("");
-    return showNumber ? `${starsHtml} <small class="text-muted">(${rating || 0}/5)</small>` : starsHtml;
-  }
-
-  truncateText(text, length = 50) {
-    if (!text) return "";
-    return text.length > length ? text.substring(0, length) + "..." : text;
-  }
-
-  debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
-
-  // ========== DATA MANAGEMENT ==========
-  async loadDashboardStats() {
     try {
-      const [hotels, rooms, bookings, users] = await Promise.all([
-        this.makeRequest(API_CONFIG.ENDPOINTS.HOTELS),
-        this.makeRequest(API_CONFIG.ENDPOINTS.ROOMS),
-        this.makeRequest(API_CONFIG.ENDPOINTS.BOOKINGS),
-        this.makeRequest(API_CONFIG.ENDPOINTS.USERS),
-      ]);
+      const response = await fetch(`${API_URL}/hotels`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
 
-      return {
-        hotels: hotels?.length || 0,
-        rooms: rooms?.length || 0,
-        bookings: bookings?.length || 0,
-        users: users?.length || 0,
-      };
-    } catch (error) {
-      console.error("Error loading dashboard stats:", error);
-      return { hotels: 0, rooms: 0, bookings: 0, users: 0 };
-    }
-  }
-
-  // ========== IMAGE HANDLING ==========
-  validateImageFile(file) {
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error("Chỉ chấp nhận file hình ảnh (JPG, PNG, GIF, WebP)");
-    }
-
-    if (file.size > maxSize) {
-      throw new Error("File quá lớn! Tối đa 5MB");
-    }
-
-    return true;
-  }
-
-  createImagePreview(file, onRemove) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const container = document.createElement("div");
-        container.className = "uploaded-image position-relative";
-        container.innerHTML = `
-                    <img src="${e.target.result}" alt="Preview" class="img-thumbnail">
-                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-image" 
-                            style="transform: translate(50%, -50%);">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-
-        const removeBtn = container.querySelector(".remove-image");
-        removeBtn.addEventListener("click", () => {
-          container.remove();
-          if (onRemove) onRemove();
-        });
-
-        resolve(container);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // ========== FORM VALIDATION ==========
-  validateRequired(fields) {
-    const errors = [];
-
-    fields.forEach((field) => {
-      const element = document.getElementById(field.id);
-      const value = element?.value?.trim();
-
-      if (!value) {
-        errors.push(field.message || `${field.label || field.id} là bắt buộc`);
-        element?.focus();
+      if (response.ok) {
+        showAlert("Thêm khách sạn thành công!", "success");
+        setTimeout(() => {
+          window.location.href = "hotels.html";
+        }, 2000);
+      } else {
+        const data = await response.json();
+        showAlert(data.message || "Có lỗi xảy ra!", "danger");
       }
+    } catch (error) {
+      showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
+    }
+  });
+}
+
+// Edit hotel
+async function editHotel(id) {
+  try {
+    const response = await fetch(`${API_URL}/hotels/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    const hotel = await response.json();
+
+    // Fill form with hotel data
+    document.getElementById("editHotelId").value = hotel.id;
+    document.getElementById("editName").value = hotel.name;
+    document.getElementById("editCity").value = hotel.city;
+    document.getElementById("editAddress").value = hotel.address;
+    document.getElementById("editPrice").value = hotel.price;
+    document.getElementById("editRating").value = hotel.rating || "4.0";
+    document.getElementById("editDescription").value = hotel.description || "";
+    document.getElementById("editAmenities").value = hotel.amenities || "";
+
+    // Show current images
+    const currentImagesDiv = document.getElementById("currentImages");
+    currentImagesDiv.innerHTML = "";
+
+    if (hotel.images && hotel.images.length > 0) {
+      hotel.images.forEach((image, index) => {
+        currentImagesDiv.innerHTML += `
+                    <div class="image-container">
+                        <img src="http://localhost:3000${image}" alt="Image ${index + 1}">
+                        <button type="button" class="remove-image" onclick="removeImage(${hotel.id}, '${image}')">×</button>
+                    </div>
+                `;
+      });
+    }
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById("editHotelModal"));
+    modal.show();
+  } catch (error) {
+    console.error("Error loading hotel:", error);
+    showAlert("Có lỗi xảy ra!", "danger");
+  }
+}
+
+// Update hotel
+async function updateHotel() {
+  const id = document.getElementById("editHotelId").value;
+  const formData = new FormData();
+
+  formData.append("name", document.getElementById("editName").value);
+  formData.append("city", document.getElementById("editCity").value);
+  formData.append("address", document.getElementById("editAddress").value);
+  formData.append("price", document.getElementById("editPrice").value);
+  formData.append("rating", document.getElementById("editRating").value);
+  formData.append("description", document.getElementById("editDescription").value);
+  formData.append("amenities", document.getElementById("editAmenities").value);
+
+  // Add new images if selected
+  const newImages = document.getElementById("editImages").files;
+  for (let i = 0; i < newImages.length; i++) {
+    formData.append("images", newImages[i]);
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/hotels/${id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: formData,
     });
 
-    return errors;
+    if (response.ok) {
+      showAlert("Cập nhật khách sạn thành công!", "success");
+      bootstrap.Modal.getInstance(document.getElementById("editHotelModal")).hide();
+      loadAdminHotels();
+    } else {
+      const data = await response.json();
+      showAlert(data.message || "Có lỗi xảy ra!", "danger");
+    }
+  } catch (error) {
+    showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
+  }
+}
+
+// Delete hotel
+async function deleteHotel(id) {
+  if (!confirm("Bạn có chắc chắn muốn xóa khách sạn này?")) {
+    return;
   }
 
-  validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  try {
+    const response = await fetch(`${API_URL}/hotels/${id}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+
+    if (response.ok) {
+      showAlert("Xóa khách sạn thành công!", "success");
+      loadAdminHotels();
+    } else {
+      const data = await response.json();
+      showAlert(data.message || "Có lỗi xảy ra!", "danger");
+    }
+  } catch (error) {
+    showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
+  }
+}
+
+// Remove image from hotel
+async function removeImage(hotelId, imagePath) {
+  if (!confirm("Bạn có chắc chắn muốn xóa hình ảnh này?")) {
+    return;
   }
 
-  validatePhone(phone) {
-    const phoneRegex = /^[0-9]{10,11}$/;
-    return phoneRegex.test(phone.replace(/\D/g, ""));
+  try {
+    const response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ imagePath }),
+    });
+
+    if (response.ok) {
+      showAlert("Xóa hình ảnh thành công!", "success");
+      editHotel(hotelId); // Reload the edit modal
+    } else {
+      showAlert("Có lỗi xảy ra!", "danger");
+    }
+  } catch (error) {
+    showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
   }
-}
-
-// Initialize Admin when DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
-  window.hotelAdmin = new HotelAdmin();
-});
-
-// Global utility functions for backward compatibility
-function toggleSidebar() {
-  window.hotelAdmin?.toggleSidebar();
-}
-
-function logout() {
-  window.hotelAdmin?.logout();
-}
-
-function checkAuth() {
-  return window.hotelAdmin?.checkAuthentication();
-}
-
-function showAlert(message, type = "danger") {
-  window.hotelAdmin?.showAlert(message, type);
-}
-
-function formatDate(dateString) {
-  return window.hotelAdmin?.formatDate(dateString);
-}
-
-function formatCurrency(amount) {
-  return window.hotelAdmin?.formatCurrency(amount);
-}
-
-function generateStars(rating) {
-  return window.hotelAdmin?.generateStars(rating);
 }
