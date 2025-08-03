@@ -16,11 +16,11 @@ function checkAuth() {
     if (loginMenu) loginMenu.style.display = "none";
     if (userMenu) {
       userMenu.style.display = "block";
-      if (username) username.textContent = user.fullName || user.email;
+      if (username) username.textContent = user.hoTen || user.email;
     }
 
     // Show admin menu if user is admin
-    if (adminMenu && user.role === "admin") {
+    if (adminMenu && user.vaiTro === "admin") {
       adminMenu.style.display = "block";
     }
   } else {
@@ -41,22 +41,25 @@ async function login(email, password) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        email: email,
+        matKhau: password,
+      }),
     });
 
     const data = await response.json();
     console.log("Login response:", data);
 
-    if (response.ok) {
-      // Save token and user info
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+    if (response.ok && data.success) {
+      // Save token and user info - Chú ý: data nằm trong data.data
+      localStorage.setItem("token", data.data.token);
+      localStorage.setItem("user", JSON.stringify(data.data.user));
 
       showAlert("Đăng nhập thành công!", "success");
 
       // Redirect based on role
       setTimeout(() => {
-        if (data.user.role === "admin") {
+        if (data.data.user.vaiTro === "admin") {
           window.location.href = "admin/dashboard.html";
         } else {
           window.location.href = "index.html";
@@ -75,6 +78,7 @@ async function login(email, password) {
 async function register(userData) {
   try {
     console.log("Attempting register to:", `${API_URL}/auth/register`);
+    console.log("Register data:", userData);
 
     const response = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
@@ -87,7 +91,7 @@ async function register(userData) {
     const data = await response.json();
     console.log("Register response:", data);
 
-    if (response.ok) {
+    if (response.ok && data.success) {
       showAlert("Đăng ký thành công! Đang chuyển đến trang đăng nhập...", "success");
       setTimeout(() => {
         window.location.href = "login.html";
@@ -105,7 +109,7 @@ async function register(userData) {
 function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  window.location.href = "/Frontend/index.html"; // Sửa đường dẫn
+  window.location.href = "/Frontend/index.html";
 }
 
 // Check if user is admin
@@ -113,7 +117,7 @@ function checkAdminAccess() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const token = localStorage.getItem("token");
 
-  if (!token || !user.role || user.role !== "admin") {
+  if (!token || !user.vaiTro || user.vaiTro !== "admin") {
     alert("Bạn không có quyền truy cập trang này!");
     window.location.href = "../index.html";
     return false;
@@ -121,7 +125,7 @@ function checkAdminAccess() {
   return true;
 }
 
-// Get auth headers - đã có trong utils.js nhưng giữ lại để tương thích
+// Get auth headers
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
   return {
@@ -130,7 +134,7 @@ function getAuthHeaders() {
   };
 }
 
-// Show alert message - đã có trong utils.js nhưng giữ lại để tương thích
+// Show alert message
 function showAlert(message, type = "danger") {
   const alertDiv = document.getElementById("alertMessage");
   if (alertDiv) {
@@ -184,10 +188,10 @@ if (document.getElementById("registerForm")) {
     }
 
     const userData = {
-      fullName: document.getElementById("fullName").value.trim(),
+      hoTen: document.getElementById("fullName").value.trim(),
       email: document.getElementById("email").value.trim(),
-      phone: document.getElementById("phone").value.trim(),
-      password: password,
+      soDienThoai: document.getElementById("phone").value.trim(),
+      matKhau: password,
     };
 
     await register(userData);
