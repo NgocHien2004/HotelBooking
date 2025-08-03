@@ -1,37 +1,11 @@
-// Hotels page functionality
-let allHotels = [];
-
+// Home page functionality
 document.addEventListener("DOMContentLoaded", function () {
-  initializeHotelsPage();
+  loadFeaturedHotels();
 });
 
-async function initializeHotelsPage() {
-  try {
-    await loadHotels();
-    setupEventListeners();
-  } catch (error) {
-    console.error("Error initializing hotels page:", error);
-    showError("Có lỗi xảy ra khi tải trang");
-  }
-}
-
-function setupEventListeners() {
-  // Enter key for search
-  document.getElementById("searchInput").addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-      searchHotels();
-    }
-  });
-
-  document.getElementById("cityFilter").addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-      searchHotels();
-    }
-  });
-}
-
-async function loadHotels() {
+async function loadFeaturedHotels() {
   showLoading(true);
+
   try {
     const response = await fetch(`${API_BASE_URL}/api/hotels`);
 
@@ -41,78 +15,42 @@ async function loadHotels() {
 
     const result = await response.json();
 
-    if (result.success) {
-      allHotels = result.data;
-      displayHotels(allHotels);
+    if (result.success && result.data) {
+      // Hiển thị 6 khách sạn đầu tiên (có thể sắp xếp theo rating)
+      const featuredHotels = result.data.sort((a, b) => b.danhGiaTrungBinh - a.danhGiaTrungBinh).slice(0, 6);
+
+      displayFeaturedHotels(featuredHotels);
     } else {
       throw new Error(result.message || "Không thể tải danh sách khách sạn");
     }
   } catch (error) {
-    console.error("Error loading hotels:", error);
-    showError("Không thể tải danh sách khách sạn. Vui lòng thử lại sau.");
+    console.error("Error loading featured hotels:", error);
+    showError("Không thể tải khách sạn nổi bật. Vui lòng thử lại sau.");
   } finally {
     showLoading(false);
   }
 }
 
-async function searchHotels() {
-  const searchTerm = document.getElementById("searchInput").value.trim();
-  const city = document.getElementById("cityFilter").value.trim();
-
-  showLoading(true);
-
-  try {
-    let url = `${API_BASE_URL}/api/hotels/search?`;
-    const params = new URLSearchParams();
-
-    if (searchTerm) {
-      params.append("searchTerm", searchTerm);
-    }
-
-    if (city) {
-      params.append("city", city);
-    }
-
-    url += params.toString();
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    if (result.success) {
-      displayHotels(result.data);
-    } else {
-      throw new Error(result.message || "Không thể tìm kiếm khách sạn");
-    }
-  } catch (error) {
-    console.error("Error searching hotels:", error);
-    showError("Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.");
-  } finally {
-    showLoading(false);
-  }
-}
-
-function displayHotels(hotels) {
-  const container = document.getElementById("hotelsContainer");
-  const noResults = document.getElementById("noResults");
+function displayFeaturedHotels(hotels) {
+  const container = document.getElementById("featuredHotels");
 
   if (!hotels || hotels.length === 0) {
-    container.innerHTML = "";
-    noResults.classList.remove("d-none");
+    container.innerHTML = `
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Hiện tại chưa có khách sạn nào trong hệ thống.
+                </div>
+            </div>
+        `;
     return;
   }
 
-  noResults.classList.add("d-none");
-
-  const hotelsHtml = hotels.map((hotel) => createHotelCard(hotel)).join("");
+  const hotelsHtml = hotels.map((hotel) => createFeaturedHotelCard(hotel)).join("");
   container.innerHTML = hotelsHtml;
 }
 
-function createHotelCard(hotel) {
+function createFeaturedHotelCard(hotel) {
   // Lấy ảnh đầu tiên hoặc ảnh placeholder
   const imageUrl =
     hotel.hinhAnhs && hotel.hinhAnhs.length > 0
@@ -126,9 +64,15 @@ function createHotelCard(hotel) {
   const rating = hotel.danhGiaTrungBinh || 0;
   const ratingStars = generateStarRating(rating);
 
+  // Giá thấp nhất từ các loại phòng
+  let minPrice = null;
+  if (hotel.loaiPhongs && hotel.loaiPhongs.length > 0) {
+    minPrice = Math.min(...hotel.loaiPhongs.map((room) => room.giaMotDem));
+  }
+
   return `
         <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 hotel-card">
+            <div class="card h-100 hotel-card fade-in">
                 <div class="position-relative">
                     <img src="${imageUrl}" 
                          class="card-img-top hotel-image" 
@@ -137,12 +81,21 @@ function createHotelCard(hotel) {
                     <div class="position-absolute top-0 end-0 m-2">
                         <span class="badge bg-primary">${roomTypesCount} loại phòng</span>
                     </div>
+                    ${
+                      rating >= 4.0
+                        ? `
+                        <div class="position-absolute top-0 start-0 m-2">
+                            <span class="badge bg-success">Nổi bật</span>
+                        </div>
+                    `
+                        : ""
+                    }
                 </div>
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">${hotel.tenKhachSan}</h5>
                     <div class="mb-2">
                         <i class="fas fa-map-marker-alt text-muted"></i>
-                        <span class="text-muted">${hotel.diaChi}</span>
+                        <span class="text-muted">${truncateText(hotel.diaChi, 50)}</span>
                     </div>
                     ${
                       hotel.thanhPho
@@ -159,9 +112,21 @@ function createHotelCard(hotel) {
                         <span class="text-muted ms-1">(${rating.toFixed(1)})</span>
                     </div>
                     ${
+                      minPrice
+                        ? `
+                        <div class="mb-2">
+                            <span class="text-success fw-bold">
+                                <i class="fas fa-tag"></i>
+                                Từ ${formatCurrency(minPrice)}/đêm
+                            </span>
+                        </div>
+                    `
+                        : ""
+                    }
+                    ${
                       hotel.moTa
                         ? `
-                        <p class="card-text flex-grow-1">${truncateText(hotel.moTa, 100)}</p>
+                        <p class="card-text flex-grow-1 text-muted">${truncateText(hotel.moTa, 80)}</p>
                     `
                         : ""
                     }
@@ -202,8 +167,15 @@ function generateStarRating(rating) {
 }
 
 function truncateText(text, maxLength) {
-  if (text.length <= maxLength) return text;
+  if (!text || text.length <= maxLength) return text;
   return text.substr(0, maxLength) + "...";
+}
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
 }
 
 function viewHotelDetails(hotelId) {
@@ -213,18 +185,18 @@ function viewHotelDetails(hotelId) {
 
 function showLoading(show) {
   const loadingIndicator = document.getElementById("loadingIndicator");
-  const hotelsContainer = document.getElementById("hotelsContainer");
+  const featuredHotels = document.getElementById("featuredHotels");
 
   if (show) {
     loadingIndicator.classList.remove("d-none");
-    hotelsContainer.innerHTML = "";
+    featuredHotels.innerHTML = "";
   } else {
     loadingIndicator.classList.add("d-none");
   }
 }
 
 function showError(message) {
-  const container = document.getElementById("hotelsContainer");
+  const container = document.getElementById("featuredHotels");
   container.innerHTML = `
         <div class="col-12">
             <div class="alert alert-danger" role="alert">

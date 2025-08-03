@@ -1,12 +1,19 @@
+/* Custom CSS for Hotel Booking */
+
 /* General Styles */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #f8f9fa;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.5rem;
 }
 
 /* Hero Section */
 .hero-section {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   min-height: 400px;
   display: flex;
@@ -15,54 +22,115 @@ body {
 
 /* Hotel Cards */
 .hotel-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   border: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
-  height: 100%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .hotel-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
 }
 
-.hotel-card img {
+.hotel-image {
   height: 200px;
   object-fit: cover;
+  width: 100%;
+  transition: transform 0.3s ease;
 }
 
-.hotel-price {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #007bff;
+.hotel-card:hover .hotel-image {
+  transform: scale(1.05);
 }
 
-.hotel-rating {
-  color: #ffc107;
+.card-body {
+  padding: 1.5rem;
 }
 
-/* Amenities */
-.amenity-badge {
-  font-size: 0.875rem;
-  padding: 0.25rem 0.5rem;
-  margin: 0.125rem;
+.card-title {
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
 }
 
-/* Forms */
+.card-text {
+  color: #6c757d;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Star Rating */
+.text-warning {
+  color: #ffc107 !important;
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(45deg, #764ba2, #667eea);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Search Section */
+.search-section {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Loading Indicator */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Form Controls */
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
 .form-control:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
-/* Alerts */
+/* Badges */
+.badge {
+  font-size: 0.8rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+}
+
+/* Alert Styles */
 .alert {
-  border-radius: 0.5rem;
+  border-radius: 10px;
+  border: none;
 }
 
-/* Navigation */
-.navbar-brand {
-  font-weight: bold;
-  font-size: 1.5rem;
+.alert-info {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.alert-danger {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.alert-success {
+  background-color: #e8f5e8;
+  color: #2e7d32;
 }
 
 /* Footer */
@@ -70,70 +138,242 @@ footer {
   margin-top: auto;
 }
 
-/* Loading Spinner */
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
-}
-
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-}
-
-/* Pagination */
-.pagination {
-  margin-bottom: 0;
-}
-
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
   .hero-section {
     min-height: 300px;
+    text-align: center;
   }
 
-  .hotel-card img {
-    height: 150px;
+  .hero-section h1 {
+    font-size: 2rem;
+  }
+
+  .hotel-card {
+    margin-bottom: 1.5rem;
+  }
+
+  .hotel-image {
+    height: 180px;
   }
 }
 
-/* Image Gallery */
-.image-gallery {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 10px 0;
+@media (max-width: 576px) {
+  .hero-section {
+    min-height: 250px;
+    padding: 1rem 0;
+  }
+
+  .hero-section h1 {
+    font-size: 1.75rem;
+  }
+
+  .hotel-image {
+    height: 160px;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
 }
 
-.image-gallery img {
-  height: 80px;
-  width: 80px;
+/* Login/Register Forms */
+.auth-card {
+  max-width: 400px;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.auth-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+
+.auth-body {
+  padding: 2rem;
+}
+
+/* Navigation Improvements */
+.navbar-nav .nav-link {
+  transition: color 0.3s ease;
+  font-weight: 500;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #f8f9fa !important;
+}
+
+.dropdown-menu {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Hotel Details Specific Styles */
+.hotel-detail-image {
+  height: 400px;
   object-fit: cover;
+  border-radius: 10px;
+}
+
+.hotel-info-section {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.room-type-card {
+  transition: transform 0.2s ease;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+}
+
+.room-type-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Admin Dashboard Styles */
+.sidebar {
+  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+.sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  padding: 0.75rem 1rem;
+  margin: 0.25rem 0;
   border-radius: 5px;
-  cursor: pointer;
-  transition: transform 0.2s;
 }
 
-.image-gallery img:hover {
-  transform: scale(1.1);
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Custom scrollbar for image gallery */
-.image-gallery::-webkit-scrollbar {
-  height: 8px;
+.main-content {
+  background-color: #f8f9fa;
+  min-height: 100vh;
 }
 
-.image-gallery::-webkit-scrollbar-track {
-  background: #f1f1f1;
+/* Statistics Cards */
+.stat-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
 }
 
-.image-gallery::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+.stat-card:hover {
+  transform: translateY(-2px);
 }
 
-.image-gallery::-webkit-scrollbar-thumb:hover {
-  background: #555;
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+/* Table Styles */
+.table-responsive {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table thead th {
+  background-color: #667eea;
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Modal Improvements */
+.modal-content {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 15px 15px 0 0;
+}
+
+.modal-header .btn-close {
+  filter: invert(1);
+}
+
+/* Utility Classes */
+.text-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.border-radius-lg {
+  border-radius: 15px;
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
