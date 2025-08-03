@@ -1,3 +1,6 @@
+// Auth.js - Authentication handling
+// API_URL được định nghĩa trong utils.js
+
 // Check authentication status
 function checkAuth() {
   const token = localStorage.getItem("token");
@@ -31,6 +34,8 @@ function checkAuth() {
 // Login function
 async function login(email, password) {
   try {
+    console.log("Attempting login to:", `${API_URL}/auth/login`);
+
     const response = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       headers: {
@@ -40,29 +45,37 @@ async function login(email, password) {
     });
 
     const data = await response.json();
+    console.log("Login response:", data);
 
     if (response.ok) {
       // Save token and user info
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
+      showAlert("Đăng nhập thành công!", "success");
+
       // Redirect based on role
-      if (data.user.role === "admin") {
-        window.location.href = "admin/dashboard.html";
-      } else {
-        window.location.href = "index.html";
-      }
+      setTimeout(() => {
+        if (data.user.role === "admin") {
+          window.location.href = "admin/dashboard.html";
+        } else {
+          window.location.href = "index.html";
+        }
+      }, 1000);
     } else {
-      showAlert(data.message || "Đăng nhập thất bại", "danger");
+      showAlert(data.message || "Email hoặc mật khẩu không đúng", "danger");
     }
   } catch (error) {
-    showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
+    console.error("Login error:", error);
+    showAlert("Không thể kết nối đến server. Vui lòng kiểm tra lại!", "danger");
   }
 }
 
 // Register function
 async function register(userData) {
   try {
+    console.log("Attempting register to:", `${API_URL}/auth/register`);
+
     const response = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
       headers: {
@@ -72,6 +85,7 @@ async function register(userData) {
     });
 
     const data = await response.json();
+    console.log("Register response:", data);
 
     if (response.ok) {
       showAlert("Đăng ký thành công! Đang chuyển đến trang đăng nhập...", "success");
@@ -82,7 +96,8 @@ async function register(userData) {
       showAlert(data.message || "Đăng ký thất bại", "danger");
     }
   } catch (error) {
-    showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
+    console.error("Register error:", error);
+    showAlert("Không thể kết nối đến server. Vui lòng kiểm tra lại!", "danger");
   }
 }
 
@@ -90,20 +105,23 @@ async function register(userData) {
 function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  window.location.href = "/index.html";
+  window.location.href = "/Frontend/index.html"; // Sửa đường dẫn
 }
 
 // Check if user is admin
 function checkAdminAccess() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const token = localStorage.getItem("token");
 
-  if (!user.role || user.role !== "admin") {
+  if (!token || !user.role || user.role !== "admin") {
     alert("Bạn không có quyền truy cập trang này!");
     window.location.href = "../index.html";
+    return false;
   }
+  return true;
 }
 
-// Get auth headers
+// Get auth headers - đã có trong utils.js nhưng giữ lại để tương thích
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
   return {
@@ -112,13 +130,36 @@ function getAuthHeaders() {
   };
 }
 
+// Show alert message - đã có trong utils.js nhưng giữ lại để tương thích
+function showAlert(message, type = "danger") {
+  const alertDiv = document.getElementById("alertMessage");
+  if (alertDiv) {
+    alertDiv.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+      alertDiv.innerHTML = "";
+    }, 5000);
+  }
+}
+
 // Handle login form submission
 if (document.getElementById("loginForm")) {
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("email").value;
+    const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+      showAlert("Vui lòng nhập đầy đủ email và mật khẩu!", "warning");
+      return;
+    }
 
     await login(email, password);
   });
@@ -137,10 +178,15 @@ if (document.getElementById("registerForm")) {
       return;
     }
 
+    if (password.length < 6) {
+      showAlert("Mật khẩu phải có ít nhất 6 ký tự!", "warning");
+      return;
+    }
+
     const userData = {
-      fullName: document.getElementById("fullName").value,
-      email: document.getElementById("email").value,
-      phone: document.getElementById("phone").value,
+      fullName: document.getElementById("fullName").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
       password: password,
     };
 

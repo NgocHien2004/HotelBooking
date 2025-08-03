@@ -1,3 +1,6 @@
+// Hotel.js - Hotel listing page functions
+// API_URL được định nghĩa trong utils.js
+
 // Load hotels list
 let allHotels = [];
 let currentPage = 1;

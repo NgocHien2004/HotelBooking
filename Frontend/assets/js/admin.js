@@ -1,3 +1,6 @@
+// API URL configuration
+const API_URL = "http://localhost:5233/api";
+
 // Load dashboard data
 async function loadDashboardData() {
   try {

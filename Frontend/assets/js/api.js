@@ -1,116 +1,84 @@
-// D:\Temp\HotelBooking\Frontend\assets\js\api.js
+// API Base URL - Sửa port cho đúng với backend
+const API_URL = "http://localhost:5233/api";
 
-const API_BASE_URL = "http://localhost:5233/api";
+// Load featured hotels on homepage
+async function loadFeaturedHotels() {
+  try {
+    const response = await fetch(`${API_URL}/hotels?limit=3`);
+    const hotels = await response.json();
 
-// API helper functions
-const api = {
-  // Generic request function
-  async request(endpoint, options = {}) {
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-      });
+    const container = document.getElementById("featuredHotels");
+    if (!container) return;
 
-      const data = await response.json();
+    container.innerHTML = "";
 
-      if (!response.ok) {
-        throw new Error(data.message || "API request failed");
-      }
+    hotels.forEach((hotel) => {
+      container.innerHTML += createHotelCard(hotel);
+    });
+  } catch (error) {
+    console.error("Error loading featured hotels:", error);
+  }
+}
 
-      return data;
-    } catch (error) {
-      console.error("API Error:", error);
-      throw error;
-    }
-  },
+// Create hotel card HTML
+function createHotelCard(hotel) {
+  const amenities = hotel.amenities ? hotel.amenities.split(",").slice(0, 3) : [];
+  const imageUrl =
+    hotel.images && hotel.images.length > 0 ? `http://localhost:3000${hotel.images[0]}` : "https://via.placeholder.com/300x200?text=No+Image";
 
-  // Hotel APIs
-  hotels: {
-    getAll: () => api.request("/hotels"),
-    getById: (id) => api.request(`/hotels/${id}`),
-    create: (data) =>
-      api.request("/hotels", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    update: (id, data) =>
-      api.request(`/hotels/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      }),
-    delete: (id) =>
-      api.request(`/hotels/${id}`, {
-        method: "DELETE",
-      }),
-    uploadImage: async (id, file) => {
-      const formData = new FormData();
-      formData.append("image", file);
+  return `
+        <div class="col-md-4 mb-4">
+            <div class="card hotel-card">
+                <img src="${imageUrl}" class="card-img-top" alt="${hotel.name}">
+                <div class="card-body">
+                    <h5 class="card-title">${hotel.name}</h5>
+                    <p class="text-muted mb-2"><i class="bi bi-geo-alt"></i> ${hotel.city}</p>
+                    <div class="mb-2">
+                        ${amenities.map((a) => `<span class="badge bg-secondary amenity-badge">${a.trim()}</span>`).join("")}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="hotel-price">${formatCurrency(hotel.price)}/đêm</span>
+                        <span class="hotel-rating">
+                            <i class="bi bi-star-fill"></i> ${hotel.rating || "4.0"}
+                        </span>
+                    </div>
+                    <a href="hotel-detail.html?id=${hotel.id}" class="btn btn-primary btn-sm mt-3 w-100">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+    `;
+}
 
-      const response = await fetch(`${API_BASE_URL}/hotels/${id}/upload`, {
-        method: "POST",
-        body: formData,
-      });
+// Format currency
+function formatCurrency(amount) {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+}
 
-      return response.json();
-    },
-  },
+// Show alert message
+function showAlert(message, type = "danger") {
+  const alertDiv = document.getElementById("alertMessage");
+  if (alertDiv) {
+    alertDiv.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
 
-  // Room APIs
-  rooms: {
-    getByHotel: (hotelId) => api.request(`/hotels/${hotelId}/rooms`),
-    create: (hotelId, data) =>
-      api.request(`/hotels/${hotelId}/rooms`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    update: (id, data) =>
-      api.request(`/rooms/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      }),
-    delete: (id) =>
-      api.request(`/rooms/${id}`, {
-        method: "DELETE",
-      }),
-  },
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+      alertDiv.innerHTML = "";
+    }, 5000);
+  }
+}
 
-  // Booking APIs
-  bookings: {
-    getAll: () => api.request("/bookings"),
-    getById: (id) => api.request(`/bookings/${id}`),
-    create: (data) =>
-      api.request("/bookings", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    updateStatus: (id, status) =>
-      api.request(`/bookings/${id}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
-      }),
-  },
-
-  // User APIs
-  users: {
-    getAll: () => api.request("/users"),
-    getById: (id) => api.request(`/users/${id}`),
-    create: (data) =>
-      api.request("/users", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    update: (id, data) =>
-      api.request(`/users/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      }),
-    delete: (id) =>
-      api.request(`/users/${id}`, {
-        method: "DELETE",
-      }),
-  },
-};
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", function () {
+  // Load featured hotels if on homepage
+  if (document.getElementById("featuredHotels")) {
+    loadFeaturedHotels();
+  }
+});
