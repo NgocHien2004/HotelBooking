@@ -10,6 +10,7 @@ function checkAuth() {
   const userMenu = document.getElementById("userMenu");
   const adminMenu = document.getElementById("adminMenu");
   const username = document.getElementById("username");
+  const userDropdownMenu = document.getElementById("userDropdownMenu");
 
   if (token && user.email) {
     // User is logged in
@@ -19,8 +20,32 @@ function checkAuth() {
       if (username) username.textContent = user.hoTen || user.email;
     }
 
-    // Show admin menu if user is admin
-    if (adminMenu && user.vaiTro === "admin") {
+    // Update dropdown menu based on role
+    if (userDropdownMenu && user.vaiTro === "Admin") {
+      // Add admin menu items
+      userDropdownMenu.innerHTML = `
+        <li><h6 class="dropdown-header">Quản lý</h6></li>
+        <li><a class="dropdown-item" href="/admin/dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        <li><a class="dropdown-item" href="/admin/hotels.html"><i class="bi bi-building"></i> Quản lý khách sạn</a></li>
+        <li><a class="dropdown-item" href="/admin/users.html"><i class="bi bi-people"></i> Quản lý người dùng</a></li>
+        <li><a class="dropdown-item" href="/admin/bookings.html"><i class="bi bi-calendar-check"></i> Quản lý đặt phòng</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><h6 class="dropdown-header">Tài khoản</h6></li>
+        <li><a class="dropdown-item" href="/profile.html"><i class="bi bi-person-circle"></i> Thông tin cá nhân</a></li>
+        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
+      `;
+    } else if (userDropdownMenu) {
+      // Regular user menu
+      userDropdownMenu.innerHTML = `
+        <li><a class="dropdown-item" href="/profile.html"><i class="bi bi-person-circle"></i> Thông tin cá nhân</a></li>
+        <li><a class="dropdown-item" href="/my-bookings.html"><i class="bi bi-calendar-check"></i> Đặt phòng của tôi</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
+      `;
+    }
+
+    // Show admin menu if user is admin (for backward compatibility)
+    if (adminMenu && user.vaiTro === "Admin") {
       adminMenu.style.display = "block";
     }
   } else {
@@ -59,7 +84,7 @@ async function login(email, password) {
 
       // Redirect based on role
       setTimeout(() => {
-        if (data.data.user.vaiTro === "admin") {
+        if (data.data.user.vaiTro === "Admin") {
           window.location.href = "admin/dashboard.html";
         } else {
           window.location.href = "index.html";
@@ -92,12 +117,12 @@ async function register(userData) {
     console.log("Register response:", data);
 
     if (response.ok && data.success) {
-      showAlert("Đăng ký thành công! Đang chuyển đến trang đăng nhập...", "success");
+      showAlert("Đăng ký thành công! Vui lòng đăng nhập.", "success");
       setTimeout(() => {
         window.location.href = "login.html";
       }, 2000);
     } else {
-      showAlert(data.message || "Đăng ký thất bại", "danger");
+      showAlert(data.message || "Đăng ký thất bại. Vui lòng thử lại!", "danger");
     }
   } catch (error) {
     console.error("Register error:", error);
@@ -107,69 +132,33 @@ async function register(userData) {
 
 // Logout function
 function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  window.location.href = "/Frontend/index.html";
+  if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/index.html";
+  }
 }
 
-// Check if user is admin
+// Check admin access
 function checkAdminAccess() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const token = localStorage.getItem("token");
-
-  if (!token || !user.vaiTro || user.vaiTro !== "admin") {
+  if (!user.vaiTro || user.vaiTro !== "Admin") {
     alert("Bạn không có quyền truy cập trang này!");
     window.location.href = "../index.html";
-    return false;
-  }
-  return true;
-}
-
-// Get auth headers
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    Authorization: token ? `Bearer ${token}` : "",
-  };
-}
-
-// Show alert message
-function showAlert(message, type = "danger") {
-  const alertDiv = document.getElementById("alertMessage");
-  if (alertDiv) {
-    alertDiv.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
-
-    // Auto dismiss after 5 seconds
-    setTimeout(() => {
-      alertDiv.innerHTML = "";
-    }, 5000);
   }
 }
 
-// Handle login form submission
+// Login form handler
 if (document.getElementById("loginForm")) {
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    const email = document.getElementById("email").value.trim();
+    const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-
-    if (!email || !password) {
-      showAlert("Vui lòng nhập đầy đủ email và mật khẩu!", "warning");
-      return;
-    }
-
     await login(email, password);
   });
 }
 
-// Handle register form submission
+// Register form handler
 if (document.getElementById("registerForm")) {
   document.getElementById("registerForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -182,23 +171,17 @@ if (document.getElementById("registerForm")) {
       return;
     }
 
-    if (password.length < 6) {
-      showAlert("Mật khẩu phải có ít nhất 6 ký tự!", "warning");
-      return;
-    }
-
     const userData = {
-      hoTen: document.getElementById("fullName").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      soDienThoai: document.getElementById("phone").value.trim(),
+      hoTen: document.getElementById("fullName").value,
+      email: document.getElementById("email").value,
       matKhau: password,
+      soDienThoai: document.getElementById("phone").value,
+      vaiTro: "Customer",
     };
 
     await register(userData);
   });
 }
 
-// Check auth status on page load
-document.addEventListener("DOMContentLoaded", function () {
-  checkAuth();
-});
+// Initialize authentication check on page load
+document.addEventListener("DOMContentLoaded", checkAuth);

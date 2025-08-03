@@ -1,5 +1,4 @@
-// API URL configuration
-const API_URL = "http://localhost:5233/api";
+// Admin.js - Admin panel functions
 
 // Load dashboard data
 async function loadDashboardData() {
@@ -8,11 +7,15 @@ async function loadDashboardData() {
     const hotelsResponse = await fetch(`${API_URL}/hotels`, {
       headers: getAuthHeaders(),
     });
-    const hotels = await hotelsResponse.json();
+    const hotelsData = await hotelsResponse.json();
+
+    // Handle response format
+    const hotels = hotelsData.success && hotelsData.data ? hotelsData.data : hotelsData;
+
     document.getElementById("totalHotels").textContent = hotels.length;
 
     // Calculate available rooms (mock data for now)
-    const availableRooms = hotels.reduce((sum, hotel) => sum + (hotel.availableRooms || 10), 0);
+    const availableRooms = hotels.reduce((sum, hotel) => sum + 10, 0);
     document.getElementById("availableRooms").textContent = availableRooms;
 
     // Get today's bookings (mock data)
@@ -27,76 +30,38 @@ async function loadDashboardData() {
     tbody.innerHTML = "";
 
     recentHotels.forEach((hotel) => {
+      // Map Vietnamese property names to English
+      const hotelData = {
+        id: hotel.maKhachSan || hotel.id,
+        name: hotel.tenKhachSan || hotel.name,
+        address: hotel.diaChi || hotel.address,
+        price: hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0,
+        createdAt: hotel.ngayTao || hotel.createdAt,
+      };
+
       tbody.innerHTML += `
-                <tr>
-                    <td>${hotel.id}</td>
-                    <td>${hotel.name}</td>
-                    <td>${hotel.address}</td>
-                    <td>${formatCurrency(hotel.price)}</td>
-                    <td>${new Date(hotel.createdAt).toLocaleDateString("vi-VN")}</td>
-                    <td>
-                        <a href="hotels.html" class="btn btn-sm btn-primary">Xem</a>
-                    </td>
-                </tr>
-            `;
+        <tr>
+          <td>${hotelData.id}</td>
+          <td>${hotelData.name}</td>
+          <td>${hotelData.address}</td>
+          <td>${hotelData.price > 0 ? `Từ ${formatCurrency(hotelData.price)}` : "Chưa có giá"}</td>
+          <td>${new Date(hotelData.createdAt).toLocaleDateString("vi-VN")}</td>
+          <td>
+            <a href="hotels.html" class="btn btn-sm btn-primary">Xem</a>
+          </td>
+        </tr>
+      `;
     });
   } catch (error) {
     console.error("Error loading dashboard data:", error);
+    showAlert("Không thể tải dữ liệu dashboard", "danger");
   }
 }
 
 // Load hotels for admin management
 async function loadAdminHotels() {
-  try {
-    const response = await fetch(`${API_URL}/hotels`, {
-      headers: getAuthHeaders(),
-    });
-    const hotels = await response.json();
-
-    const tbody = document.getElementById("hotelsTableBody");
-    tbody.innerHTML = "";
-
-    hotels.forEach((hotel) => {
-      const imageUrl =
-        hotel.images && hotel.images.length > 0 ? `http://localhost:3000${hotel.images[0]}` : "https://via.placeholder.com/60x60?text=No+Image";
-
-      tbody.innerHTML += `
-                <tr>
-                    <td>${hotel.id}</td>
-                    <td><img src="${imageUrl}" class="table-img" alt="${hotel.name}"></td>
-                    <td>${hotel.name}</td>
-                    <td>${hotel.address}</td>
-                    <td>${hotel.city}</td>
-                    <td>${formatCurrency(hotel.price)}</td>
-                    <td>${hotel.rating || "4.0"}</td>
-                    <td>
-                        <span class="badge bg-success">Hoạt động</span>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-primary btn-action" onclick="editHotel(${hotel.id})">
-                            <i class="bi bi-pencil"></i> Sửa
-                        </button>
-                        <button class="btn btn-sm btn-danger btn-action" onclick="deleteHotel(${hotel.id})">
-                            <i class="bi bi-trash"></i> Xóa
-                        </button>
-                    </td>
-                </tr>
-            `;
-    });
-
-    // Search functionality
-    document.getElementById("searchInput").addEventListener("input", function (e) {
-      const searchTerm = e.target.value.toLowerCase();
-      const rows = tbody.getElementsByTagName("tr");
-
-      Array.from(rows).forEach((row) => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchTerm) ? "" : "none";
-      });
-    });
-  } catch (error) {
-    console.error("Error loading hotels:", error);
-  }
+  // This function is now replaced by admin-hotels.js
+  console.log("This function has been moved to admin-hotels.js");
 }
 
 // Add new hotel
@@ -104,32 +69,36 @@ if (document.getElementById("addHotelForm")) {
   document.getElementById("addHotelForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append("name", document.getElementById("name").value);
-    formData.append("city", document.getElementById("city").value);
-    formData.append("address", document.getElementById("address").value);
-    formData.append("price", document.getElementById("price").value);
-    formData.append("rating", document.getElementById("rating").value);
-    formData.append("description", document.getElementById("description").value);
-    formData.append("amenities", document.getElementById("amenities").value);
-
-    // Add images
-    const images = document.getElementById("images").files;
-    for (let i = 0; i < images.length; i++) {
-      formData.append("images", images[i]);
-    }
+    // Create object with Vietnamese property names
+    const hotelData = {
+      tenKhachSan: document.getElementById("name").value,
+      thanhPho: document.getElementById("city").value,
+      diaChi: document.getElementById("address").value,
+      danhGiaTrungBinh: parseFloat(document.getElementById("rating").value || 4.0),
+      moTa: document.getElementById("description").value,
+      tienNghi: document.getElementById("amenities").value,
+    };
 
     try {
       const response = await fetch(`${API_URL}/hotels`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
         },
-        body: formData,
+        body: JSON.stringify(hotelData),
       });
 
       if (response.ok) {
         showAlert("Thêm khách sạn thành công!", "success");
+
+        // Handle images if any
+        const images = document.getElementById("images").files;
+        if (images.length > 0) {
+          // TODO: Implement image upload
+          console.log("Images to upload:", images.length);
+        }
+
         setTimeout(() => {
           window.location.href = "hotels.html";
         }, 2000);
@@ -138,6 +107,7 @@ if (document.getElementById("addHotelForm")) {
         showAlert(data.message || "Có lỗi xảy ra!", "danger");
       }
     } catch (error) {
+      console.error("Error adding hotel:", error);
       showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
     }
   });
@@ -149,30 +119,55 @@ async function editHotel(id) {
     const response = await fetch(`${API_URL}/hotels/${id}`, {
       headers: getAuthHeaders(),
     });
-    const hotel = await response.json();
+    const data = await response.json();
+
+    // Handle response format
+    const hotel = data.success && data.data ? data.data : data;
+
+    // Map property names
+    const hotelData = {
+      id: hotel.maKhachSan || hotel.id,
+      name: hotel.tenKhachSan || hotel.name,
+      city: hotel.thanhPho || hotel.city,
+      address: hotel.diaChi || hotel.address,
+      rating: hotel.danhGiaTrungBinh || hotel.rating || 4.0,
+      description: hotel.moTa || hotel.description || "",
+      amenities: hotel.tienNghi || hotel.amenities || "",
+      images: hotel.hinhAnh || hotel.images || [],
+    };
 
     // Fill form with hotel data
-    document.getElementById("editHotelId").value = hotel.id;
-    document.getElementById("editName").value = hotel.name;
-    document.getElementById("editCity").value = hotel.city;
-    document.getElementById("editAddress").value = hotel.address;
-    document.getElementById("editPrice").value = hotel.price;
-    document.getElementById("editRating").value = hotel.rating || "4.0";
-    document.getElementById("editDescription").value = hotel.description || "";
-    document.getElementById("editAmenities").value = hotel.amenities || "";
+    document.getElementById("editHotelId").value = hotelData.id;
+    document.getElementById("editName").value = hotelData.name;
+    document.getElementById("editCity").value = hotelData.city;
+    document.getElementById("editAddress").value = hotelData.address;
+    document.getElementById("editRating").value = hotelData.rating;
+    document.getElementById("editDescription").value = hotelData.description;
+    document.getElementById("editAmenities").value = hotelData.amenities;
 
     // Show current images
     const currentImagesDiv = document.getElementById("currentImages");
     currentImagesDiv.innerHTML = "";
 
-    if (hotel.images && hotel.images.length > 0) {
-      hotel.images.forEach((image, index) => {
+    if (hotelData.images && hotelData.images.length > 0) {
+      hotelData.images.forEach((image, index) => {
+        let imageUrl = "";
+        if (typeof image === "object" && image.duongDanAnh) {
+          imageUrl = image.duongDanAnh;
+        } else if (typeof image === "string") {
+          imageUrl = image;
+        }
+
+        if (!imageUrl.startsWith("http")) {
+          imageUrl = `http://localhost:5233${imageUrl}`;
+        }
+
         currentImagesDiv.innerHTML += `
-                    <div class="image-container">
-                        <img src="http://localhost:3000${image}" alt="Image ${index + 1}">
-                        <button type="button" class="remove-image" onclick="removeImage(${hotel.id}, '${image}')">×</button>
-                    </div>
-                `;
+          <div class="image-container">
+            <img src="${imageUrl}" alt="Image ${index + 1}">
+            <button type="button" class="remove-image" onclick="removeImage(${hotelData.id}, '${imageUrl}')">×</button>
+          </div>
+        `;
       });
     }
 
@@ -181,36 +176,32 @@ async function editHotel(id) {
     modal.show();
   } catch (error) {
     console.error("Error loading hotel:", error);
-    showAlert("Có lỗi xảy ra!", "danger");
+    showAlert("Có lỗi xảy ra khi tải thông tin khách sạn!", "danger");
   }
 }
 
 // Update hotel
 async function updateHotel() {
   const id = document.getElementById("editHotelId").value;
-  const formData = new FormData();
 
-  formData.append("name", document.getElementById("editName").value);
-  formData.append("city", document.getElementById("editCity").value);
-  formData.append("address", document.getElementById("editAddress").value);
-  formData.append("price", document.getElementById("editPrice").value);
-  formData.append("rating", document.getElementById("editRating").value);
-  formData.append("description", document.getElementById("editDescription").value);
-  formData.append("amenities", document.getElementById("editAmenities").value);
-
-  // Add new images if selected
-  const newImages = document.getElementById("editImages").files;
-  for (let i = 0; i < newImages.length; i++) {
-    formData.append("images", newImages[i]);
-  }
+  // Create object with Vietnamese property names
+  const hotelData = {
+    tenKhachSan: document.getElementById("editName").value,
+    thanhPho: document.getElementById("editCity").value,
+    diaChi: document.getElementById("editAddress").value,
+    danhGiaTrungBinh: parseFloat(document.getElementById("editRating").value),
+    moTa: document.getElementById("editDescription").value,
+    tienNghi: document.getElementById("editAmenities").value,
+  };
 
   try {
     const response = await fetch(`${API_URL}/hotels/${id}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
       },
-      body: formData,
+      body: JSON.stringify(hotelData),
     });
 
     if (response.ok) {
@@ -222,6 +213,7 @@ async function updateHotel() {
       showAlert(data.message || "Có lỗi xảy ra!", "danger");
     }
   } catch (error) {
+    console.error("Error updating hotel:", error);
     showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
   }
 }
@@ -246,6 +238,7 @@ async function deleteHotel(id) {
       showAlert(data.message || "Có lỗi xảy ra!", "danger");
     }
   } catch (error) {
+    console.error("Error deleting hotel:", error);
     showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
   }
 }
@@ -259,7 +252,10 @@ async function removeImage(hotelId, imagePath) {
   try {
     const response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify({ imagePath }),
     });
 
@@ -270,6 +266,7 @@ async function removeImage(hotelId, imagePath) {
       showAlert("Có lỗi xảy ra!", "danger");
     }
   } catch (error) {
+    console.error("Error removing image:", error);
     showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
   }
 }

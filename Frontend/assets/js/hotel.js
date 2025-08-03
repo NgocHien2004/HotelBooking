@@ -1,236 +1,161 @@
-// Hotels page functionality
+// Hotel.js - Hotel listing page functions
+// API_URL được định nghĩa trong utils.js
+
+// Load hotels list
 let allHotels = [];
-
-document.addEventListener("DOMContentLoaded", function () {
-  initializeHotelsPage();
-});
-
-async function initializeHotelsPage() {
-  try {
-    await loadHotels();
-    setupEventListeners();
-  } catch (error) {
-    console.error("Error initializing hotels page:", error);
-    showError("Có lỗi xảy ra khi tải trang");
-  }
-}
-
-function setupEventListeners() {
-  // Enter key for search
-  document.getElementById("searchInput").addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-      searchHotels();
-    }
-  });
-
-  document.getElementById("cityFilter").addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-      searchHotels();
-    }
-  });
-}
+let currentPage = 1;
+const itemsPerPage = 6;
 
 async function loadHotels() {
-  showLoading(true);
   try {
-    const response = await fetch(`${API_BASE_URL}/api/hotels`);
+    const response = await fetch(`${API_URL}/hotels`);
+    const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    if (result.success) {
-      allHotels = result.data;
-      displayHotels(allHotels);
+    // Kiểm tra response format từ backend
+    if (data.success && data.data) {
+      allHotels = data.data;
     } else {
-      throw new Error(result.message || "Không thể tải danh sách khách sạn");
+      allHotels = data; // Fallback nếu response trực tiếp là array
     }
+
+    // Extract unique locations for filter
+    const locations = [...new Set(allHotels.map((h) => h.thanhPho || h.city))];
+    const locationFilter = document.getElementById("locationFilter");
+    locationFilter.innerHTML = '<option value="">Tất cả địa điểm</option>';
+    locations.forEach((location) => {
+      if (location) {
+        locationFilter.innerHTML += `<option value="${location}">${location}</option>`;
+      }
+    });
+
+    displayHotels();
   } catch (error) {
     console.error("Error loading hotels:", error);
-    showError("Không thể tải danh sách khách sạn. Vui lòng thử lại sau.");
-  } finally {
-    showLoading(false);
+    document.getElementById("hotelsList").innerHTML = `
+            <div class="col-12 text-center">
+                <p class="text-danger">Có lỗi xảy ra khi tải danh sách khách sạn.</p>
+            </div>
+        `;
   }
 }
 
-async function searchHotels() {
-  const searchTerm = document.getElementById("searchInput").value.trim();
-  const city = document.getElementById("cityFilter").value.trim();
+function displayHotels() {
+  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+  const selectedLocation = document.getElementById("locationFilter").value;
+  const priceRange = document.getElementById("priceFilter").value;
 
-  showLoading(true);
+  // Filter hotels
+  let filteredHotels = allHotels.filter((hotel) => {
+    // Xử lý cả tên property tiếng Việt và tiếng Anh
+    const hotelName = hotel.tenKhachSan || hotel.name || "";
+    const hotelCity = hotel.thanhPho || hotel.city || "";
+    const hotelAddress = hotel.diaChi || hotel.address || "";
+    const hotelPrice = hotel.giaMotDem || hotel.price || 0;
 
-  try {
-    let url = `${API_BASE_URL}/api/hotels/search?`;
-    const params = new URLSearchParams();
+    const matchSearch =
+      hotelName.toLowerCase().includes(searchTerm) || hotelCity.toLowerCase().includes(searchTerm) || hotelAddress.toLowerCase().includes(searchTerm);
+    const matchLocation = !selectedLocation || hotelCity === selectedLocation;
 
-    if (searchTerm) {
-      params.append("searchTerm", searchTerm);
+    let matchPrice = true;
+    if (priceRange) {
+      const [min, max] = priceRange.split("-").map(Number);
+      matchPrice = hotelPrice >= min && hotelPrice <= max;
     }
 
-    if (city) {
-      params.append("city", city);
-    }
+    return matchSearch && matchLocation && matchPrice;
+  });
 
-    url += params.toString();
+  // Pagination
+  const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const hotelsToDisplay = filteredHotels.slice(startIndex, endIndex);
 
-    const response = await fetch(url);
+  // Display hotels
+  const container = document.getElementById("hotelsList");
+  container.innerHTML = "";
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    if (result.success) {
-      displayHotels(result.data);
-    } else {
-      throw new Error(result.message || "Không thể tìm kiếm khách sạn");
-    }
-  } catch (error) {
-    console.error("Error searching hotels:", error);
-    showError("Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.");
-  } finally {
-    showLoading(false);
-  }
-}
-
-function displayHotels(hotels) {
-  const container = document.getElementById("hotelsContainer");
-  const noResults = document.getElementById("noResults");
-
-  if (!hotels || hotels.length === 0) {
-    container.innerHTML = "";
-    noResults.classList.remove("d-none");
+  if (hotelsToDisplay.length === 0) {
+    container.innerHTML = `
+            <div class="col-12 text-center">
+                <p>Không tìm thấy khách sạn nào.</p>
+            </div>
+        `;
     return;
   }
 
-  noResults.classList.add("d-none");
+  hotelsToDisplay.forEach((hotel) => {
+    container.innerHTML += createHotelCard(hotel);
+  });
 
-  const hotelsHtml = hotels.map((hotel) => createHotelCard(hotel)).join("");
-  container.innerHTML = hotelsHtml;
+  // Update pagination
+  updatePagination(totalPages);
 }
 
-function createHotelCard(hotel) {
-  // Lấy ảnh đầu tiên hoặc ảnh placeholder
-  const imageUrl =
-    hotel.hinhAnhs && hotel.hinhAnhs.length > 0
-      ? `${API_BASE_URL}${hotel.hinhAnhs[0].duongDanAnh}`
-      : `${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg`;
+function updatePagination(totalPages) {
+  const pagination = document.getElementById("pagination");
+  pagination.innerHTML = "";
 
-  // Tính số loại phòng
-  const roomTypesCount = hotel.loaiPhongs ? hotel.loaiPhongs.length : 0;
+  if (totalPages <= 1) return;
 
-  // Hiển thị rating
-  const rating = hotel.danhGiaTrungBinh || 0;
-  const ratingStars = generateStarRating(rating);
+  // Previous button
+  pagination.innerHTML += `
+        <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Trước</a>
+        </li>
+    `;
 
-  return `
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 hotel-card">
-                <div class="position-relative">
-                    <img src="${imageUrl}" 
-                         class="card-img-top hotel-image" 
-                         alt="${hotel.tenKhachSan}"
-                         onerror="this.src='${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg'">
-                    <div class="position-absolute top-0 end-0 m-2">
-                        <span class="badge bg-primary">${roomTypesCount} loại phòng</span>
-                    </div>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">${hotel.tenKhachSan}</h5>
-                    <div class="mb-2">
-                        <i class="fas fa-map-marker-alt text-muted"></i>
-                        <span class="text-muted">${hotel.diaChi}</span>
-                    </div>
-                    ${
-                      hotel.thanhPho
-                        ? `
-                        <div class="mb-2">
-                            <i class="fas fa-city text-muted"></i>
-                            <span class="text-muted">${hotel.thanhPho}</span>
-                        </div>
-                    `
-                        : ""
-                    }
-                    <div class="mb-2">
-                        ${ratingStars}
-                        <span class="text-muted ms-1">(${rating.toFixed(1)})</span>
-                    </div>
-                    ${
-                      hotel.moTa
-                        ? `
-                        <p class="card-text flex-grow-1">${truncateText(hotel.moTa, 100)}</p>
-                    `
-                        : ""
-                    }
-                    <div class="mt-auto">
-                        <button class="btn btn-primary w-100" onclick="viewHotelDetails(${hotel.maKhachSan})">
-                            <i class="fas fa-eye"></i> Xem chi tiết
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+  // Page numbers
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+      pagination.innerHTML += `
+                <li class="page-item ${i === currentPage ? "active" : ""}">
+                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                </li>
+            `;
+    } else if (i === currentPage - 2 || i === currentPage + 2) {
+      pagination.innerHTML += `
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">...</a>
+                </li>
+            `;
+    }
+  }
+
+  // Next button
+  pagination.innerHTML += `
+        <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Sau</a>
+        </li>
     `;
 }
 
-function generateStarRating(rating) {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+function changePage(page) {
+  currentPage = page;
+  displayHotels();
+  window.scrollTo(0, 0);
+}
 
-  let starsHtml = "";
+// Event listeners
+document.addEventListener("DOMContentLoaded", function () {
+  if (document.getElementById("hotelsList")) {
+    loadHotels();
 
-  // Full stars
-  for (let i = 0; i < fullStars; i++) {
-    starsHtml += '<i class="fas fa-star text-warning"></i>';
+    // Search functionality
+    document.getElementById("searchInput").addEventListener("input", () => {
+      currentPage = 1;
+      displayHotels();
+    });
+
+    // Filter functionality
+    document.getElementById("locationFilter").addEventListener("change", () => {
+      currentPage = 1;
+      displayHotels();
+    });
+
+    document.getElementById("priceFilter").addEventListener("change", () => {
+      currentPage = 1;
+      displayHotels();
+    });
   }
-
-  // Half star
-  if (hasHalfStar) {
-    starsHtml += '<i class="fas fa-star-half-alt text-warning"></i>';
-  }
-
-  // Empty stars
-  for (let i = 0; i < emptyStars; i++) {
-    starsHtml += '<i class="far fa-star text-warning"></i>';
-  }
-
-  return starsHtml;
-}
-
-function truncateText(text, maxLength) {
-  if (text.length <= maxLength) return text;
-  return text.substr(0, maxLength) + "...";
-}
-
-function viewHotelDetails(hotelId) {
-  // Chuyển đến trang chi tiết khách sạn
-  window.location.href = `hotel-details.html?id=${hotelId}`;
-}
-
-function showLoading(show) {
-  const loadingIndicator = document.getElementById("loadingIndicator");
-  const hotelsContainer = document.getElementById("hotelsContainer");
-
-  if (show) {
-    loadingIndicator.classList.remove("d-none");
-    hotelsContainer.innerHTML = "";
-  } else {
-    loadingIndicator.classList.add("d-none");
-  }
-}
-
-function showError(message) {
-  const container = document.getElementById("hotelsContainer");
-  container.innerHTML = `
-        <div class="col-12">
-            <div class="alert alert-danger" role="alert">
-                <i class="fas fa-exclamation-triangle"></i>
-                ${message}
-            </div>
-        </div>
-    `;
-}
+});

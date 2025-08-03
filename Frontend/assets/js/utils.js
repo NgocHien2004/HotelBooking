@@ -42,31 +42,65 @@ function showAlert(message, type = "danger") {
   }
 }
 
-// Create hotel card HTML
+// Create hotel card HTML - Hỗ trợ cả property tiếng Việt và tiếng Anh
 function createHotelCard(hotel) {
-  const amenities = hotel.amenities ? hotel.amenities.split(",").slice(0, 3) : [];
-  const imageUrl =
-    hotel.images && hotel.images.length > 0 ? `http://localhost:5233${hotel.images[0]}` : "https://via.placeholder.com/300x200?text=No+Image";
+  // Map properties từ backend (tiếng Việt) sang frontend (tiếng Anh)
+  const hotelData = {
+    id: hotel.maKhachSan || hotel.id,
+    name: hotel.tenKhachSan || hotel.name,
+    city: hotel.thanhPho || hotel.city,
+    address: hotel.diaChi || hotel.address,
+    price: hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0,
+    rating: hotel.danhGiaTrungBinh || hotel.rating || 4.0,
+    description: hotel.moTa || hotel.description,
+    images: hotel.hinhAnh || hotel.images || [],
+    amenities: hotel.tienNghi || hotel.amenities || "",
+  };
+
+  const amenities = hotelData.amenities ? hotelData.amenities.split(",").slice(0, 3) : [];
+
+  // Xử lý đường dẫn hình ảnh
+  let imageUrl = "/uploads/temp/hotel-placeholder.jpg"; // Default placeholder
+
+  if (hotelData.images && hotelData.images.length > 0) {
+    // Kiểm tra xem image có phải là object hay string
+    if (typeof hotelData.images[0] === "object" && hotelData.images[0].duongDanAnh) {
+      // Nếu đường dẫn đã có http thì dùng trực tiếp, không thì thêm base URL
+      if (hotelData.images[0].duongDanAnh.startsWith("http")) {
+        imageUrl = hotelData.images[0].duongDanAnh;
+      } else {
+        imageUrl = `http://localhost:5233${hotelData.images[0].duongDanAnh}`;
+      }
+    } else if (typeof hotelData.images[0] === "string") {
+      // Nếu là string, kiểm tra xem có phải là đường dẫn đầy đủ không
+      if (hotelData.images[0].startsWith("http")) {
+        imageUrl = hotelData.images[0];
+      } else {
+        imageUrl = `http://localhost:5233${hotelData.images[0]}`;
+      }
+    }
+  }
 
   return `
         <div class="col-md-4 mb-4">
             <div class="card hotel-card h-100">
-                <img src="${imageUrl}" class="card-img-top" alt="${
-    hotel.name
-  }" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                <img src="${imageUrl}" class="card-img-top" alt="${hotelData.name}" 
+                     onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">${hotel.name}</h5>
-                    <p class="text-muted mb-2"><i class="bi bi-geo-alt"></i> ${hotel.city}</p>
+                    <h5 class="card-title">${hotelData.name}</h5>
+                    <p class="text-muted mb-2"><i class="bi bi-geo-alt"></i> ${hotelData.city}</p>
                     <div class="mb-2">
                         ${amenities.map((a) => `<span class="badge bg-secondary amenity-badge">${a.trim()}</span>`).join("")}
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-auto">
-                        <span class="hotel-price">${formatCurrency(hotel.price)}/đêm</span>
+                        <span class="hotel-price">
+                            ${hotelData.price > 0 ? `Từ ${formatCurrency(hotelData.price)}/đêm` : "Liên hệ"}
+                        </span>
                         <span class="hotel-rating">
-                            <i class="bi bi-star-fill"></i> ${hotel.rating || "4.0"}
+                            <i class="bi bi-star-fill"></i> ${hotelData.rating}
                         </span>
                     </div>
-                    <a href="hotel-detail.html?id=${hotel.id}" class="btn btn-primary btn-sm mt-3 w-100">Xem chi tiết</a>
+                    <a href="hotel-detail.html?id=${hotelData.id}" class="btn btn-primary btn-sm mt-3 w-100">Xem chi tiết</a>
                 </div>
             </div>
         </div>
@@ -82,44 +116,18 @@ function parseJwt(token) {
   }
 }
 
-// Check if token is expired
-function isTokenExpired(token) {
-  const decoded = parseJwt(token);
-  if (!decoded) return true;
-
-  const currentTime = Date.now() / 1000;
-  return decoded.exp < currentTime;
-}
-
-// Validate token and refresh if needed
-function validateToken() {
-  const token = localStorage.getItem("token");
-  if (!token) return false;
-
-  if (isTokenExpired(token)) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    return false;
+// Check admin access
+function checkAdminAccess() {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  if (!user.vaiTro || user.vaiTro !== "Admin") {
+    alert("Bạn không có quyền truy cập trang này!");
+    window.location.href = "../index.html";
   }
-
-  return true;
 }
 
-// Format date to Vietnamese format
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("vi-VN");
-}
-
-// Debounce function for search
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
+// Logout function
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href = "index.html";
 }

@@ -5,27 +5,44 @@ document.addEventListener("DOMContentLoaded", function () {
 
 async function loadFeaturedHotels() {
   showLoading(true);
+  debugLog("Loading featured hotels from API...");
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/hotels`);
+    const url = `${API_BASE_URL}/api/hotels`;
+    debugLog("API URL:", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    debugLog("Response status:", response.status);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      debugLog("Error response text:", errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
+    debugLog("API Response:", result);
 
     if (result.success && result.data) {
       // Hiển thị 6 khách sạn đầu tiên (có thể sắp xếp theo rating)
       const featuredHotels = result.data.sort((a, b) => b.danhGiaTrungBinh - a.danhGiaTrungBinh).slice(0, 6);
 
+      debugLog("Featured hotels loaded successfully:", featuredHotels.length);
       displayFeaturedHotels(featuredHotels);
     } else {
       throw new Error(result.message || "Không thể tải danh sách khách sạn");
     }
   } catch (error) {
     console.error("Error loading featured hotels:", error);
-    showError("Không thể tải khách sạn nổi bật. Vui lòng thử lại sau.");
+    debugLog("Detailed error:", error);
+    showError(`Không thể tải khách sạn nổi bật: ${error.message}`);
   } finally {
     showLoading(false);
   }

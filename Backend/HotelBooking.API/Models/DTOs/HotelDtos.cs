@@ -11,7 +11,9 @@ namespace HotelBooking.API.DTOs
         public string? MoTa { get; set; }
         public decimal DanhGiaTrungBinh { get; set; }
         public DateTime NgayTao { get; set; }
-        public List<HinhAnhKhachSanDto> HinhAnhs { get; set; } = new List<HinhAnhKhachSanDto>();
+        public decimal? GiaPhongThapNhat { get; set; } // Giá phòng thấp nhất từ LoaiPhong
+        public string? TienNghi { get; set; } // Thêm tiện nghi nếu cần
+        public List<HinhAnhKhachSanDto> HinhAnh { get; set; } = new List<HinhAnhKhachSanDto>();
         public List<LoaiPhongDto> LoaiPhongs { get; set; } = new List<LoaiPhongDto>();
     }
 
@@ -29,6 +31,10 @@ namespace HotelBooking.API.DTOs
         public string? ThanhPho { get; set; }
 
         public string? MoTa { get; set; }
+        
+        public string? TienNghi { get; set; }
+        
+        public decimal? DanhGiaTrungBinh { get; set; }
     }
 
     public class UpdateKhachSanDto
@@ -45,6 +51,10 @@ namespace HotelBooking.API.DTOs
         public string? ThanhPho { get; set; }
 
         public string? MoTa { get; set; }
+        
+        public string? TienNghi { get; set; }
+        
+        public decimal? DanhGiaTrungBinh { get; set; }
     }
 
     public class HinhAnhKhachSanDto

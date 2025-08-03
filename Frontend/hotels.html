@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Danh sách khách sạn - Hotel Booking</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-    <link href="css/style.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    <link href="assets/css/style.css" rel="stylesheet" />
   </head>
   <body>
     <!-- Navigation -->
@@ -33,10 +33,10 @@
             <li class="nav-item" id="userMenu" style="display: none">
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                  <span id="username"></span>
+                  <i class="bi bi-person-circle"></i> <span id="username"></span>
                 </a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#" onclick="logout()">Đăng xuất</a></li>
+                <ul class="dropdown-menu dropdown-menu-end" id="userDropdownMenu">
+                  <!-- Menu items will be populated by auth.js based on user role -->
                 </ul>
               </div>
             </li>
@@ -50,54 +50,53 @@
       <div class="container">
         <h2 class="mb-4">Danh sách khách sạn</h2>
 
+        <!-- Alert Message -->
+        <div id="alertMessage"></div>
+
         <!-- Search and Filter -->
         <div class="row mb-4">
           <div class="col-md-6">
             <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm khách sạn..." />
           </div>
-          <div class="col-md-4">
-            <input type="text" class="form-control" id="cityFilter" placeholder="Lọc theo thành phố..." />
+          <div class="col-md-3">
+            <select class="form-select" id="locationFilter">
+              <option value="">Tất cả địa điểm</option>
+            </select>
           </div>
-          <div class="col-md-2">
-            <button class="btn btn-primary w-100" onclick="searchHotels()"><i class="fas fa-search"></i> Tìm kiếm</button>
+          <div class="col-md-3">
+            <select class="form-select" id="priceFilter">
+              <option value="">Tất cả mức giá</option>
+              <option value="0-1000000">Dưới 1 triệu</option>
+              <option value="1000000-2000000">1 - 2 triệu</option>
+              <option value="2000000-5000000">2 - 5 triệu</option>
+              <option value="5000000-999999999">Trên 5 triệu</option>
+            </select>
           </div>
-        </div>
-
-        <!-- Loading indicator -->
-        <div id="loadingIndicator" class="text-center d-none">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Đang tải...</span>
-          </div>
-          <p class="mt-2">Đang tải danh sách khách sạn...</p>
         </div>
 
         <!-- Hotels Grid -->
-        <div class="row" id="hotelsContainer">
+        <div class="row" id="hotelsList">
           <!-- Hotels will be loaded here -->
         </div>
 
-        <!-- No results message -->
-        <div id="noResults" class="text-center d-none">
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
-            Không tìm thấy khách sạn nào phù hợp với tiêu chí tìm kiếm.
-          </div>
-        </div>
+        <!-- Pagination -->
+        <nav aria-label="Page navigation" class="mt-4">
+          <ul class="pagination justify-content-center" id="pagination"></ul>
+        </nav>
       </div>
     </section>
 
     <!-- Footer -->
     <footer class="bg-dark text-white py-4 mt-5">
       <div class="container text-center">
-        <p class="mb-0">&copy; 2024 Hotel Booking. Tất cả quyền được bảo lưu.</p>
+        <p class="mb-0">&copy; 2024 Hotel Booking. All rights reserved.</p>
       </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/hotels.js"></script>
+    <!-- Quan trọng: Load các file JS theo đúng thứ tự -->
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/hotel.js"></script>
   </body>
 </html>

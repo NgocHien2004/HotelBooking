@@ -11,13 +11,11 @@ namespace HotelBooking.API.Services.Implementations
     {
         private readonly HotelBookingContext _context;
         private readonly IMapper _mapper;
-        private readonly IWebHostEnvironment _environment;
 
-        public HotelService(HotelBookingContext context, IMapper mapper, IWebHostEnvironment environment)
+        public HotelService(HotelBookingContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
-            _environment = environment;
         }
 
         public async Task<IEnumerable<KhachSanDto>> GetAllHotelsAsync()
@@ -30,18 +28,12 @@ namespace HotelBooking.API.Services.Implementations
 
             var hotelDtos = _mapper.Map<IEnumerable<KhachSanDto>>(hotels);
             
-            // Xử lý ảnh placeholder cho các khách sạn không có ảnh
+            // Tính giá phòng thấp nhất cho mỗi khách sạn
             foreach (var hotelDto in hotelDtos)
             {
-                if (!hotelDto.HinhAnhs.Any())
+                if (hotelDto.LoaiPhongs != null && hotelDto.LoaiPhongs.Any())
                 {
-                    hotelDto.HinhAnhs.Add(new HinhAnhKhachSanDto
-                    {
-                        MaAnh = 0,
-                        MaKhachSan = hotelDto.MaKhachSan,
-                        DuongDanAnh = "/uploads/temp/hotel-placeholder.jpg",
-                        MoTa = "Ảnh mặc định"
-                    });
+                    hotelDto.GiaPhongThapNhat = hotelDto.LoaiPhongs.Min(lp => lp.GiaMotDem);
                 }
             }
 
@@ -60,16 +52,10 @@ namespace HotelBooking.API.Services.Implementations
 
             var hotelDto = _mapper.Map<KhachSanDto>(hotel);
             
-            // Xử lý ảnh placeholder nếu không có ảnh
-            if (!hotelDto.HinhAnhs.Any())
+            // Tính giá phòng thấp nhất
+            if (hotelDto.LoaiPhongs != null && hotelDto.LoaiPhongs.Any())
             {
-                hotelDto.HinhAnhs.Add(new HinhAnhKhachSanDto
-                {
-                    MaAnh = 0,
-                    MaKhachSan = hotelDto.MaKhachSan,
-                    DuongDanAnh = "/uploads/temp/hotel-placeholder.jpg",
-                    MoTa = "Ảnh mặc định"
-                });
+                hotelDto.GiaPhongThapNhat = hotelDto.LoaiPhongs.Min(lp => lp.GiaMotDem);
             }
 
             return hotelDto;
@@ -97,44 +83,29 @@ namespace HotelBooking.API.Services.Implementations
             var hotels = await query.OrderBy(h => h.TenKhachSan).ToListAsync();
             var hotelDtos = _mapper.Map<IEnumerable<KhachSanDto>>(hotels);
             
-            // Xử lý ảnh placeholder cho các khách sạn không có ảnh
+            // Tính giá phòng thấp nhất cho mỗi khách sạn
             foreach (var hotelDto in hotelDtos)
             {
-                if (!hotelDto.HinhAnhs.Any())
+                if (hotelDto.LoaiPhongs != null && hotelDto.LoaiPhongs.Any())
                 {
-                    hotelDto.HinhAnhs.Add(new HinhAnhKhachSanDto
-                    {
-                        MaAnh = 0,
-                        MaKhachSan = hotelDto.MaKhachSan,
-                        DuongDanAnh = "/uploads/temp/hotel-placeholder.jpg",
-                        MoTa = "Ảnh mặc định"
-                    });
+                    hotelDto.GiaPhongThapNhat = hotelDto.LoaiPhongs.Min(lp => lp.GiaMotDem);
                 }
             }
 
             return hotelDtos;
         }
 
-        public async Task<IEnumerable<string>> GetAvailableCitiesAsync()
-        {
-            var cities = await _context.KhachSans
-                .Where(h => !string.IsNullOrWhiteSpace(h.ThanhPho))
-                .Select(h => h.ThanhPho!)
-                .Distinct()
-                .OrderBy(city => city)
-                .ToListAsync();
-
-            return cities;
-        }
-
         public async Task<KhachSanDto> CreateHotelAsync(CreateKhachSanDto createHotelDto)
         {
             var hotel = _mapper.Map<KhachSan>(createHotelDto);
             
+            // Thêm tiện nghi nếu có (lưu vào một field khác nếu cần)
+            // Tùy thuộc vào cách bạn muốn lưu tiện nghi trong database
+            
             _context.KhachSans.Add(hotel);
             await _context.SaveChangesAsync();
 
-            return await GetHotelByIdAsync(hotel.MaKhachSan) ??
+            return await GetHotelByIdAsync(hotel.MaKhachSan) ?? 
                 throw new InvalidOperationException("Không thể tạo khách sạn");
         }
 
@@ -195,6 +166,18 @@ namespace HotelBooking.API.Services.Implementations
                 .ToListAsync();
 
             return _mapper.Map<IEnumerable<HinhAnhKhachSanDto>>(images);
+        }
+
+        public async Task<IEnumerable<string>> GetAvailableCitiesAsync()
+        {
+            var cities = await _context.KhachSans
+                .Where(h => !string.IsNullOrEmpty(h.ThanhPho))
+                .Select(h => h.ThanhPho!)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
+            return cities;
         }
     }
 }
