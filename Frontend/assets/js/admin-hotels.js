@@ -1,180 +1,98 @@
-// Admin Hotels Management
-let allHotels = [];
-let currentView = "grid"; // chỉ còn grid view
+// Global variables
+const API_URL = "http://localhost:5233/api";
+let hotels = [];
 let currentHotelId = null;
+let modal = null;
 
-// Initialize page
+// Initialize the page
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("DOM loaded, initializing admin hotels page...");
+  console.log("Admin hotels page loaded");
+
+  // Initialize Bootstrap modal
+  const modalElement = document.getElementById("hotelDetailsModal");
+  if (modalElement) {
+    modal = new bootstrap.Modal(modalElement);
+  }
+
+  // Load hotels data
   loadHotels();
-  setupEventListeners();
+
+  // Bind search event
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", filterHotels);
+  }
 });
 
-// Setup event listeners
-function setupEventListeners() {
-  // Chỉ còn grid view - loại bỏ table view
-  document.getElementById("gridViewBtn").addEventListener("click", () => switchView("grid"));
-
-  // Ẩn nút table view
-  const tableViewBtn = document.getElementById("tableViewBtn");
-  if (tableViewBtn) {
-    tableViewBtn.style.display = "none";
-  }
-
-  // Search
-  document.getElementById("searchInput").addEventListener("input", filterHotels);
-
-  // Setup form handlers
-  setupFormHandlers();
-}
-
-// Setup form handlers
-function setupFormHandlers() {
-  // Edit hotel form
-  const editHotelForm = document.getElementById("editHotelForm");
-  if (editHotelForm) {
-    editHotelForm.addEventListener("submit", function (e) {
-      e.preventDefault();
-      updateHotel();
-    });
-  }
-
-  // Add room type form
-  const addRoomTypeForm = document.getElementById("addRoomTypeForm");
-  if (addRoomTypeForm) {
-    addRoomTypeForm.addEventListener("submit", function (e) {
-      e.preventDefault();
-      addRoomType();
-    });
-  }
-
-  // Edit room type form
-  const editRoomTypeForm = document.getElementById("editRoomTypeForm");
-  if (editRoomTypeForm) {
-    editRoomTypeForm.addEventListener("submit", function (e) {
-      e.preventDefault();
-      updateRoomType();
-    });
-  }
-}
-
-// Switch view (chỉ còn grid)
-function switchView(view) {
-  currentView = "grid";
-  document.getElementById("gridViewBtn").classList.add("active");
-  document.getElementById("hotelsGridView").style.display = "flex";
-
-  // Ẩn table view
-  const tableView = document.getElementById("hotelsTableView");
-  if (tableView) {
-    tableView.style.display = "none";
-  }
-
-  displayHotels();
-}
-
-// Load hotels with improved error handling and debug
+// Load hotels from API
 async function loadHotels() {
   console.log("Loading hotels...");
-  console.log("API_URL:", API_URL);
+  const loadingDiv = document.getElementById("loadingSpinner");
 
   try {
-    // Check if API_URL is defined
-    if (!API_URL) {
-      console.error("API_URL is not defined!");
-      showAlert("Lỗi cấu hình: API_URL không được định nghĩa", "danger");
-      return;
-    }
+    if (loadingDiv) loadingDiv.style.display = "block";
 
-    const url = `${API_URL}/hotels`;
-    console.log("Fetching from:", url);
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeaders(),
-      },
+    const response = await fetch(`${API_URL}/hotels`, {
+      headers: getAuthHeaders(),
     });
 
-    console.log("Response status:", response.status);
-    console.log("Response ok:", response.ok);
+    console.log("Hotels API response status:", response.status);
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Error response:", errorText);
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log("Raw response data:", data);
+    console.log("Hotels API response data:", data);
 
     // Handle different response formats
     if (data.success && data.data) {
-      allHotels = data.data;
-      console.log("Hotels from data.data:", allHotels);
+      hotels = Array.isArray(data.data) ? data.data : [data.data];
     } else if (Array.isArray(data)) {
-      allHotels = data;
-      console.log("Hotels from direct array:", allHotels);
+      hotels = data;
     } else {
-      console.error("Unexpected data format:", data);
-      allHotels = [];
+      console.warn("Unexpected data format:", data);
+      hotels = [];
     }
 
-    console.log("Final allHotels array:", allHotels);
-    console.log("Hotels count:", allHotels.length);
-
+    console.log("Processed hotels:", hotels);
     displayHotels();
   } catch (error) {
     console.error("Error loading hotels:", error);
-    showAlert(`Không thể tải danh sách khách sạn: ${error.message}`, "danger");
-
-    // Show empty state
-    const container = document.getElementById("hotelsGridView");
-    container.innerHTML = `
-      <div class="col-12 text-center">
-        <div class="alert alert-warning">
-          <h4>Không thể tải dữ liệu</h4>
-          <p>Lỗi: ${error.message}</p>
-          <button class="btn btn-primary" onclick="loadHotels()">Thử lại</button>
-        </div>
-      </div>
-    `;
+    showAlert(`Lỗi khi tải danh sách khách sạn: ${error.message}`);
+    hotels = [];
+    displayHotels();
+  } finally {
+    if (loadingDiv) loadingDiv.style.display = "none";
   }
 }
 
-// Display hotels - chỉ grid view
+// Display hotels in grid
 function displayHotels() {
-  console.log("Displaying hotels in grid view");
-  console.log("Hotels to display:", allHotels.length);
-
-  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
-  const filteredHotels = allHotels.filter((hotel) => {
-    const hotelName = hotel.tenKhachSan || hotel.name || "";
-    const hotelCity = hotel.thanhPho || hotel.city || "";
-    const hotelAddress = hotel.diaChi || hotel.address || "";
-
-    return (
-      hotelName.toLowerCase().includes(searchTerm) || hotelCity.toLowerCase().includes(searchTerm) || hotelAddress.toLowerCase().includes(searchTerm)
-    );
-  });
-
-  console.log("Filtered hotels:", filteredHotels.length);
-  displayGridView(filteredHotels);
-}
-
-// Display hotels in grid view
-function displayGridView(hotels) {
-  const container = document.getElementById("hotelsGridView");
+  const container = document.getElementById("hotelsContainer");
+  const searchValue = document.getElementById("searchInput")?.value.toLowerCase() || "";
 
   if (!container) {
-    console.error("Grid view container not found!");
+    console.error("Hotels container not found");
     return;
+  }
+
+  // Filter hotels based on search
+  let filteredHotels = hotels;
+  if (searchValue) {
+    filteredHotels = hotels.filter((hotel) => {
+      const hotelData = mapHotelData(hotel);
+      return (
+        hotelData.name.toLowerCase().includes(searchValue) ||
+        hotelData.city.toLowerCase().includes(searchValue) ||
+        hotelData.address.toLowerCase().includes(searchValue)
+      );
+    });
   }
 
   container.innerHTML = "";
 
-  if (hotels.length === 0) {
+  if (filteredHotels.length === 0) {
     container.innerHTML = `
       <div class="col-12 text-center">
         <div class="alert alert-info">
@@ -187,7 +105,7 @@ function displayGridView(hotels) {
     return;
   }
 
-  hotels.forEach((hotel) => {
+  filteredHotels.forEach((hotel) => {
     console.log("Processing hotel:", hotel);
     const hotelData = mapHotelData(hotel);
     console.log("Mapped hotel data:", hotelData);
@@ -214,17 +132,50 @@ function mapHotelData(hotel) {
 
 // Create hotel card for grid view với đầy đủ chức năng CRUD
 function createHotelCard(hotel) {
+  console.log("[ADMIN] Creating hotel card for:", hotel);
+
   let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
 
   if (hotel.images && hotel.images.length > 0) {
-    imageUrl = getImageUrl(hotel.images[0]);
+    const firstImage = hotel.images[0];
+    console.log("[ADMIN] Processing hotel image:", firstImage);
+
+    // Sử dụng hàm getImageUrl từ utils.js hoặc config.js
+    if (typeof getImageUrl === "function") {
+      imageUrl = getImageUrl(firstImage, "hotel");
+    } else if (typeof getHotelImageUrl === "function") {
+      imageUrl = getHotelImageUrl(firstImage);
+    } else {
+      // Fallback processing
+      if (typeof firstImage === "string") {
+        if (firstImage.startsWith("http")) {
+          imageUrl = firstImage;
+        } else if (firstImage.startsWith("/uploads")) {
+          imageUrl = `http://localhost:5233${firstImage}`;
+        } else {
+          imageUrl = `http://localhost:5233/uploads/hotels/${firstImage}`;
+        }
+      } else if (firstImage && firstImage.duongDanAnh) {
+        const imgPath = firstImage.duongDanAnh;
+        if (imgPath.startsWith("http")) {
+          imageUrl = imgPath;
+        } else if (imgPath.startsWith("/uploads")) {
+          imageUrl = `http://localhost:5233${imgPath}`;
+        } else {
+          imageUrl = `http://localhost:5233/uploads/hotels/${imgPath}`;
+        }
+      }
+    }
+
+    console.log("[ADMIN] Generated hotel image URL:", imageUrl);
   }
 
   return `
     <div class="col-md-6 col-lg-4 mb-4">
       <div class="card h-100 hotel-admin-card">
         <img src="${imageUrl}" class="card-img-top" alt="${hotel.name}" 
-             onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'"
+             onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'; console.log('[ADMIN] Hotel image failed:', this.src);"
+             onload="console.log('[ADMIN] Hotel image loaded:', this.src);"
              style="height: 200px; object-fit: cover;">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${hotel.name}</h5>
@@ -232,7 +183,7 @@ function createHotelCard(hotel) {
           <p class="text-muted mb-2 small">${hotel.address}</p>
           <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="text-primary fw-bold">
-              ${hotel.price > 0 ? `Từ ${formatCurrency(hotel.price)}` : "Chưa có giá"}
+              ${hotel.price > 0 ? formatCurrency(hotel.price) : "Chưa có giá"}
             </span>
             <span class="text-warning">
               <i class="bi bi-star-fill"></i> ${hotel.rating.toFixed(1)}
@@ -268,35 +219,6 @@ function filterHotels() {
   displayHotels();
 }
 
-// Get image URL helper
-function getImageUrl(image) {
-  if (typeof image === "string") {
-    // Nếu đã là URL đầy đủ thì dùng trực tiếp
-    if (image.startsWith("http")) {
-      return image;
-    }
-    // Nếu bắt đầu bằng /uploads thì thêm API_URL
-    if (image.startsWith("/uploads")) {
-      return `http://localhost:5233${image}`;
-    }
-    // Nếu không có /uploads thì thêm vào
-    return `http://localhost:5233/uploads/${image}`;
-  }
-
-  if (image && image.duongDanAnh) {
-    if (image.duongDanAnh.startsWith("http")) {
-      return image.duongDanAnh;
-    }
-    if (image.duongDanAnh.startsWith("/uploads")) {
-      return `http://localhost:5233${image.duongDanAnh}`;
-    }
-    return `http://localhost:5233/uploads/${image.duongDanAnh}`;
-  }
-
-  // Fallback to placeholder
-  return "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
-}
-
 // View hotel details with room types
 async function viewHotelDetails(hotelId) {
   console.log("Viewing hotel details for ID:", hotelId);
@@ -323,20 +245,26 @@ async function viewHotelDetails(hotelId) {
     let roomTypes = [];
     if (roomTypesResponse.ok) {
       const roomTypesData = await roomTypesResponse.json();
-      roomTypes = roomTypesData.success && roomTypesData.data ? roomTypesData.data : roomTypesData;
+      roomTypes = roomTypesData.success && roomTypesData.data ? roomTypesData.data : Array.isArray(roomTypesData) ? roomTypesData : [];
     }
 
     showHotelDetailsModal(hotelData, roomTypes);
   } catch (error) {
     console.error("Error loading hotel details:", error);
-    showAlert("Không thể tải thông tin khách sạn", "danger");
+    showAlert(`Lỗi khi tải chi tiết khách sạn: ${error.message}`);
   }
 }
 
-// Show hotel details modal with room types
-function showHotelDetailsModal(hotel, roomTypes) {
-  const modal = new bootstrap.Modal(document.getElementById("hotelDetailsModal"));
+// Show hotel details modal
+function showHotelDetailsModal(hotel, roomTypes = []) {
+  console.log("Showing hotel details:", hotel, "Room types:", roomTypes);
 
+  if (!modal) {
+    console.error("Modal not initialized");
+    return;
+  }
+
+  // Set modal title
   document.getElementById("hotelDetailsTitle").textContent = hotel.name;
 
   // Create room types section
@@ -352,30 +280,61 @@ function showHotelDetailsModal(hotel, roomTypes) {
         </div>
         <div class="row">
           ${roomTypes
-            .map(
-              (roomType) => `
+            .map((roomType) => {
+              // Process room type images
+              let roomImageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
+              if (roomType.hinhAnhs && roomType.hinhAnhs.length > 0) {
+                const firstRoomImage = roomType.hinhAnhs[0];
+                console.log("[ADMIN] Processing room image:", firstRoomImage);
+
+                if (typeof getRoomImageUrl === "function") {
+                  roomImageUrl = getRoomImageUrl(firstRoomImage);
+                } else if (typeof getImageUrl === "function") {
+                  roomImageUrl = getImageUrl(firstRoomImage, "room");
+                } else {
+                  // Fallback processing for room images
+                  if (typeof firstRoomImage === "string") {
+                    if (firstRoomImage.startsWith("http")) {
+                      roomImageUrl = firstRoomImage;
+                    } else if (firstRoomImage.startsWith("/uploads")) {
+                      roomImageUrl = `http://localhost:5233${firstRoomImage}`;
+                    } else {
+                      roomImageUrl = `http://localhost:5233/uploads/rooms/${firstRoomImage}`;
+                    }
+                  } else if (firstRoomImage && firstRoomImage.duongDanAnh) {
+                    const imgPath = firstRoomImage.duongDanAnh;
+                    if (imgPath.startsWith("http")) {
+                      roomImageUrl = imgPath;
+                    } else if (imgPath.startsWith("/uploads")) {
+                      roomImageUrl = `http://localhost:5233${imgPath}`;
+                    } else {
+                      roomImageUrl = `http://localhost:5233/uploads/rooms/${imgPath}`;
+                    }
+                  }
+                }
+
+                console.log("[ADMIN] Generated room image URL:", roomImageUrl);
+              }
+
+              return `
             <div class="col-md-6 mb-3">
-              <div class="card border">
+              <div class="card">
+                <img src="${roomImageUrl}" 
+                     class="card-img-top" 
+                     alt="${roomType.tenLoaiPhong || roomType.name}"
+                     style="height: 150px; object-fit: cover;"
+                     onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'; console.log('[ADMIN] Room image failed:', this.src);"
+                     onload="console.log('[ADMIN] Room image loaded:', this.src);">
                 <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="card-title mb-0">${roomType.tenLoaiPhong}</h6>
-                    <div class="btn-group btn-group-sm">
-                      <button class="btn btn-outline-warning btn-sm" onclick="editRoomType(${roomType.maLoaiPhong})">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-outline-danger btn-sm" onclick="deleteRoomType(${roomType.maLoaiPhong})">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <p class="text-primary fw-bold mb-1">${formatCurrency(roomType.giaMotDem)}/đêm</p>
-                  <p class="text-muted mb-1"><i class="bi bi-people"></i> Sức chứa: ${roomType.sucChua} người</p>
+                  <h6 class="card-title">${roomType.tenLoaiPhong || roomType.name}</h6>
+                  <p class="text-primary fw-bold">${formatCurrency(roomType.giaMotDem || roomType.price || 0)}/đêm</p>
+                  <p class="small text-muted">Sức chứa: ${roomType.sucChua || roomType.capacity || 0} người</p>
                   ${roomType.moTa ? `<p class="text-muted small mb-0">${roomType.moTa}</p>` : ""}
                 </div>
               </div>
             </div>
-          `
-            )
+          `;
+            })
             .join("")}
         </div>
       </div>
@@ -404,15 +363,44 @@ function showHotelDetailsModal(hotel, roomTypes) {
         <h6>Hình Ảnh</h6>
         <div class="row">
           ${hotel.images
-            .map(
-              (image) => `
+            .map((image) => {
+              let imageUrl;
+              if (typeof getImageUrl === "function") {
+                imageUrl = getImageUrl(image, "hotel");
+              } else if (typeof getHotelImageUrl === "function") {
+                imageUrl = getHotelImageUrl(image);
+              } else {
+                // Fallback
+                if (typeof image === "string") {
+                  if (image.startsWith("http")) {
+                    imageUrl = image;
+                  } else if (image.startsWith("/uploads")) {
+                    imageUrl = `http://localhost:5233${image}`;
+                  } else {
+                    imageUrl = `http://localhost:5233/uploads/hotels/${image}`;
+                  }
+                } else if (image && image.duongDanAnh) {
+                  const imgPath = image.duongDanAnh;
+                  if (imgPath.startsWith("http")) {
+                    imageUrl = imgPath;
+                  } else if (imgPath.startsWith("/uploads")) {
+                    imageUrl = `http://localhost:5233${imgPath}`;
+                  } else {
+                    imageUrl = `http://localhost:5233/uploads/hotels/${imgPath}`;
+                  }
+                } else {
+                  imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
+                }
+              }
+
+              return `
             <div class="col-md-3 mb-2">
-              <img src="${getImageUrl(image)}" class="img-fluid rounded" alt="Hotel Image"
+              <img src="${imageUrl}" class="img-fluid rounded" alt="Hotel Image"
                    style="width: 100%; height: 100px; object-fit: cover;"
                    onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg';">
             </div>
-          `
-            )
+          `;
+            })
             .join("")}
         </div>
       </div>
@@ -461,78 +449,13 @@ function showHotelDetailsModal(hotel, roomTypes) {
 // Edit hotel
 async function editHotel(hotelId) {
   console.log("Editing hotel ID:", hotelId);
-
-  try {
-    const response = await fetch(`${API_URL}/hotels/${hotelId}`, {
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    const hotel = data.success && data.data ? data.data : data;
-    const hotelData = mapHotelData(hotel);
-
-    // Fill form with hotel data
-    document.getElementById("editHotelId").value = hotelData.id;
-    document.getElementById("editName").value = hotelData.name;
-    document.getElementById("editCity").value = hotelData.city;
-    document.getElementById("editAddress").value = hotelData.address;
-    document.getElementById("editRating").value = hotelData.rating;
-    document.getElementById("editDescription").value = hotelData.description;
-    document.getElementById("editAmenities").value = hotelData.amenities;
-
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById("editHotelModal"));
-    modal.show();
-  } catch (error) {
-    console.error("Error loading hotel:", error);
-    showAlert("Không thể tải thông tin khách sạn", "danger");
-  }
-}
-
-// Update hotel
-async function updateHotel() {
-  const id = document.getElementById("editHotelId").value;
-
-  const hotelData = {
-    tenKhachSan: document.getElementById("editName").value,
-    thanhPho: document.getElementById("editCity").value,
-    diaChi: document.getElementById("editAddress").value,
-    danhGiaTrungBinh: parseFloat(document.getElementById("editRating").value),
-    moTa: document.getElementById("editDescription").value,
-    tienNghi: document.getElementById("editAmenities").value,
-  };
-
-  try {
-    const response = await fetch(`${API_URL}/hotels/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify(hotelData),
-    });
-
-    if (response.ok) {
-      showAlert("Cập nhật khách sạn thành công!", "success");
-      bootstrap.Modal.getInstance(document.getElementById("editHotelModal")).hide();
-      loadHotels(); // Reload hotels
-    } else {
-      const data = await response.json();
-      showAlert(data.message || "Có lỗi xảy ra!", "danger");
-    }
-  } catch (error) {
-    console.error("Error updating hotel:", error);
-    showAlert("Có lỗi xảy ra!", "danger");
-  }
+  // Redirect to edit page hoặc show edit modal
+  window.location.href = `edit-hotel.html?id=${hotelId}`;
 }
 
 // Delete hotel
 async function deleteHotel(hotelId) {
-  if (!confirm("Bạn có chắc chắn muốn xóa khách sạn này? Tất cả loại phòng và đặt phòng liên quan cũng sẽ bị xóa.")) {
+  if (!confirm("Bạn có chắc chắn muốn xóa khách sạn này?")) {
     return;
   }
 
@@ -542,176 +465,20 @@ async function deleteHotel(hotelId) {
       headers: getAuthHeaders(),
     });
 
-    if (response.ok) {
-      showAlert("Xóa khách sạn thành công!", "success");
-      loadHotels(); // Reload hotels list
-    } else {
-      const data = await response.json();
-      showAlert(data.message || "Có lỗi xảy ra khi xóa khách sạn!", "danger");
-    }
-  } catch (error) {
-    console.error("Error deleting hotel:", error);
-    showAlert("Có lỗi xảy ra khi xóa khách sạn!", "danger");
-  }
-}
-
-// Show add room type modal
-function showAddRoomTypeModal(hotelId) {
-  document.getElementById("roomTypeHotelId").value = hotelId;
-  document.getElementById("addRoomTypeForm").reset();
-
-  const modal = new bootstrap.Modal(document.getElementById("addRoomTypeModal"));
-  modal.show();
-}
-
-// Add room type
-async function addRoomType() {
-  const hotelId = document.getElementById("roomTypeHotelId").value;
-  const roomTypeData = {
-    maKhachSan: parseInt(hotelId),
-    tenLoaiPhong: document.getElementById("roomTypeName").value,
-    giaMotDem: parseFloat(document.getElementById("roomTypePrice").value),
-    sucChua: parseInt(document.getElementById("roomTypeCapacity").value),
-    moTa: document.getElementById("roomTypeDescription").value,
-  };
-
-  try {
-    const response = await fetch(`${API_URL}/roomtypes`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify(roomTypeData),
-    });
-
-    if (response.ok) {
-      showAlert("Thêm loại phòng thành công!", "success");
-      bootstrap.Modal.getInstance(document.getElementById("addRoomTypeModal")).hide();
-      viewHotelDetails(hotelId); // Reload hotel details
-      loadHotels(); // Reload hotels to update prices
-    } else {
-      const data = await response.json();
-      showAlert(data.message || "Có lỗi xảy ra!", "danger");
-    }
-  } catch (error) {
-    console.error("Error adding room type:", error);
-    showAlert("Có lỗi xảy ra!", "danger");
-  }
-}
-
-// Edit room type
-async function editRoomType(roomTypeId) {
-  try {
-    const response = await fetch(`${API_URL}/roomtypes/${roomTypeId}`, {
-      headers: getAuthHeaders(),
-    });
-
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    const data = await response.json();
-    const roomType = data.success && data.data ? data.data : data;
-
-    // Fill form
-    document.getElementById("editRoomTypeId").value = roomType.maLoaiPhong;
-    document.getElementById("editRoomTypeName").value = roomType.tenLoaiPhong;
-    document.getElementById("editRoomTypePrice").value = roomType.giaMotDem;
-    document.getElementById("editRoomTypeCapacity").value = roomType.sucChua;
-    document.getElementById("editRoomTypeDescription").value = roomType.moTa || "";
-
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById("editRoomTypeModal"));
-    modal.show();
+    showAlert("Xóa khách sạn thành công!", "success");
+    loadHotels(); // Reload the list
   } catch (error) {
-    console.error("Error loading room type:", error);
-    showAlert("Không thể tải thông tin loại phòng", "danger");
+    console.error("Error deleting hotel:", error);
+    showAlert(`Lỗi khi xóa khách sạn: ${error.message}`);
   }
 }
 
-// Update room type
-async function updateRoomType() {
-  const roomTypeId = document.getElementById("editRoomTypeId").value;
-  const roomTypeData = {
-    tenLoaiPhong: document.getElementById("editRoomTypeName").value,
-    giaMotDem: parseFloat(document.getElementById("editRoomTypePrice").value),
-    sucChua: parseInt(document.getElementById("editRoomTypeCapacity").value),
-    moTa: document.getElementById("editRoomTypeDescription").value,
-  };
-
-  try {
-    const response = await fetch(`${API_URL}/roomtypes/${roomTypeId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify(roomTypeData),
-    });
-
-    if (response.ok) {
-      showAlert("Cập nhật loại phòng thành công!", "success");
-      bootstrap.Modal.getInstance(document.getElementById("editRoomTypeModal")).hide();
-      viewHotelDetails(currentHotelId); // Reload hotel details
-      loadHotels(); // Reload hotels to update prices
-    } else {
-      const data = await response.json();
-      showAlert(data.message || "Có lỗi xảy ra!", "danger");
-    }
-  } catch (error) {
-    console.error("Error updating room type:", error);
-    showAlert("Có lỗi xảy ra!", "danger");
-  }
-}
-
-// Delete room type
-async function deleteRoomType(roomTypeId) {
-  console.log("Attempting to delete room type ID:", roomTypeId);
-
-  if (!confirm("Bạn có chắc chắn muốn xóa loại phòng này? Tất cả phòng thuộc loại này cũng sẽ bị xóa.")) {
-    return;
-  }
-
-  try {
-    const url = `${API_URL}/roomtypes/${roomTypeId}`;
-    console.log("DELETE URL:", url);
-    console.log("Headers:", getAuthHeaders());
-
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-
-    console.log("Delete response status:", response.status);
-    console.log("Delete response ok:", response.ok);
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log("Delete success data:", data);
-      showAlert("Xóa loại phòng thành công!", "success");
-
-      // Reload hotel details and hotels list
-      if (currentHotelId) {
-        viewHotelDetails(currentHotelId);
-      }
-      loadHotels();
-    } else {
-      const errorText = await response.text();
-      console.error("Delete error response:", errorText);
-
-      let errorMessage = "Có lỗi xảy ra!";
-      try {
-        const errorData = JSON.parse(errorText);
-        errorMessage = errorData.message || errorMessage;
-      } catch (e) {
-        console.error("Could not parse error response:", e);
-      }
-
-      showAlert(errorMessage, "danger");
-    }
-  } catch (error) {
-    console.error("Error deleting room type:", error);
-    showAlert(`Có lỗi xảy ra: ${error.message}`, "danger");
-  }
+// Add room type modal placeholder
+function showAddRoomTypeModal(hotelId) {
+  // Redirect to add room type page hoặc show modal
+  window.location.href = `add-room-type.html?hotelId=${hotelId}`;
 }
