@@ -172,3 +172,4 @@ D:\Temp\HotelBooking\Backend\HotelBooking.API\obj\Debug\net8.0\refint\HotelBooki
 D:\Temp\HotelBooking\Backend\HotelBooking.API\obj\Debug\net8.0\HotelBooking.API.pdb
 D:\Temp\HotelBooking\Backend\HotelBooking.API\obj\Debug\net8.0\HotelBooking.API.genruntimeconfig.cache
 D:\Temp\HotelBooking\Backend\HotelBooking.API\obj\Debug\net8.0\ref\HotelBooking.API.dll
+D:\Temp\HotelBooking\Backend\HotelBooking.API\bin\Debug\net8.0\HotelBooking.API.staticwebassets.runtime.json

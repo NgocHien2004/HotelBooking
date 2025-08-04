@@ -22,11 +22,7 @@ namespace HotelBooking.API.Services.Implementations
         {
             var payments = await _context.ThanhToans
                 .Include(p => p.DatPhong)
-                    .ThenInclude(b => b.NguoiDung)
-                .Include(p => p.DatPhong)
-                    .ThenInclude(b => b.Phong)
-                        .ThenInclude(r => r.LoaiPhong)
-                            .ThenInclude(rt => rt.KhachSan)
+                    .ThenInclude(d => d.NguoiDung)
                 .OrderByDescending(p => p.NgayThanhToan)
                 .ToListAsync();
 
@@ -37,11 +33,7 @@ namespace HotelBooking.API.Services.Implementations
         {
             var payment = await _context.ThanhToans
                 .Include(p => p.DatPhong)
-                    .ThenInclude(b => b.NguoiDung)
-                .Include(p => p.DatPhong)
-                    .ThenInclude(b => b.Phong)
-                        .ThenInclude(r => r.LoaiPhong)
-                            .ThenInclude(rt => rt.KhachSan)
+                    .ThenInclude(d => d.NguoiDung)
                 .FirstOrDefaultAsync(p => p.MaThanhToan == id);
 
             return payment == null ? null : _mapper.Map<ThanhToanDto>(payment);
@@ -51,28 +43,7 @@ namespace HotelBooking.API.Services.Implementations
         {
             var payments = await _context.ThanhToans
                 .Include(p => p.DatPhong)
-                    .ThenInclude(b => b.NguoiDung)
-                .Include(p => p.DatPhong)
-                    .ThenInclude(b => b.Phong)
-                        .ThenInclude(r => r.LoaiPhong)
-                            .ThenInclude(rt => rt.KhachSan)
                 .Where(p => p.MaDatPhong == bookingId)
-                .OrderByDescending(p => p.NgayThanhToan)
-                .ToListAsync();
-
-            return _mapper.Map<IEnumerable<ThanhToanDto>>(payments);
-        }
-
-        public async Task<IEnumerable<ThanhToanDto>> GetPaymentsByUserAsync(int userId)
-        {
-            var payments = await _context.ThanhToans
-                .Include(p => p.DatPhong)
-                    .ThenInclude(b => b.NguoiDung)
-                .Include(p => p.DatPhong)
-                    .ThenInclude(b => b.Phong)
-                        .ThenInclude(r => r.LoaiPhong)
-                            .ThenInclude(rt => rt.KhachSan)
-                .Where(p => p.DatPhong.MaNguoiDung == userId)
                 .OrderByDescending(p => p.NgayThanhToan)
                 .ToListAsync();
 
@@ -81,82 +52,64 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<ThanhToanDto> CreatePaymentAsync(CreateThanhToanDto createPaymentDto)
         {
-            // Validate booking exists
-            var booking = await _context.DatPhongs.FindAsync(createPaymentDto.MaDatPhong);
-            if (booking == null)
-            {
-                throw new ArgumentException("Đặt phòng không tồn tại");
-            }
-
-            // Validate payment amount
-            if (createPaymentDto.SoTien <= 0)
-            {
-                throw new ArgumentException("Số tiền thanh toán phải lớn hơn 0");
-            }
-
-            // Check if total payments would exceed booking total
-            var currentTotal = await GetTotalPaymentsByBookingAsync(createPaymentDto.MaDatPhong);
-            if (currentTotal + createPaymentDto.SoTien > booking.TongTien)
-            {
-                throw new InvalidOperationException("Tổng số tiền thanh toán không thể vượt quá tổng tiền đặt phòng");
-            }
-
             var payment = _mapper.Map<ThanhToan>(createPaymentDto);
+            payment.NgayThanhToan = DateTime.Now;
+            
             _context.ThanhToans.Add(payment);
             await _context.SaveChangesAsync();
 
             // Update booking status if fully paid
-            if (await IsBookingFullyPaidAsync(createPaymentDto.MaDatPhong))
+            var booking = await _context.DatPhongs.FindAsync(payment.MaDatPhong);
+            if (booking != null)
             {
-                booking.TrangThai = "Confirmed";
-                await _context.SaveChangesAsync();
+                var totalPaid = await _context.ThanhToans
+                    .Where(p => p.MaDatPhong == booking.MaDatPhong)
+                    .SumAsync(p => p.SoTien);
+
+                if (totalPaid >= booking.TongTien)
+                {
+                    booking.TrangThai = "Confirmed";
+                    await _context.SaveChangesAsync();
+                }
             }
 
             return await GetPaymentByIdAsync(payment.MaThanhToan) ?? 
-                   throw new InvalidOperationException("Không thể tạo thanh toán");
+                throw new InvalidOperationException("Không thể tạo thanh toán");
         }
 
-        public async Task<bool> DeletePaymentAsync(int id)
+        public async Task<bool> ProcessPaymentAsync(int paymentId)
         {
-            var payment = await _context.ThanhToans.FindAsync(id);
-            if (payment == null)
-            {
-                return false;
-            }
+            // Implement payment processing logic here
+            // This is where you would integrate with payment gateway
+            
+            // For now, just mark as processed
+            var payment = await _context.ThanhToans.FindAsync(paymentId);
+            if (payment == null) return false;
 
-            _context.ThanhToans.Remove(payment);
-            await _context.SaveChangesAsync();
+            // Process payment...
+            // await ProcessWithPaymentGateway(payment);
+
             return true;
         }
 
-        public async Task<IEnumerable<PaymentMethodDto>> GetPaymentMethodsAsync()
+        public async Task<bool> RefundPaymentAsync(int paymentId)
         {
-            return new List<PaymentMethodDto>
+            var payment = await _context.ThanhToans.FindAsync(paymentId);
+            if (payment == null) return false;
+
+            // Create refund record
+            var refund = new ThanhToan
             {
-                new PaymentMethodDto { Value = "Cash", Label = "Tiền mặt" },
-                new PaymentMethodDto { Value = "Credit Card", Label = "Thẻ tín dụng" },
-                new PaymentMethodDto { Value = "Bank Transfer", Label = "Chuyển khoản ngân hàng" },
-                new PaymentMethodDto { Value = "E-Wallet", Label = "Ví điện tử" }
+                MaDatPhong = payment.MaDatPhong,
+                SoTien = -payment.SoTien, // Negative amount for refund
+                PhuongThuc = payment.PhuongThuc,
+                NgayThanhToan = DateTime.Now
             };
-        }
 
-        public async Task<decimal> GetTotalPaymentsByBookingAsync(int bookingId)
-        {
-            return await _context.ThanhToans
-                .Where(p => p.MaDatPhong == bookingId)
-                .SumAsync(p => p.SoTien);
-        }
+            _context.ThanhToans.Add(refund);
+            await _context.SaveChangesAsync();
 
-        public async Task<bool> IsBookingFullyPaidAsync(int bookingId)
-        {
-            var booking = await _context.DatPhongs.FindAsync(bookingId);
-            if (booking == null)
-            {
-                return false;
-            }
-
-            var totalPaid = await GetTotalPaymentsByBookingAsync(bookingId);
-            return totalPaid >= booking.TongTien;
+            return true;
         }
     }
 }

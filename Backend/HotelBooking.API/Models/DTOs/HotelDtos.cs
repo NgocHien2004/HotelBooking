@@ -13,7 +13,7 @@ namespace HotelBooking.API.DTOs
         public DateTime NgayTao { get; set; }
         public decimal? GiaPhongThapNhat { get; set; } // Giá phòng thấp nhất từ LoaiPhong
         public string? TienNghi { get; set; } // Thêm tiện nghi nếu cần
-        public List<HinhAnhKhachSanDto> HinhAnh { get; set; } = new List<HinhAnhKhachSanDto>();
+        public List<HinhAnhKhachSanDto> HinhAnhs { get; set; } = new List<HinhAnhKhachSanDto>();
         public List<LoaiPhongDto> LoaiPhongs { get; set; } = new List<LoaiPhongDto>();
     }
 
