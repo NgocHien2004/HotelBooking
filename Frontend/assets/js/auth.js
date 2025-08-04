@@ -22,10 +22,9 @@ function checkAuth() {
 
     // Update dropdown menu based on role
     if (userDropdownMenu && user.vaiTro === "Admin") {
-      // Add admin menu items
+      // Add admin menu items - REMOVED dashboard link
       userDropdownMenu.innerHTML = `
         <li><h6 class="dropdown-header">Quản lý</h6></li>
-        <li><a class="dropdown-item" href="/admin/dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
         <li><a class="dropdown-item" href="/admin/hotels.html"><i class="bi bi-building"></i> Quản lý khách sạn</a></li>
         <li><a class="dropdown-item" href="/admin/users.html"><i class="bi bi-people"></i> Quản lý người dùng</a></li>
         <li><a class="dropdown-item" href="/admin/bookings.html"><i class="bi bi-calendar-check"></i> Quản lý đặt phòng</a></li>
@@ -44,9 +43,15 @@ function checkAuth() {
       `;
     }
 
-    // Show admin menu if user is admin (for backward compatibility)
+    // Show admin menu if user is admin (for backward compatibility) - UPDATED link
     if (adminMenu && user.vaiTro === "Admin") {
       adminMenu.style.display = "block";
+      // Update the link to point to hotels instead of dashboard
+      const adminLink = adminMenu.querySelector("a");
+      if (adminLink) {
+        adminLink.href = "admin/hotels.html";
+        adminLink.textContent = "Quản lý";
+      }
     }
   } else {
     // User is not logged in
@@ -82,10 +87,10 @@ async function login(email, password) {
 
       showAlert("Đăng nhập thành công!", "success");
 
-      // Redirect based on role
+      // Redirect based on role - UPDATED: Admin goes to hotels instead of dashboard
       setTimeout(() => {
         if (data.data.user.vaiTro === "Admin") {
-          window.location.href = "admin/dashboard.html";
+          window.location.href = "admin/hotels.html";
         } else {
           window.location.href = "index.html";
         }

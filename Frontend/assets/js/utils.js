@@ -42,6 +42,37 @@ function showAlert(message, type = "danger") {
   }
 }
 
+// Get image URL helper function
+function getImageUrl(image) {
+  const baseUrl = "http://localhost:5233";
+
+  if (typeof image === "string") {
+    // Nếu đã là URL đầy đủ thì dùng trực tiếp
+    if (image.startsWith("http")) {
+      return image;
+    }
+    // Nếu bắt đầu bằng /uploads thì thêm base URL
+    if (image.startsWith("/uploads")) {
+      return `${baseUrl}${image}`;
+    }
+    // Nếu không có /uploads thì thêm vào
+    return `${baseUrl}/uploads/${image}`;
+  }
+
+  if (image && image.duongDanAnh) {
+    if (image.duongDanAnh.startsWith("http")) {
+      return image.duongDanAnh;
+    }
+    if (image.duongDanAnh.startsWith("/uploads")) {
+      return `${baseUrl}${image.duongDanAnh}`;
+    }
+    return `${baseUrl}/uploads/${image.duongDanAnh}`;
+  }
+
+  // Fallback to placeholder
+  return `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
+}
+
 // Create hotel card HTML - Hỗ trợ cả property tiếng Việt và tiếng Anh
 function createHotelCard(hotel) {
   // Map properties từ backend (tiếng Việt) sang frontend (tiếng Anh)
@@ -53,39 +84,25 @@ function createHotelCard(hotel) {
     price: hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0,
     rating: hotel.danhGiaTrungBinh || hotel.rating || 4.0,
     description: hotel.moTa || hotel.description,
-    images: hotel.hinhAnh || hotel.images || [],
+    images: hotel.hinhAnhs || hotel.images || [],
     amenities: hotel.tienNghi || hotel.amenities || "",
   };
 
   const amenities = hotelData.amenities ? hotelData.amenities.split(",").slice(0, 3) : [];
 
-  // Xử lý đường dẫn hình ảnh
-  let imageUrl = "/uploads/temp/hotel-placeholder.jpg"; // Default placeholder
+  // Xử lý đường dẫn hình ảnh với fallback tốt hơn
+  let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg"; // Default placeholder
 
   if (hotelData.images && hotelData.images.length > 0) {
-    // Kiểm tra xem image có phải là object hay string
-    if (typeof hotelData.images[0] === "object" && hotelData.images[0].duongDanAnh) {
-      // Nếu đường dẫn đã có http thì dùng trực tiếp, không thì thêm base URL
-      if (hotelData.images[0].duongDanAnh.startsWith("http")) {
-        imageUrl = hotelData.images[0].duongDanAnh;
-      } else {
-        imageUrl = `http://localhost:5233${hotelData.images[0].duongDanAnh}`;
-      }
-    } else if (typeof hotelData.images[0] === "string") {
-      // Nếu là string, kiểm tra xem có phải là đường dẫn đầy đủ không
-      if (hotelData.images[0].startsWith("http")) {
-        imageUrl = hotelData.images[0];
-      } else {
-        imageUrl = `http://localhost:5233${hotelData.images[0]}`;
-      }
-    }
+    imageUrl = getImageUrl(hotelData.images[0]);
   }
 
   return `
         <div class="col-md-4 mb-4">
             <div class="card hotel-card h-100">
                 <img src="${imageUrl}" class="card-img-top" alt="${hotelData.name}" 
-                     onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
+                     onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'"
+                     style="height: 200px; object-fit: cover; width: 100%;">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">${hotelData.name}</h5>
                     <p class="text-muted mb-2"><i class="bi bi-geo-alt"></i> ${hotelData.city}</p>

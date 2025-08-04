@@ -12,21 +12,41 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
-        <a class="navbar-brand" href="dashboard.html">
+        <a class="navbar-brand" href="hotels.html">
           <i class="bi bi-building"></i>
           Admin Panel
         </a>
-        <div class="navbar-nav ms-auto">
-          <div class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-              <i class="bi bi-person-circle"></i>
-              <span id="adminName">Admin</span>
-            </a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="dashboard.html">Dashboard</a></li>
-              <li><hr class="dropdown-divider" /></li>
-              <li><a class="dropdown-item" href="#" onclick="logout()">Đăng xuất</a></li>
-            </ul>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="hotels.html"><i class="bi bi-building"></i> Khách sạn</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="users.html"><i class="bi bi-people"></i> Người dùng</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="bookings.html"><i class="bi bi-calendar-check"></i> Đặt phòng</a>
+            </li>
+          </ul>
+          <div class="navbar-nav ms-auto">
+            <div class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle"></i>
+                <span id="adminName">Admin</span>
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a class="dropdown-item" href="../index.html"><i class="bi bi-house"></i> Trang chủ</a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

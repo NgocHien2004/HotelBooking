@@ -214,7 +214,8 @@ function mapHotelData(hotel) {
 
 // Create hotel card for grid view với đầy đủ chức năng CRUD
 function createHotelCard(hotel) {
-  let imageUrl = "/uploads/temp/hotel-placeholder.jpg";
+  let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
+
   if (hotel.images && hotel.images.length > 0) {
     imageUrl = getImageUrl(hotel.images[0]);
   }
@@ -270,12 +271,30 @@ function filterHotels() {
 // Get image URL helper
 function getImageUrl(image) {
   if (typeof image === "string") {
-    return image.startsWith("http") ? image : `${API_URL}${image}`;
+    // Nếu đã là URL đầy đủ thì dùng trực tiếp
+    if (image.startsWith("http")) {
+      return image;
+    }
+    // Nếu bắt đầu bằng /uploads thì thêm API_URL
+    if (image.startsWith("/uploads")) {
+      return `http://localhost:5233${image}`;
+    }
+    // Nếu không có /uploads thì thêm vào
+    return `http://localhost:5233/uploads/${image}`;
   }
+
   if (image && image.duongDanAnh) {
-    return image.duongDanAnh.startsWith("http") ? image.duongDanAnh : `${API_URL}${image.duongDanAnh}`;
+    if (image.duongDanAnh.startsWith("http")) {
+      return image.duongDanAnh;
+    }
+    if (image.duongDanAnh.startsWith("/uploads")) {
+      return `http://localhost:5233${image.duongDanAnh}`;
+    }
+    return `http://localhost:5233/uploads/${image.duongDanAnh}`;
   }
-  return "/uploads/temp/hotel-placeholder.jpg";
+
+  // Fallback to placeholder
+  return "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
 }
 
 // View hotel details with room types
@@ -389,7 +408,8 @@ function showHotelDetailsModal(hotel, roomTypes) {
               (image) => `
             <div class="col-md-3 mb-2">
               <img src="${getImageUrl(image)}" class="img-fluid rounded" alt="Hotel Image"
-                   style="width: 100%; height: 100px; object-fit: cover;">
+                   style="width: 100%; height: 100px; object-fit: cover;"
+                   onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg';">
             </div>
           `
             )
