@@ -10,56 +10,95 @@ namespace HotelBooking.API.Controllers
     public class RoomTypesController : ControllerBase
     {
         private readonly IRoomService _roomService;
+        private readonly ILogger<RoomTypesController> _logger;
 
-        public RoomTypesController(IRoomService roomService)
+        public RoomTypesController(IRoomService roomService, ILogger<RoomTypesController> logger)
         {
             _roomService = roomService;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LoaiPhongDto>>> GetAllRoomTypes()
         {
-            var roomTypes = await _roomService.GetAllRoomTypesAsync();
-            return Ok(new { success = true, data = roomTypes });
+            try
+            {
+                _logger.LogInformation("Getting all room types...");
+                var roomTypes = await _roomService.GetAllRoomTypesAsync();
+                _logger.LogInformation($"Found {roomTypes?.Count()} room types");
+                
+                return Ok(new { success = true, data = roomTypes });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all room types");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<LoaiPhongDto>> GetRoomType(int id)
         {
-            var roomType = await _roomService.GetRoomTypeByIdAsync(id);
-            if (roomType == null)
+            try
             {
-                return NotFound(new { success = false, message = "Không tìm thấy loại phòng" });
-            }
+                _logger.LogInformation($"Getting room type with ID: {id}");
+                var roomType = await _roomService.GetRoomTypeByIdAsync(id);
+                if (roomType == null)
+                {
+                    _logger.LogWarning($"Room type with ID {id} not found");
+                    return NotFound(new { success = false, message = "Không tìm thấy loại phòng" });
+                }
 
-            return Ok(new { success = true, data = roomType });
+                _logger.LogInformation($"Found room type: {roomType.TenLoaiPhong}");
+                return Ok(new { success = true, data = roomType });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting room type with ID: {id}");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet("hotel/{hotelId}")]
         public async Task<ActionResult<IEnumerable<LoaiPhongDto>>> GetRoomTypesByHotel(int hotelId)
         {
-            var roomTypes = await _roomService.GetRoomTypesByHotelAsync(hotelId);
-            return Ok(new { success = true, data = roomTypes });
+            try
+            {
+                _logger.LogInformation($"Getting room types for hotel ID: {hotelId}");
+                var roomTypes = await _roomService.GetRoomTypesByHotelAsync(hotelId);
+                _logger.LogInformation($"Found {roomTypes?.Count()} room types for hotel {hotelId}");
+                
+                return Ok(new { success = true, data = roomTypes });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting room types for hotel {hotelId}");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<LoaiPhongDto>> CreateRoomType(CreateLoaiPhongDto createRoomTypeDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
-            }
-
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
+                }
+
+                _logger.LogInformation($"Creating room type: {createRoomTypeDto.TenLoaiPhong} for hotel {createRoomTypeDto.MaKhachSan}");
                 var roomType = await _roomService.CreateRoomTypeAsync(createRoomTypeDto);
+                _logger.LogInformation($"Room type created with ID: {roomType.MaLoaiPhong}");
+                
                 return CreatedAtAction(nameof(GetRoomType), new { id = roomType.MaLoaiPhong }, 
                     new { success = true, data = roomType });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Error creating room type");
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
 
@@ -67,31 +106,53 @@ namespace HotelBooking.API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<LoaiPhongDto>> UpdateRoomType(int id, UpdateLoaiPhongDto updateRoomTypeDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
+                }
 
-            var roomType = await _roomService.UpdateRoomTypeAsync(id, updateRoomTypeDto);
-            if (roomType == null)
+                _logger.LogInformation($"Updating room type with ID: {id}");
+                var roomType = await _roomService.UpdateRoomTypeAsync(id, updateRoomTypeDto);
+                if (roomType == null)
+                {
+                    _logger.LogWarning($"Room type with ID {id} not found for update");
+                    return NotFound(new { success = false, message = "Không tìm thấy loại phòng" });
+                }
+
+                _logger.LogInformation($"Room type updated: {roomType.TenLoaiPhong}");
+                return Ok(new { success = true, data = roomType });
+            }
+            catch (Exception ex)
             {
-                return NotFound(new { success = false, message = "Không tìm thấy loại phòng" });
+                _logger.LogError(ex, $"Error updating room type with ID: {id}");
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
-
-            return Ok(new { success = true, data = roomType });
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteRoomType(int id)
         {
-            var result = await _roomService.DeleteRoomTypeAsync(id);
-            if (!result)
+            try
             {
-                return NotFound(new { success = false, message = "Không tìm thấy loại phòng" });
-            }
+                _logger.LogInformation($"Deleting room type with ID: {id}");
+                var result = await _roomService.DeleteRoomTypeAsync(id);
+                if (!result)
+                {
+                    _logger.LogWarning($"Room type with ID {id} not found for deletion");
+                    return NotFound(new { success = false, message = "Không tìm thấy loại phòng" });
+                }
 
-            return Ok(new { success = true, message = "Xóa loại phòng thành công" });
+                _logger.LogInformation($"Room type with ID {id} deleted successfully");
+                return Ok(new { success = true, message = "Xóa loại phòng thành công" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error deleting room type with ID: {id}");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
     }
 }

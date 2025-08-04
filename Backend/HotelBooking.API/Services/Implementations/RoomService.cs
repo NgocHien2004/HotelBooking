@@ -60,7 +60,8 @@ namespace HotelBooking.API.Services.Implementations
             _context.LoaiPhongs.Add(roomType);
             await _context.SaveChangesAsync();
 
-            return await GetRoomTypeByIdAsync(roomType.MaLoaiPhong) ?? throw new InvalidOperationException("Không thể tạo loại phòng");
+            return await GetRoomTypeByIdAsync(roomType.MaLoaiPhong) ??
+                   throw new InvalidOperationException("Không thể tạo loại phòng");
         }
 
         public async Task<LoaiPhongDto?> UpdateRoomTypeAsync(int id, UpdateLoaiPhongDto updateRoomTypeDto)
@@ -79,15 +80,50 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<bool> DeleteRoomTypeAsync(int id)
         {
-            var roomType = await _context.LoaiPhongs.FindAsync(id);
-            if (roomType == null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
             {
-                return false;
-            }
+                var roomType = await _context.LoaiPhongs
+                    .Include(rt => rt.Phongs)
+                    .FirstOrDefaultAsync(rt => rt.MaLoaiPhong == id);
+                
+                if (roomType == null)
+                {
+                    return false;
+                }
 
-            _context.LoaiPhongs.Remove(roomType);
-            await _context.SaveChangesAsync();
-            return true;
+                // First, delete all rooms of this type
+                if (roomType.Phongs.Any())
+                {
+                    // Delete all bookings for these rooms first
+                    var roomIds = roomType.Phongs.Select(p => p.MaPhong).ToList();
+                    var bookingsToDelete = await _context.DatPhongs
+                        .Where(b => roomIds.Contains(b.MaPhong))
+                        .ToListAsync();
+                    
+                    if (bookingsToDelete.Any())
+                    {
+                        _context.DatPhongs.RemoveRange(bookingsToDelete);
+                    }
+
+                    // Then delete the rooms
+                    _context.Phongs.RemoveRange(roomType.Phongs);
+                }
+
+                // Finally, delete the room type
+                _context.LoaiPhongs.Remove(roomType);
+                
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                
+                return true;
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         #endregion
@@ -142,7 +178,8 @@ namespace HotelBooking.API.Services.Implementations
             _context.Phongs.Add(room);
             await _context.SaveChangesAsync();
 
-            return await GetRoomByIdAsync(room.MaPhong) ?? throw new InvalidOperationException("Không thể tạo phòng");
+            return await GetRoomByIdAsync(room.MaPhong) ??
+                   throw new InvalidOperationException("Không thể tạo phòng");
         }
 
         public async Task<PhongDto?> UpdateRoomAsync(int id, UpdatePhongDto updateRoomDto)
@@ -161,15 +198,39 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<bool> DeleteRoomAsync(int id)
         {
-            var room = await _context.Phongs.FindAsync(id);
-            if (room == null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
             {
-                return false;
-            }
+                var room = await _context.Phongs.FindAsync(id);
+                if (room == null)
+                {
+                    return false;
+                }
 
-            _context.Phongs.Remove(room);
-            await _context.SaveChangesAsync();
-            return true;
+                // Delete all bookings for this room first
+                var bookingsToDelete = await _context.DatPhongs
+                    .Where(b => b.MaPhong == id)
+                    .ToListAsync();
+                
+                if (bookingsToDelete.Any())
+                {
+                    _context.DatPhongs.RemoveRange(bookingsToDelete);
+                }
+
+                // Then delete the room
+                _context.Phongs.Remove(room);
+                
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                
+                return true;
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         #endregion

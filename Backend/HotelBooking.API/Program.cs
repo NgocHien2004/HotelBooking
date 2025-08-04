@@ -34,6 +34,7 @@ builder.Services.AddAutoMapper(typeof(Program));
 // Add Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IUserService, UserService>();
 // Add other services here...
 
