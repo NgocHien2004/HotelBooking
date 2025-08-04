@@ -52,6 +52,31 @@ function getHeaders(includeAuth = false) {
   return headers;
 }
 
+// IMAGE URL HELPERS - THÊM MỚI: Các hàm helper riêng cho từng loại ảnh
+function getHotelImageUrl(imagePath) {
+  if (!imagePath) return `${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg`;
+
+  if (imagePath.startsWith("http")) return imagePath;
+  if (imagePath.startsWith("/uploads")) return `${API_BASE_URL}${imagePath}`;
+
+  // Nếu chỉ có tên file
+  return `${API_BASE_URL}/uploads/hotels/${imagePath}`;
+}
+
+function getRoomImageUrl(imagePath) {
+  if (!imagePath) return `${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg`;
+
+  if (imagePath.startsWith("http")) return imagePath;
+  if (imagePath.startsWith("/uploads")) return `${API_BASE_URL}${imagePath}`;
+
+  // Nếu chỉ có tên file
+  return `${API_BASE_URL}/uploads/rooms/${imagePath}`;
+}
+
+function getPlaceholderImageUrl() {
+  return `${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg`;
+}
+
 // Debug logging (can be disabled in production)
 const DEBUG_MODE = true;
 

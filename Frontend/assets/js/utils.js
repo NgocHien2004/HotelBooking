@@ -42,7 +42,7 @@ function showAlert(message, type = "danger") {
   }
 }
 
-// Get image URL helper function
+// Get image URL helper function - SỬAẠ ĐỔI: Cải thiện logic xử lý đường dẫn
 function getImageUrl(image) {
   const baseUrl = "http://localhost:5233";
 
@@ -55,25 +55,74 @@ function getImageUrl(image) {
     if (image.startsWith("/uploads")) {
       return `${baseUrl}${image}`;
     }
-    // Nếu không có /uploads thì thêm vào
-    return `${baseUrl}/uploads/${image}`;
+    // Nếu là đường dẫn tương đối, thêm /uploads/
+    if (!image.startsWith("/")) {
+      // Kiểm tra xem có phải là ảnh khách sạn hay phòng không
+      if (image.includes("hotel") || image.endsWith(".jpg") || image.endsWith(".png") || image.endsWith(".jpeg")) {
+        return `${baseUrl}/uploads/hotels/${image}`;
+      }
+      return `${baseUrl}/uploads/${image}`;
+    }
+    return `${baseUrl}${image}`;
   }
 
   if (image && image.duongDanAnh) {
-    if (image.duongDanAnh.startsWith("http")) {
-      return image.duongDanAnh;
+    let imagePath = image.duongDanAnh;
+
+    if (imagePath.startsWith("http")) {
+      return imagePath;
     }
-    if (image.duongDanAnh.startsWith("/uploads")) {
-      return `${baseUrl}${image.duongDanAnh}`;
+    if (imagePath.startsWith("/uploads")) {
+      return `${baseUrl}${imagePath}`;
     }
-    return `${baseUrl}/uploads/${image.duongDanAnh}`;
+    // Nếu chỉ có tên file, thêm đường dẫn đầy đủ
+    if (!imagePath.startsWith("/")) {
+      return `${baseUrl}/uploads/hotels/${imagePath}`;
+    }
+    return `${baseUrl}${imagePath}`;
   }
 
   // Fallback to placeholder
   return `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
 }
 
-// Create hotel card HTML - Hỗ trợ cả property tiếng Việt và tiếng Anh
+// Get room image URL - THÊM MỚI: Hàm riêng cho ảnh phòng
+function getRoomImageUrl(image) {
+  const baseUrl = "http://localhost:5233";
+
+  if (typeof image === "string") {
+    if (image.startsWith("http")) {
+      return image;
+    }
+    if (image.startsWith("/uploads")) {
+      return `${baseUrl}${image}`;
+    }
+    if (!image.startsWith("/")) {
+      return `${baseUrl}/uploads/rooms/${image}`;
+    }
+    return `${baseUrl}${image}`;
+  }
+
+  if (image && image.duongDanAnh) {
+    let imagePath = image.duongDanAnh;
+
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+    if (imagePath.startsWith("/uploads")) {
+      return `${baseUrl}${imagePath}`;
+    }
+    if (!imagePath.startsWith("/")) {
+      return `${baseUrl}/uploads/rooms/${imagePath}`;
+    }
+    return `${baseUrl}${imagePath}`;
+  }
+
+  // Fallback to placeholder
+  return `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
+}
+
+// Create hotel card HTML - SỬAẠ ĐỔI: Cải thiện xử lý hình ảnh
 function createHotelCard(hotel) {
   // Map properties từ backend (tiếng Việt) sang frontend (tiếng Anh)
   const hotelData = {
@@ -84,67 +133,67 @@ function createHotelCard(hotel) {
     price: hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0,
     rating: hotel.danhGiaTrungBinh || hotel.rating || 4.0,
     description: hotel.moTa || hotel.description,
-    images: hotel.hinhAnhs || hotel.images || [],
+    images: hotel.hinhAnhs || hotel.hinhAnhKhachSans || hotel.images || [],
     amenities: hotel.tienNghi || hotel.amenities || "",
   };
 
-  const amenities = hotelData.amenities ? hotelData.amenities.split(",").slice(0, 3) : [];
+  const amenities = hotelData.amenities
+    ? hotelData.amenities
+        .split(",")
+        .slice(0, 3)
+        .map((amenity) => `<span class="badge bg-light text-dark me-1">${amenity.trim()}</span>`)
+        .join("")
+    : '<span class="text-muted">Chưa cập nhật</span>';
 
-  // Xử lý đường dẫn hình ảnh với fallback tốt hơn
-  let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg"; // Default placeholder
-
+  // Lấy hình ảnh đầu tiên hoặc placeholder
+  let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
   if (hotelData.images && hotelData.images.length > 0) {
-    imageUrl = getImageUrl(hotelData.images[0]);
+    const firstImage = hotelData.images[0];
+    imageUrl = getImageUrl(firstImage);
   }
 
   return `
-        <div class="col-md-4 mb-4">
-            <div class="card hotel-card h-100">
-                <img src="${imageUrl}" class="card-img-top" alt="${hotelData.name}" 
-                     onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'"
-                     style="height: 200px; object-fit: cover; width: 100%;">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">${hotelData.name}</h5>
-                    <p class="text-muted mb-2"><i class="bi bi-geo-alt"></i> ${hotelData.city}</p>
-                    <div class="mb-2">
-                        ${amenities.map((a) => `<span class="badge bg-secondary amenity-badge">${a.trim()}</span>`).join("")}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-auto">
-                        <span class="hotel-price">
-                            ${hotelData.price > 0 ? `Từ ${formatCurrency(hotelData.price)}/đêm` : "Liên hệ"}
-                        </span>
-                        <span class="hotel-rating">
-                            <i class="bi bi-star-fill"></i> ${hotelData.rating}
-                        </span>
-                    </div>
-                    <a href="hotel-detail.html?id=${hotelData.id}" class="btn btn-primary btn-sm mt-3 w-100">Xem chi tiết</a>
-                </div>
-            </div>
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card h-100 shadow-sm hotel-card">
+        <div class="position-relative">
+          <img src="${imageUrl}" 
+               class="card-img-top" 
+               alt="${hotelData.name}" 
+               style="height: 200px; object-fit: cover;"
+               onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg';">
+          <div class="position-absolute top-0 end-0 m-2">
+            <span class="badge bg-primary">${hotelData.city}</span>
+          </div>
         </div>
-    `;
-}
-
-// Parse JWT token
-function parseJwt(token) {
-  try {
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch (e) {
-    return null;
-  }
-}
-
-// Check admin access
-function checkAdminAccess() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  if (!user.vaiTro || user.vaiTro !== "Admin") {
-    alert("Bạn không có quyền truy cập trang này!");
-    window.location.href = "../index.html";
-  }
-}
-
-// Logout function
-function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  window.location.href = "index.html";
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${hotelData.name}</h5>
+          <p class="card-text text-muted small">${hotelData.address}</p>
+          ${
+            hotelData.description
+              ? `<p class="card-text">${hotelData.description.substring(0, 100)}${hotelData.description.length > 100 ? "..." : ""}</p>`
+              : ""
+          }
+          <div class="mb-2">
+            <small class="text-muted">Tiện ích:</small><br>
+            ${amenities}
+          </div>
+          <div class="mt-auto">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="h6 mb-0 text-success">
+                ${hotelData.price > 0 ? `Từ ${formatCurrency(hotelData.price)}` : "Chưa có giá"}
+              </span>
+              <span class="text-warning">
+                <i class="bi bi-star-fill"></i> ${hotelData.rating.toFixed(1)}
+              </span>
+            </div>
+            <div class="d-grid gap-2">
+              <a href="hotel-detail.html?id=${hotelData.id}" class="btn btn-primary btn-sm">
+                <i class="bi bi-eye"></i> Xem Chi Tiết
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
