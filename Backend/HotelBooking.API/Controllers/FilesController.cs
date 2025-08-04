@@ -1,233 +1,133 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelBooking.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class FilesController : ControllerBase
+    public class UploadController : ControllerBase
     {
-        private readonly ILogger<FilesController> _logger;
-        private readonly IWebHostEnvironment _environment;
+        private readonly ILogger<UploadController> _logger;
+        private readonly string _hotelsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\hotels";
+        private readonly string _roomsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\rooms";
 
-        public FilesController(ILogger<FilesController> logger, IWebHostEnvironment environment)
+        public UploadController(ILogger<UploadController> logger)
         {
             _logger = logger;
-            _environment = environment;
+            
+            // Ensure directories exist
+            if (!Directory.Exists(_hotelsPath))
+                Directory.CreateDirectory(_hotelsPath);
+            if (!Directory.Exists(_roomsPath))
+                Directory.CreateDirectory(_roomsPath);
         }
 
-        [HttpPost("upload/hotels")]
+        [HttpPost("hotels/{hotelId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UploadHotelImages([FromForm] List<IFormFile> files)
+        public async Task<IActionResult> UploadHotelImages(int hotelId, List<IFormFile> images)
         {
             try
             {
-                if (files == null || files.Count == 0)
+                if (images == null || images.Count == 0)
                 {
                     return BadRequest(new { success = false, message = "Không có file nào được chọn" });
                 }
 
-                var uploadedFiles = new List<object>();
-                var realHotelsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\hotels";
+                var uploadedFiles = new List<string>();
 
-                // Tạo thư mục nếu chưa tồn tại
-                if (!Directory.Exists(realHotelsPath))
+                foreach (var image in images)
                 {
-                    Directory.CreateDirectory(realHotelsPath);
-                    _logger.LogInformation("Created hotels directory: " + realHotelsPath);
-                }
-
-                foreach (var file in files)
-                {
-                    if (file.Length > 0)
+                    if (image.Length > 0)
                     {
-                        // Kiểm tra loại file
-                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                        // Validate file type
+                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                        var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
                         
-                        if (!allowedExtensions.Contains(fileExtension))
+                        if (!allowedExtensions.Contains(extension))
                         {
-                            return BadRequest(new { 
-                                success = false, 
-                                message = $"File {file.FileName} không được hỗ trợ. Chỉ chấp nhận: {string.Join(", ", allowedExtensions)}" 
-                            });
+                            continue; // Skip invalid files
                         }
 
-                        // Tạo tên file unique
-                        var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                        var filePath = Path.Combine(realHotelsPath, fileName);
+                        // Generate unique filename
+                        var fileName = $"hotel_{hotelId}_{Guid.NewGuid()}{extension}";
+                        var filePath = Path.Combine(_hotelsPath, fileName);
 
-                        // Lưu file
+                        // Save file
                         using (var stream = new FileStream(filePath, FileMode.Create))
                         {
-                            await file.CopyToAsync(stream);
+                            await image.CopyToAsync(stream);
                         }
 
-                        uploadedFiles.Add(new
-                        {
-                            originalName = file.FileName,
-                            fileName = fileName,
-                            url = $"/uploads/hotels/{fileName}",
-                            size = file.Length
-                        });
-
-                        _logger.LogInformation($"Uploaded hotel image: {fileName} to {filePath}");
+                        uploadedFiles.Add($"/uploads/hotels/{fileName}");
+                        _logger.LogInformation($"Uploaded hotel image: {fileName}");
                     }
                 }
 
                 return Ok(new { 
                     success = true, 
-                    message = $"Upload thành công {uploadedFiles.Count} file", 
+                    message = $"Đã upload {uploadedFiles.Count} ảnh thành công",
                     files = uploadedFiles 
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error uploading hotel images");
-                return StatusCode(500, new { success = false, message = "Lỗi khi upload file: " + ex.Message });
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
 
-        [HttpPost("upload/rooms")]
+        [HttpPost("rooms/{roomId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UploadRoomImages([FromForm] List<IFormFile> files)
+        public async Task<IActionResult> UploadRoomImages(int roomId, List<IFormFile> images)
         {
             try
             {
-                if (files == null || files.Count == 0)
+                if (images == null || images.Count == 0)
                 {
                     return BadRequest(new { success = false, message = "Không có file nào được chọn" });
                 }
 
-                var uploadedFiles = new List<object>();
-                var realRoomsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\rooms";
+                var uploadedFiles = new List<string>();
 
-                // Tạo thư mục nếu chưa tồn tại
-                if (!Directory.Exists(realRoomsPath))
+                foreach (var image in images)
                 {
-                    Directory.CreateDirectory(realRoomsPath);
-                    _logger.LogInformation("Created rooms directory: " + realRoomsPath);
-                }
-
-                foreach (var file in files)
-                {
-                    if (file.Length > 0)
+                    if (image.Length > 0)
                     {
-                        // Kiểm tra loại file
-                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                        // Validate file type
+                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                        var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
                         
-                        if (!allowedExtensions.Contains(fileExtension))
+                        if (!allowedExtensions.Contains(extension))
                         {
-                            return BadRequest(new { 
-                                success = false, 
-                                message = $"File {file.FileName} không được hỗ trợ. Chỉ chấp nhận: {string.Join(", ", allowedExtensions)}" 
-                            });
+                            continue;
                         }
 
-                        // Tạo tên file unique
-                        var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                        var filePath = Path.Combine(realRoomsPath, fileName);
+                        // Generate unique filename
+                        var fileName = $"room_{roomId}_{Guid.NewGuid()}{extension}";
+                        var filePath = Path.Combine(_roomsPath, fileName);
 
-                        // Lưu file
+                        // Save file
                         using (var stream = new FileStream(filePath, FileMode.Create))
                         {
-                            await file.CopyToAsync(stream);
+                            await image.CopyToAsync(stream);
                         }
 
-                        uploadedFiles.Add(new
-                        {
-                            originalName = file.FileName,
-                            fileName = fileName,
-                            url = $"/uploads/rooms/{fileName}",
-                            size = file.Length
-                        });
-
-                        _logger.LogInformation($"Uploaded room image: {fileName} to {filePath}");
+                        uploadedFiles.Add($"/uploads/rooms/{fileName}");
+                        _logger.LogInformation($"Uploaded room image: {fileName}");
                     }
                 }
 
                 return Ok(new { 
                     success = true, 
-                    message = $"Upload thành công {uploadedFiles.Count} file", 
+                    message = $"Đã upload {uploadedFiles.Count} ảnh thành công",
                     files = uploadedFiles 
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error uploading room images");
-                return StatusCode(500, new { success = false, message = "Lỗi khi upload file: " + ex.Message });
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
-        }
-
-        [HttpDelete("hotels/{fileName}")]
-        [Authorize(Roles = "Admin")]
-        public IActionResult DeleteHotelImage(string fileName)
-        {
-            try
-            {
-                var realHotelsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\hotels";
-                var filePath = Path.Combine(realHotelsPath, fileName);
-
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                    _logger.LogInformation($"Deleted hotel image: {fileName}");
-                    return Ok(new { success = true, message = "Xóa file thành công" });
-                }
-
-                return NotFound(new { success = false, message = "File không tồn tại" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error deleting hotel image: {fileName}");
-                return StatusCode(500, new { success = false, message = "Lỗi khi xóa file: " + ex.Message });
-            }
-        }
-
-        [HttpDelete("rooms/{fileName}")]
-        [Authorize(Roles = "Admin")]
-        public IActionResult DeleteRoomImage(string fileName)
-        {
-            try
-            {
-                var realRoomsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\rooms";
-                var filePath = Path.Combine(realRoomsPath, fileName);
-
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                    _logger.LogInformation($"Deleted room image: {fileName}");
-                    return Ok(new { success = true, message = "Xóa file thành công" });
-                }
-
-                return NotFound(new { success = false, message = "File không tồn tại" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error deleting room image: {fileName}");
-                return StatusCode(500, new { success = false, message = "Lỗi khi xóa file: " + ex.Message });
-            }
-        }
-
-        // Test endpoint để kiểm tra upload functionality
-        [HttpGet("test")]
-        public IActionResult Test()
-        {
-            var realHotelsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\hotels";
-            var realRoomsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\rooms";
-
-            return Ok(new
-            {
-                success = true,
-                message = "Files controller is working!",
-                realHotelsPath = realHotelsPath,
-                realRoomsPath = realRoomsPath,
-                hotelsPathExists = Directory.Exists(realHotelsPath),
-                roomsPathExists = Directory.Exists(realRoomsPath),
-                timestamp = DateTime.Now
-            });
         }
     }
 }

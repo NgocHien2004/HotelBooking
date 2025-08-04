@@ -60,83 +60,41 @@ var app = builder.Build();
 // KHÔNG dùng HTTPS redirect trong development
 // app.UseHttpsRedirection();
 
-// === SỬA ĐỔI: Cấu hình static files cho nhiều thư mục ảnh ===
-
-// 1. Thư mục uploads trong project (cho placeholder)
+// Tạo thư mục uploads trực tiếp trong project root (không dùng wwwroot)
 var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
 var tempPath = Path.Combine(uploadsPath, "temp");
-var hotelsPathLocal = Path.Combine(uploadsPath, "hotels");
-var roomsPathLocal = Path.Combine(uploadsPath, "rooms");
+var hotelsPath = Path.Combine(uploadsPath, "hotels");
+var roomsPath = Path.Combine(uploadsPath, "rooms");
 
-Console.WriteLine($"Local uploads path: {uploadsPath}");
+Console.WriteLine($"Uploads path: {uploadsPath}");
 
-// Tạo thư mục local nếu chưa có
 if (!Directory.Exists(uploadsPath))
 {
     Directory.CreateDirectory(uploadsPath);
-    Console.WriteLine("Created local uploads directory");
+    Console.WriteLine("Created uploads directory");
 }
 if (!Directory.Exists(tempPath))
 {
     Directory.CreateDirectory(tempPath);
     Console.WriteLine("Created temp directory");
 }
-if (!Directory.Exists(hotelsPathLocal))
+if (!Directory.Exists(hotelsPath))
 {
-    Directory.CreateDirectory(hotelsPathLocal);
-    Console.WriteLine("Created local hotels directory");
+    Directory.CreateDirectory(hotelsPath);
+    Console.WriteLine("Created hotels directory");
 }
-if (!Directory.Exists(roomsPathLocal))
+if (!Directory.Exists(roomsPath))
 {
-    Directory.CreateDirectory(roomsPathLocal);
-    Console.WriteLine("Created local rooms directory");
-}
-
-// 2. Đường dẫn thực tế của ảnh khách sạn và phòng
-var realHotelsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\hotels";
-var realRoomsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\rooms";
-
-Console.WriteLine($"Real hotels path: {realHotelsPath}");
-Console.WriteLine($"Real rooms path: {realRoomsPath}");
-Console.WriteLine($"Real hotels exists: {Directory.Exists(realHotelsPath)}");
-Console.WriteLine($"Real rooms exists: {Directory.Exists(realRoomsPath)}");
-
-// Tạo thư mục thực tế nếu chưa có
-if (!Directory.Exists(realHotelsPath))
-{
-    Directory.CreateDirectory(realHotelsPath);
-    Console.WriteLine("Created real hotels directory");
-}
-if (!Directory.Exists(realRoomsPath))
-{
-    Directory.CreateDirectory(realRoomsPath);
-    Console.WriteLine("Created real rooms directory");
+    Directory.CreateDirectory(roomsPath);
+    Console.WriteLine("Created rooms directory");
 }
 
-// === STATIC FILES CONFIGURATION ===
+// Kiểm tra file placeholder
+var placeholderPath = Path.Combine(tempPath, "hotel-placeholder.jpg");
+Console.WriteLine($"Checking placeholder at: {placeholderPath}");
+Console.WriteLine($"Placeholder exists: {File.Exists(placeholderPath)}");
 
-// 1. Serve ảnh khách sạn từ thư mục thực tế
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(realHotelsPath),
-    RequestPath = "/uploads/hotels"
-});
-
-// 2. Serve ảnh phòng từ thư mục thực tế  
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(realRoomsPath),
-    RequestPath = "/uploads/rooms"
-});
-
-// 3. Serve placeholder và temp files từ thư mục local
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(tempPath),
-    RequestPath = "/uploads/temp"
-});
-
-// 4. Serve các file uploads khác từ thư mục local
+// Serve static files từ uploads folder với đường dẫn /uploads
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
@@ -156,49 +114,19 @@ app.MapControllers();
 // Add a simple test endpoint
 app.MapGet("/", () => "API is running!");
 
-// Test endpoint để kiểm tra static files và ảnh
+// Test endpoint để kiểm tra static files và placeholder
 app.MapGet("/test-image", () => 
 {
-    var placeholderExists = File.Exists(Path.Combine(tempPath, "hotel-placeholder.jpg"));
-    var tempFiles = Directory.Exists(tempPath) ? Directory.GetFiles(tempPath) : new string[0];
-    var hotelFiles = Directory.Exists(realHotelsPath) ? Directory.GetFiles(realHotelsPath) : new string[0];
-    var roomFiles = Directory.Exists(realRoomsPath) ? Directory.GetFiles(realRoomsPath) : new string[0];
+    var placeholderExists = File.Exists(Path.Combine(uploadsPath, "temp", "hotel-placeholder.jpg"));
+    var files = Directory.Exists(tempPath) ? Directory.GetFiles(tempPath) : new string[0];
     
     return new { 
         message = "Image test", 
-        localUploadsPath = uploadsPath,
-        realHotelsPath = realHotelsPath,
-        realRoomsPath = realRoomsPath,
+        uploadsPath = uploadsPath,
+        tempPath = tempPath,
         placeholderExists = placeholderExists,
         placeholderPath = Path.Combine(tempPath, "hotel-placeholder.jpg"),
-        tempFiles = tempFiles.Select(f => Path.GetFileName(f)).ToArray(),
-        hotelFiles = hotelFiles.Select(f => Path.GetFileName(f)).ToArray(),
-        roomFiles = roomFiles.Select(f => Path.GetFileName(f)).ToArray()
-    };
-});
-
-// Test endpoint để kiểm tra từng loại ảnh
-app.MapGet("/test-hotel-image/{fileName}", (string fileName) => 
-{
-    var filePath = Path.Combine(realHotelsPath, fileName);
-    var exists = File.Exists(filePath);
-    return new { 
-        fileName = fileName,
-        fullPath = filePath,
-        exists = exists,
-        url = $"/uploads/hotels/{fileName}"
-    };
-});
-
-app.MapGet("/test-room-image/{fileName}", (string fileName) => 
-{
-    var filePath = Path.Combine(realRoomsPath, fileName);
-    var exists = File.Exists(filePath);
-    return new { 
-        fileName = fileName,
-        fullPath = filePath,
-        exists = exists,
-        url = $"/uploads/rooms/{fileName}"
+        filesInTemp = files.Select(f => Path.GetFileName(f)).ToArray()
     };
 });
 

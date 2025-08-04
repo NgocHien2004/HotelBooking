@@ -1,42 +1,49 @@
-// API Base URL
-const API_URL = "http://localhost:5233/api";
-
-// Check if user is admin (từ auth.js)
-function checkAdminAccess() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  if (!user.role || user.role !== "Admin") {
-    alert("Bạn không có quyền truy cập trang này!");
-    window.location.href = "../index.html";
-    return false;
-  }
-  return true;
-}
+// Admin.js - Admin panel functions
 
 // Load dashboard data
-async function loadDashboard() {
+async function loadDashboardData() {
   try {
-    // Load hotel count
+    // Get total hotels
     const hotelsResponse = await fetch(`${API_URL}/hotels`, {
       headers: getAuthHeaders(),
     });
     const hotelsData = await hotelsResponse.json();
+
+    // Handle response format
     const hotels = hotelsData.success && hotelsData.data ? hotelsData.data : hotelsData;
 
-    // Update dashboard stats
-    document.getElementById("totalHotels").textContent = hotels.length || 0;
-    document.getElementById("totalRooms").textContent = "0"; // TODO: Implement rooms count
-    document.getElementById("totalBookings").textContent = "0"; // TODO: Implement bookings count
+    document.getElementById("totalHotels").textContent = hotels.length;
 
-    // Load recent hotels for table
-    const tbody = document.querySelector("#recentHotelsTable tbody");
-    if (tbody && hotels.length > 0) {
-      tbody.innerHTML = "";
-      hotels.slice(0, 5).forEach((hotel) => {
-        const hotelData = mapHotelData(hotel);
-        tbody.innerHTML += `
+    // Calculate available rooms (mock data for now)
+    const availableRooms = hotels.reduce((sum, hotel) => sum + 10, 0);
+    document.getElementById("availableRooms").textContent = availableRooms;
+
+    // Get today's bookings (mock data)
+    document.getElementById("todayBookings").textContent = Math.floor(Math.random() * 20) + 5;
+
+    // Get total users (mock data)
+    document.getElementById("totalUsers").textContent = Math.floor(Math.random() * 100) + 50;
+
+    // Load recent hotels
+    const recentHotels = hotels.slice(-5).reverse();
+    const tbody = document.getElementById("recentHotels");
+    tbody.innerHTML = "";
+
+    recentHotels.forEach((hotel) => {
+      // Map Vietnamese property names to English
+      const hotelData = {
+        id: hotel.maKhachSan || hotel.id,
+        name: hotel.tenKhachSan || hotel.name,
+        address: hotel.diaChi || hotel.address,
+        price: hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0,
+        createdAt: hotel.ngayTao || hotel.createdAt,
+      };
+
+      tbody.innerHTML += `
         <tr>
+          <td>${hotelData.id}</td>
           <td>${hotelData.name}</td>
-          <td>${hotelData.city}</td>
+          <td>${hotelData.address}</td>
           <td>${hotelData.price > 0 ? `Từ ${formatCurrency(hotelData.price)}` : "Chưa có giá"}</td>
           <td>${new Date(hotelData.createdAt).toLocaleDateString("vi-VN")}</td>
           <td>
@@ -44,31 +51,20 @@ async function loadDashboard() {
           </td>
         </tr>
       `;
-      });
-    }
+    });
   } catch (error) {
     console.error("Error loading dashboard data:", error);
     showAlert("Không thể tải dữ liệu dashboard", "danger");
   }
 }
 
-// Map hotel data to consistent format
-function mapHotelData(hotel) {
-  return {
-    id: hotel.maKhachSan || hotel.id,
-    name: hotel.tenKhachSan || hotel.name || "Không có tên",
-    address: hotel.diaChi || hotel.address || "Không có địa chỉ",
-    city: hotel.thanhPho || hotel.city || "Không có thành phố",
-    description: hotel.moTa || hotel.description || "",
-    rating: hotel.danhGiaTrungBinh || hotel.rating || 0,
-    price: hotel.giaPhongThapNhat || hotel.price || 0,
-    createdAt: hotel.ngayTao || hotel.createdAt || new Date(),
-    amenities: hotel.tienNghi || hotel.amenities || "",
-    images: hotel.hinhAnhs || hotel.images || [],
-  };
+// Load hotels for admin management
+async function loadAdminHotels() {
+  // This function is now replaced by admin-hotels.js
+  console.log("This function has been moved to admin-hotels.js");
 }
 
-// Add new hotel với upload ảnh
+// Add new hotel
 if (document.getElementById("addHotelForm")) {
   document.getElementById("addHotelForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -84,8 +80,7 @@ if (document.getElementById("addHotelForm")) {
     };
 
     try {
-      // Bước 1: Tạo khách sạn trước
-      const hotelResponse = await fetch(`${API_URL}/hotels`, {
+      const response = await fetch(`${API_URL}/hotels`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,54 +89,26 @@ if (document.getElementById("addHotelForm")) {
         body: JSON.stringify(hotelData),
       });
 
-      if (!hotelResponse.ok) {
-        const errorData = await hotelResponse.json();
-        throw new Error(errorData.message || "Không thể tạo khách sạn");
-      }
-
-      const hotelResult = await hotelResponse.json();
-      const hotelId = hotelResult.data?.maKhachSan || hotelResult.data?.id;
-
-      // Bước 2: Upload ảnh nếu có
-      const images = document.getElementById("images").files;
-      if (images.length > 0) {
-        const formData = new FormData();
-
-        // Thêm tất cả files vào FormData
-        for (let i = 0; i < images.length; i++) {
-          formData.append("files", images[i]);
-        }
-
-        const uploadResponse = await fetch(`${API_URL}/files/upload/hotels`, {
-          method: "POST",
-          headers: {
-            ...getAuthHeaders(),
-            // Không set Content-Type cho FormData, browser sẽ tự set
-          },
-          body: formData,
-        });
-
-        if (uploadResponse.ok) {
-          const uploadResult = await uploadResponse.json();
-          console.log("Upload successful:", uploadResult);
-
-          // TODO: Lưu thông tin ảnh vào database qua HotelService nếu cần
-          showAlert(`Thêm khách sạn và upload ${uploadResult.files.length} ảnh thành công!`, "success");
-        } else {
-          console.warn("Upload failed but hotel created");
-          showAlert("Thêm khách sạn thành công nhưng có lỗi khi upload ảnh", "warning");
-        }
-      } else {
+      if (response.ok) {
         showAlert("Thêm khách sạn thành công!", "success");
-      }
 
-      // Redirect sau 2 giây
-      setTimeout(() => {
-        window.location.href = "hotels.html";
-      }, 2000);
+        // Handle images if any
+        const images = document.getElementById("images").files;
+        if (images.length > 0) {
+          // TODO: Implement image upload
+          console.log("Images to upload:", images.length);
+        }
+
+        setTimeout(() => {
+          window.location.href = "hotels.html";
+        }, 2000);
+      } else {
+        const data = await response.json();
+        showAlert(data.message || "Có lỗi xảy ra!", "danger");
+      }
     } catch (error) {
       console.error("Error adding hotel:", error);
-      showAlert(error.message || "Có lỗi xảy ra. Vui lòng thử lại!", "danger");
+      showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
     }
   });
 }
@@ -214,101 +181,40 @@ async function editHotel(id) {
 }
 
 // Update hotel
-if (document.getElementById("editHotelForm")) {
-  document.getElementById("editHotelForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+async function updateHotel() {
+  const id = document.getElementById("editHotelId").value;
 
-    const hotelId = document.getElementById("editHotelId").value;
-    const hotelData = {
-      tenKhachSan: document.getElementById("editName").value,
-      thanhPho: document.getElementById("editCity").value,
-      diaChi: document.getElementById("editAddress").value,
-      danhGiaTrungBinh: parseFloat(document.getElementById("editRating").value || 4.0),
-      moTa: document.getElementById("editDescription").value,
-      tienNghi: document.getElementById("editAmenities").value,
-    };
-
-    try {
-      // Cập nhật thông tin khách sạn
-      const response = await fetch(`${API_URL}/hotels/${hotelId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify(hotelData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Không thể cập nhật khách sạn");
-      }
-
-      // Upload ảnh mới nếu có
-      const newImages = document.getElementById("editImages").files;
-      if (newImages.length > 0) {
-        const formData = new FormData();
-
-        for (let i = 0; i < newImages.length; i++) {
-          formData.append("files", newImages[i]);
-        }
-
-        const uploadResponse = await fetch(`${API_URL}/files/upload/hotels`, {
-          method: "POST",
-          headers: {
-            ...getAuthHeaders(),
-          },
-          body: formData,
-        });
-
-        if (uploadResponse.ok) {
-          const uploadResult = await uploadResponse.json();
-          console.log("New images uploaded:", uploadResult);
-        }
-      }
-
-      showAlert("Cập nhật khách sạn thành công!", "success");
-
-      // Close modal and reload data
-      const modal = bootstrap.Modal.getInstance(document.getElementById("editHotelModal"));
-      modal.hide();
-
-      // Reload page after a short delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (error) {
-      console.error("Error updating hotel:", error);
-      showAlert(error.message || "Có lỗi xảy ra khi cập nhật!", "danger");
-    }
-  });
-}
-
-// Remove image
-async function removeImage(hotelId, imageUrl) {
-  if (!confirm("Bạn có chắc chắn muốn xóa ảnh này?")) {
-    return;
-  }
+  // Create object with Vietnamese property names
+  const hotelData = {
+    tenKhachSan: document.getElementById("editName").value,
+    thanhPho: document.getElementById("editCity").value,
+    diaChi: document.getElementById("editAddress").value,
+    danhGiaTrungBinh: parseFloat(document.getElementById("editRating").value),
+    moTa: document.getElementById("editDescription").value,
+    tienNghi: document.getElementById("editAmenities").value,
+  };
 
   try {
-    // Extract filename from URL
-    const fileName = imageUrl.split("/").pop();
-
-    const response = await fetch(`${API_URL}/files/hotels/${fileName}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
+    const response = await fetch(`${API_URL}/hotels/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(hotelData),
     });
 
     if (response.ok) {
-      showAlert("Xóa ảnh thành công!", "success");
-      // Reload current images
-      editHotel(hotelId);
+      showAlert("Cập nhật khách sạn thành công!", "success");
+      bootstrap.Modal.getInstance(document.getElementById("editHotelModal")).hide();
+      loadAdminHotels();
     } else {
-      throw new Error("Không thể xóa ảnh");
+      const data = await response.json();
+      showAlert(data.message || "Có lỗi xảy ra!", "danger");
     }
   } catch (error) {
-    console.error("Error removing image:", error);
-    showAlert("Có lỗi xảy ra khi xóa ảnh!", "danger");
+    console.error("Error updating hotel:", error);
+    showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
   }
 }
 
@@ -326,32 +232,125 @@ async function deleteHotel(id) {
 
     if (response.ok) {
       showAlert("Xóa khách sạn thành công!", "success");
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      loadAdminHotels();
     } else {
       const data = await response.json();
-      throw new Error(data.message || "Không thể xóa khách sạn");
+      showAlert(data.message || "Có lỗi xảy ra!", "danger");
     }
   } catch (error) {
     console.error("Error deleting hotel:", error);
-    showAlert(error.message || "Có lỗi xảy ra khi xóa khách sạn!", "danger");
+    showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
   }
 }
 
-// Logout
-function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  window.location.href = "../index.html";
+// Remove image from hotel
+async function removeImage(hotelId, imagePath) {
+  if (!confirm("Bạn có chắc chắn muốn xóa hình ảnh này?")) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ imagePath }),
+    });
+
+    if (response.ok) {
+      showAlert("Xóa hình ảnh thành công!", "success");
+      editHotel(hotelId); // Reload the edit modal
+    } else {
+      showAlert("Có lỗi xảy ra!", "danger");
+    }
+  } catch (error) {
+    console.error("Error removing image:", error);
+    showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
+  }
 }
 
-// Initialize page
-document.addEventListener("DOMContentLoaded", function () {
-  checkAdminAccess();
+// Add new hotel
+if (document.getElementById("addHotelForm")) {
+  document.getElementById("addHotelForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  // Load dashboard if on dashboard page
-  if (document.getElementById("totalHotels")) {
-    loadDashboard();
+    // Create object with Vietnamese property names
+    const hotelData = {
+      tenKhachSan: document.getElementById("name").value,
+      thanhPho: document.getElementById("city").value,
+      diaChi: document.getElementById("address").value,
+      danhGiaTrungBinh: parseFloat(document.getElementById("rating").value || 4.0),
+      moTa: document.getElementById("description").value,
+      tienNghi: document.getElementById("amenities").value,
+    };
+
+    try {
+      // First, create the hotel
+      const response = await fetch(`${API_URL}/hotels`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(hotelData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const hotelId = result.data.maKhachSan || result.data.id;
+
+        showAlert("Thêm khách sạn thành công!", "success");
+
+        // Handle images if any
+        const images = document.getElementById("images").files;
+        if (images.length > 0) {
+          await uploadHotelImages(hotelId, images);
+        }
+
+        setTimeout(() => {
+          window.location.href = "hotels.html";
+        }, 2000);
+      } else {
+        const data = await response.json();
+        showAlert(data.message || "Có lỗi xảy ra!", "danger");
+      }
+    } catch (error) {
+      console.error("Error adding hotel:", error);
+      showAlert("Có lỗi xảy ra. Vui lòng thử lại!", "danger");
+    }
+  });
+}
+
+// Function to upload hotel images
+async function uploadHotelImages(hotelId, images) {
+  try {
+    const formData = new FormData();
+
+    // Add all images to FormData
+    for (let i = 0; i < images.length; i++) {
+      formData.append("images", images[i]);
+    }
+
+    const response = await fetch(`${API_URL}/upload/hotels/${hotelId}`, {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(),
+        // Don't set Content-Type for FormData, let browser set it
+      },
+      body: formData,
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      showAlert(`Đã upload ${result.files.length} ảnh thành công!`, "success");
+    } else {
+      const error = await response.json();
+      showAlert(error.message || "Có lỗi khi upload ảnh!", "warning");
+    }
+  } catch (error) {
+    console.error("Error uploading images:", error);
+    showAlert("Có lỗi khi upload ảnh!", "warning");
   }
-});
+}
