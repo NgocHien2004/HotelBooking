@@ -70,6 +70,13 @@ namespace HotelBooking.API.Mappings
             CreateMap<CreateDanhGiaDto, DanhGia>()
                 .ForMember(dest => dest.NgayTao, opt => opt.MapFrom(src => DateTime.Now));
             CreateMap<UpdateDanhGiaDto, DanhGia>();
+
+            // User mappings (thêm vào constructor của MappingProfile)
+            CreateMap<NguoiDung, UserDto>();
+            CreateMap<RegisterDto, NguoiDung>()
+                .ForMember(dest => dest.NgayTao, opt => opt.MapFrom(src => DateTime.Now));
+            CreateMap<UpdateUserDto, NguoiDung>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }
