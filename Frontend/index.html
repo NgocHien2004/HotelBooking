@@ -5,38 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hotel Booking - Trang chủ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link href="assets/css/style.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <!-- Modern Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-modern">
       <div class="container">
-        <a class="navbar-brand" href="index.html">Hotel Booking</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
+        <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel me-2"></i>Hotel Booking </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          style="border: 1px solid rgba(255, 255, 255, 0.3)">
+          <span
+            class="navbar-toggler-icon"
+            style="
+              background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 30 30%27%3e%3cpath stroke=%27rgba%28255, 255, 255, 0.8%29%27 stroke-linecap=%27round%27 stroke-miterlimit=%2710%27 stroke-width=%272%27 d=%27M4 7h22M4 15h22M4 23h22%27/%3e%3c/svg%3e');
+            "></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
+          <ul class="navbar-nav me-auto">
             <li class="nav-item">
               <a class="nav-link active" href="index.html">Trang chủ</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="hotels.html">Khách sạn</a>
             </li>
+          </ul>
+          <ul class="navbar-nav">
+            <!-- Admin Menu - Chỉ hiện cho admin -->
             <li class="nav-item" id="adminMenu" style="display: none">
-              <a class="nav-link" href="admin/dashboard.html">Quản lý</a>
+              <a class="nav-link admin-badge" href="admin/hotels.html"> <i class="fas fa-cog me-1"></i>Quản lý </a>
             </li>
+            <!-- Login Menu -->
             <li class="nav-item" id="loginMenu">
-              <a class="nav-link" href="login.html">Đăng nhập</a>
+              <a class="nav-link" href="login.html"> <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập </a>
             </li>
+            <!-- User Menu -->
             <li class="nav-item" id="userMenu" style="display: none">
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                  <i class="bi bi-person-circle"></i> <span id="username"></span>
+                  <i class="fas fa-user-circle me-1"></i><span id="username"></span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" id="userDropdownMenu">
-                  <!-- Menu items will be populated by auth.js based on user role -->
+                  <!-- Menu items sẽ được tạo bởi auth.js -->
                 </ul>
               </div>
             </li>
@@ -46,13 +60,13 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero-section py-5">
+    <section class="hero-section">
       <div class="container">
         <div class="row">
-          <div class="col-lg-12 text-center">
-            <h1 class="display-4 mb-4">Chào mừng đến với Hotel Booking</h1>
-            <p class="lead mb-4">Tìm kiếm và đặt phòng khách sạn dễ dàng</p>
-            <a href="hotels.html" class="btn btn-primary btn-lg">Xem danh sách khách sạn</a>
+          <div class="col-lg-8">
+            <h1 class="display-4 fw-bold mb-4">Tìm khách sạn hoàn hảo cho chuyến đi của bạn</h1>
+            <p class="lead mb-4">Khám phá hàng ngàn khách sạn tốt nhất với giá cả phải chăng</p>
+            <a href="hotels.html" class="btn btn-light btn-lg"> <i class="fas fa-search"></i> Tìm khách sạn ngay </a>
           </div>
         </div>
       </div>
@@ -61,7 +75,7 @@
     <!-- Featured Hotels -->
     <section class="py-5">
       <div class="container">
-        <h2 class="text-center mb-4">Khách sạn nổi bật</h2>
+        <h2 class="text-center mb-5">Khách sạn nổi bật</h2>
         <div class="row" id="featuredHotels">
           <!-- Hotels will be loaded here -->
         </div>
@@ -71,12 +85,12 @@
     <!-- Footer -->
     <footer class="bg-dark text-white py-4 mt-5">
       <div class="container text-center">
-        <p class="mb-0">&copy; 2024 Hotel Booking. All rights reserved.</p>
+        <p class="mb-0">&copy; 2024 Hotel Booking. Tất cả quyền được bảo lưu.</p>
       </div>
     </footer>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Quan trọng: Load các file JS theo đúng thứ tự -->
     <script src="assets/js/utils.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>

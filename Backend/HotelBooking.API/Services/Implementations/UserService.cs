@@ -37,6 +37,43 @@ namespace HotelBooking.API.Services.Implementations
             return user == null ? null : _mapper.Map<UserDto>(user);
         }
 
+        // Overload method to accept UpdateUserDto
+        public async Task<UserDto?> UpdateUserAsync(int id, UpdateUserDto userDto)
+        {
+            var existingUser = await _context.NguoiDungs.FindAsync(id);
+            if (existingUser == null)
+            {
+                return null;
+            }
+
+            // Check if email is being changed and if it already exists
+            if (existingUser.Email != userDto.Email)
+            {
+                var emailExists = await _context.NguoiDungs
+                    .AnyAsync(u => u.Email == userDto.Email && u.MaNguoiDung != id);
+                if (emailExists)
+                {
+                    throw new InvalidOperationException("Email đã tồn tại.");
+                }
+            }
+
+            // Update all fields including VaiTro
+            existingUser.HoTen = userDto.HoTen;
+            existingUser.Email = userDto.Email;
+            existingUser.SoDienThoai = userDto.SoDienThoai;
+            existingUser.VaiTro = userDto.VaiTro; // FIX: Update role
+            
+            // Update password if provided
+            if (!string.IsNullOrEmpty(userDto.MatKhau))
+            {
+                existingUser.MatKhau = BCrypt.Net.BCrypt.HashPassword(userDto.MatKhau);
+            }
+
+            await _context.SaveChangesAsync();
+            return _mapper.Map<UserDto>(existingUser);
+        }
+
+        // Keep original method for backward compatibility
         public async Task<UserDto?> UpdateUserAsync(int id, UserDto userDto)
         {
             var existingUser = await _context.NguoiDungs.FindAsync(id);
@@ -56,9 +93,11 @@ namespace HotelBooking.API.Services.Implementations
                 }
             }
 
+            // Update fields available in UserDto (no VaiTro or MatKhau)
             existingUser.HoTen = userDto.HoTen;
             existingUser.Email = userDto.Email;
             existingUser.SoDienThoai = userDto.SoDienThoai;
+            existingUser.VaiTro = userDto.VaiTro; // Add this line
 
             await _context.SaveChangesAsync();
             return _mapper.Map<UserDto>(existingUser);

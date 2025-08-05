@@ -8,6 +8,7 @@ namespace HotelBooking.API.Services.Interfaces
         Task<UserDto?> GetUserByIdAsync(int id);
         Task<UserDto?> GetUserByEmailAsync(string email);
         Task<UserDto?> UpdateUserAsync(int id, UserDto userDto);
+        Task<UserDto?> UpdateUserAsync(int id, UpdateUserDto userDto); // New overload
         Task<bool> DeleteUserAsync(int id);
         Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
     }

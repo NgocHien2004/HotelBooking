@@ -82,83 +82,105 @@ function getImageUrl(image) {
   return placeholderUrl;
 }
 
-// Load hotel details
+// Load hotel details - SỬA ĐỔI: Thêm error handling tốt hơn
 async function loadHotelDetails(hotelId) {
   showLoading(true);
   currentHotelId = hotelId;
 
   try {
+    console.log("Loading hotel details for ID:", hotelId);
     const response = await fetch(`${API_URL}/hotels/${hotelId}`);
+
+    console.log("Hotel details response status:", response.status);
+    console.log("Hotel details response ok:", response.ok);
+
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      const errorText = await response.text();
+      console.error("Hotel details error response:", errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
+    console.log("Hotel details raw data:", data);
+
     const hotel = data.success && data.data ? data.data : data;
+    console.log("Hotel object:", hotel);
+
+    // Kiểm tra xem hotel có dữ liệu không
+    if (!hotel || !hotel.maKhachSan) {
+      throw new Error("Dữ liệu khách sạn không hợp lệ");
+    }
 
     await displayHotelDetails(hotel);
     showLoading(false);
     document.getElementById("hotelDetailsSection").style.display = "block";
   } catch (error) {
     console.error("Error loading hotel details:", error);
-    showError("Không thể tải thông tin khách sạn!");
+    showError("Không thể tải thông tin khách sạn: " + error.message);
   }
 }
 
 // Display hotel details
 async function displayHotelDetails(hotel) {
-  // Update page title and breadcrumb
-  document.title = `${hotel.tenKhachSan} - Hotel Booking`;
-  document.getElementById("hotelBreadcrumb").textContent = hotel.tenKhachSan;
+  try {
+    console.log("Displaying hotel details:", hotel);
 
-  // Hotel basic info
-  document.getElementById("hotelName").textContent = hotel.tenKhachSan;
-  document.getElementById("hotelAddress").textContent = hotel.diaChi;
+    // Update page title and breadcrumb
+    document.title = `${hotel.tenKhachSan} - Hotel Booking`;
+    document.getElementById("hotelBreadcrumb").textContent = hotel.tenKhachSan;
 
-  if (hotel.thanhPho) {
-    document.getElementById("hotelCity").textContent = hotel.thanhPho;
-    document.getElementById("hotelCityContainer").style.display = "block";
-  }
+    // Hotel basic info
+    document.getElementById("hotelName").textContent = hotel.tenKhachSan;
+    document.getElementById("hotelAddress").textContent = hotel.diaChi;
 
-  // Rating
-  const rating = hotel.danhGiaTrungBinh || 0;
-  document.getElementById("hotelRating").innerHTML = `
-        ${generateStarRating(rating)}
-        <span class="text-muted ms-2">(${rating.toFixed(1)} sao)</span>
-    `;
-
-  // Description
-  if (hotel.moTa) {
-    document.getElementById("hotelDescription").innerHTML = `
-            <h5>Mô tả</h5>
-            <p class="text-muted">${hotel.moTa}</p>
-        `;
-  }
-
-  // Amenities
-  if (hotel.tienNghi) {
-    const amenities = hotel.tienNghi
-      .split(",")
-      .map((a) => a.trim())
-      .filter((a) => a);
-    if (amenities.length > 0) {
-      document.getElementById("hotelAmenities").innerHTML = `
-                <h6>Tiện ích</h6>
-                <div>
-                    ${amenities.map((amenity) => `<span class="amenity-badge">${amenity}</span>`).join("")}
-                </div>
-            `;
+    if (hotel.thanhPho) {
+      document.getElementById("hotelCity").textContent = hotel.thanhPho;
+      document.getElementById("hotelCityContainer").style.display = "block";
     }
+
+    // Rating
+    const rating = hotel.danhGiaTrungBinh || 0;
+    document.getElementById("hotelRating").innerHTML = `
+          ${generateStarRating(rating)}
+          <span class="text-muted ms-2">(${rating.toFixed(1)} sao)</span>
+      `;
+
+    // Description
+    if (hotel.moTa) {
+      document.getElementById("hotelDescription").innerHTML = `
+              <h5>Mô tả</h5>
+              <p class="text-muted">${hotel.moTa}</p>
+          `;
+    }
+
+    // Amenities
+    if (hotel.tienNghi) {
+      const amenities = hotel.tienNghi
+        .split(",")
+        .map((a) => a.trim())
+        .filter((a) => a);
+      if (amenities.length > 0) {
+        document.getElementById("hotelAmenities").innerHTML = `
+                  <h6>Tiện ích</h6>
+                  <div>
+                      ${amenities.map((amenity) => `<span class="amenity-badge">${amenity}</span>`).join("")}
+                  </div>
+              `;
+      }
+    }
+
+    // Initialize image slider
+    initializeImageSlider(hotel.hinhAnhs || []);
+
+    // Load room types
+    await loadRoomTypes(hotel.maKhachSan);
+
+    // Price range from room types
+    displayPriceRange();
+  } catch (error) {
+    console.error("Error displaying hotel details:", error);
+    showError("Lỗi hiển thị thông tin khách sạn: " + error.message);
   }
-
-  // Initialize image slider
-  initializeImageSlider(hotel.hinhAnhs || []);
-
-  // Load room types
-  await loadRoomTypes(hotel.maKhachSan);
-
-  // Price range from room types
-  displayPriceRange();
 }
 
 // Initialize image slider
@@ -169,21 +191,21 @@ function initializeImageSlider(images) {
   // If no images, show placeholder
   if (!images || images.length === 0) {
     wrapper.innerHTML = `
-            <div class="swiper-slide">
-                <img src="http://localhost:5233/uploads/temp/hotel-placeholder.jpg" alt="No image available">
-            </div>
-        `;
+              <div class="swiper-slide">
+                  <img src="http://localhost:5233/uploads/temp/hotel-placeholder.jpg" alt="No image available">
+              </div>
+          `;
     totalImagesSpan.textContent = "1";
   } else {
     // Add images to slider
     wrapper.innerHTML = images
       .map(
         (image) => `
-            <div class="swiper-slide">
-                <img src="${getImageUrl(image)}" alt="${image.moTa || "Hotel image"}" 
-                     onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
-            </div>
-        `
+         <div class="swiper-slide">
+                  <img src="${getImageUrl(image)}" alt="${image.moTa || "Hotel image"}" 
+                       onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
+              </div>
+          `
       )
       .join("");
     totalImagesSpan.textContent = images.length;
@@ -214,17 +236,38 @@ function initializeImageSlider(images) {
   });
 }
 
-// Load room types
+// Load room types - SỬA ĐỔI: Sửa endpoint và error handling
 async function loadRoomTypes(hotelId) {
   try {
-    const response = await fetch(`${API_URL}/roomtypes/hotel/${hotelId}`);
+    console.log("Loading room types for hotel ID:", hotelId);
+
+    // Thử endpoint đầu tiên
+    let response = await fetch(`${API_URL}/roomtypes/hotel/${hotelId}`);
+    console.log("Room types response status:", response.status);
+
+    // Nếu endpoint đầu tiên không hoạt động, thử endpoint khác
+    if (!response.ok) {
+      console.log("First endpoint failed, trying alternative endpoint...");
+      response = await fetch(`${API_URL}/hotels/${hotelId}/roomtypes`);
+      console.log("Alternative endpoint response status:", response.status);
+    }
+
     if (response.ok) {
       const data = await response.json();
-      const roomTypes = data.success && data.data ? data.data : data;
+      console.log("Room types raw data:", data);
+
+      const roomTypes = data.success && data.data ? data.data : Array.isArray(data) ? data : [];
+      console.log("Room types processed:", roomTypes);
+
       displayRoomTypes(roomTypes);
+    } else {
+      const errorText = await response.text();
+      console.error("Room types error:", errorText);
+      displayRoomTypes([]); // Hiển thị empty state thay vì lỗi
     }
   } catch (error) {
     console.error("Error loading room types:", error);
+    displayRoomTypes([]); // Hiển thị empty state thay vì lỗi
   }
 }
 
@@ -234,13 +277,13 @@ function displayRoomTypes(roomTypes) {
 
   if (!roomTypes || roomTypes.length === 0) {
     container.innerHTML = `
-            <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="fas fa-info-circle mb-2"></i>
-                    <p class="mb-0">Hiện tại khách sạn này chưa có thông tin về loại phòng.</p>
-                </div>
-            </div>
-        `;
+              <div class="col-12">
+                  <div class="alert alert-info text-center">
+                      <i class="fas fa-info-circle mb-2"></i>
+                      <p class="mb-0">Hiện tại khách sạn này chưa có thông tin về loại phòng.</p>
+                  </div>
+              </div>
+          `;
     return;
   }
 
@@ -258,35 +301,35 @@ function createRoomTypeCard(roomType) {
       : "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
 
   return `
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card room-card h-100">
-                <img src="${roomImageUrl}" class="card-img-top" alt="${roomType.tenLoaiPhong}" 
-                     style="height: 200px; object-fit: cover;"
-                     onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">${roomType.tenLoaiPhong}</h5>
-                    ${roomType.moTa ? `<p class="text-muted small">${roomType.moTa}</p>` : ""}
-                    
-                    <div class="mt-auto">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-success fs-5">
-                                ${formatCurrency(roomType.giaMotDem)}/đêm
-                            </span>
-                            <small class="text-muted">
-                                ${availableRooms}/${totalRooms} phòng trống
-                            </small>
-                        </div>
-                        
-                        <button class="btn btn-primary w-100" 
-                                ${availableRooms > 0 ? `onclick="bookRoom(${roomType.maLoaiPhong})"` : "disabled"}>
-                            <i class="fas fa-bed"></i>
-                            ${availableRooms > 0 ? "Đặt phòng" : "Hết phòng"}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+          <div class="col-md-6 col-lg-4 mb-4">
+              <div class="card room-card h-100">
+                  <img src="${roomImageUrl}" class="card-img-top" alt="${roomType.tenLoaiPhong}" 
+                       style="height: 200px; object-fit: cover;"
+                       onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
+                  <div class="card-body d-flex flex-column">
+                      <h5 class="card-title">${roomType.tenLoaiPhong}</h5>
+                      ${roomType.moTa ? `<p class="text-muted small">${roomType.moTa}</p>` : ""}
+                      
+                      <div class="mt-auto">
+                          <div class="d-flex justify-content-between align-items-center mb-2">
+                              <span class="fw-bold text-success fs-5">
+                                  ${formatCurrency(roomType.giaMotDem)}/đêm
+                              </span>
+                              <small class="text-muted">
+                                  ${availableRooms}/${totalRooms} phòng trống
+                              </small>
+                          </div>
+                          
+                          <button class="btn btn-primary w-100" 
+                                  ${availableRooms > 0 ? `onclick="bookRoom(${roomType.maLoaiPhong})"` : "disabled"}>
+                              <i class="fas fa-bed"></i>
+                              ${availableRooms > 0 ? "Đặt phòng" : "Hết phòng"}
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      `;
 }
 
 // Display price range
@@ -332,11 +375,11 @@ function showAlert(message, type = "danger") {
   const alertDiv = document.getElementById("alertMessage");
   if (alertDiv) {
     alertDiv.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
+              <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                  ${message}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+          `;
 
     setTimeout(() => {
       alertDiv.innerHTML = "";

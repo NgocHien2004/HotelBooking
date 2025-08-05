@@ -1,5 +1,6 @@
 // API Configuration
 const API_BASE_URL = "http://localhost:5233";
+const API_URL = "http://localhost:5233/api"; // Đảm bảo dòng này có mặt
 
 // API Endpoints
 const API_ENDPOINTS = {
@@ -16,6 +17,7 @@ const API_ENDPOINTS = {
     GET_ALL: "/api/rooms",
     GET_BY_HOTEL: "/api/rooms/hotel/{hotelId}",
     GET_ROOM_TYPES: "/api/rooms/types",
+    ROOM_TYPES_BY_HOTEL: "/api/roomtypes/hotel/{hotelId}",
   },
   BOOKINGS: {
     GET_ALL: "/api/bookings",
@@ -51,8 +53,6 @@ function getHeaders(includeAuth = false) {
 
   return headers;
 }
-
-// === IMAGE URL HELPERS - ĐÃ SỬA ĐỔI ===
 
 // Hàm chính để xử lý URL ảnh khách sạn
 function getHotelImageUrl(imagePath) {
@@ -113,49 +113,9 @@ function getPlaceholderImageUrl() {
   return `${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg`;
 }
 
-// Hàm tổng quát xử lý ảnh (backward compatibility)
-function getImageUrl(image, imageType = "hotel") {
-  console.log("[DEBUG] General image function - input:", image, "type:", imageType);
-
-  // Xử lý object với thuộc tính duongDanAnh
-  if (image && typeof image === "object" && image.duongDanAnh) {
-    image = image.duongDanAnh;
+// Debug function
+function debugLog(...args) {
+  if (window.location.search.includes("debug=true")) {
+    console.log("[DEBUG]", ...args);
   }
-
-  // Gọi hàm chuyên biệt dựa trên loại ảnh
-  if (imageType === "room") {
-    return getRoomImageUrl(image);
-  } else {
-    return getHotelImageUrl(image);
-  }
-}
-
-// Debug logging (can be disabled in production)
-const DEBUG_MODE = true;
-
-function debugLog(message, data = null) {
-  if (DEBUG_MODE) {
-    console.log(`[DEBUG] ${message}`, data || "");
-  }
-}
-
-// Test functions để debug ảnh
-function testImageUrls() {
-  console.log("=== IMAGE URL TESTS ===");
-
-  // Test cases
-  const testCases = [
-    { input: "hotel1.jpg", type: "hotel", expected: "hotels folder" },
-    { input: "room1.jpg", type: "room", expected: "rooms folder" },
-    { input: "/uploads/hotels/hotel2.jpg", type: "hotel", expected: "full path" },
-    { input: "http://example.com/image.jpg", type: "hotel", expected: "external URL" },
-    { input: null, type: "hotel", expected: "placeholder" },
-    { input: undefined, type: "room", expected: "placeholder" },
-  ];
-
-  testCases.forEach((test, index) => {
-    console.log(`Test ${index + 1}:`, test.input, "->", getImageUrl(test.input, test.type));
-  });
-
-  console.log("=== END TESTS ===");
 }

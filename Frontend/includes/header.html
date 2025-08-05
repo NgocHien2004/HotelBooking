@@ -1,0 +1,38 @@
+<!-- Standard Header for All Pages -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel"></i> Hotel Booking </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="index.html" id="nav-home">Trang chủ</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="hotels.html" id="nav-hotels">Khách sạn</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav" id="navbarRight">
+        <!-- Navigation items will be populated by auth.js -->
+        <li class="nav-item" id="adminMenu" style="display: none">
+          <a class="nav-link" href="admin/hotels.html"> <i class="fas fa-cog"></i> Quản lý </a>
+        </li>
+        <li class="nav-item" id="loginMenu" style="display: none">
+          <a class="nav-link" href="login.html"> <i class="fas fa-sign-in-alt"></i> Đăng nhập </a>
+        </li>
+        <li class="nav-item" id="userMenu" style="display: none">
+          <div class="dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-user-circle"></i> <span id="username"></span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" id="userDropdownMenu">
+              <!-- Menu items will be populated by auth.js based on user role -->
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

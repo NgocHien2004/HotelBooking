@@ -6,8 +6,8 @@ using HotelBooking.API.Services.Interfaces;
 
 namespace HotelBooking.API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     [Authorize]
     public class UsersController : ControllerBase
     {
@@ -62,7 +62,7 @@ namespace HotelBooking.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<UserDto>> UpdateUser(int id, UserDto userDto)
+        public async Task<ActionResult<UserDto>> UpdateUser(int id, UpdateUserDto userDto)
         {
             // Users can only update their own info unless they're admin
             var currentUserId = GetCurrentUserId();

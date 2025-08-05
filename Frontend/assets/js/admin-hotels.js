@@ -807,3 +807,86 @@ async function deleteRoomType(roomTypeId) {
     showAlert(`Có lỗi xảy ra: ${error.message}`, "danger");
   }
 }
+
+function showAddHotelModal() {
+  document.getElementById("addHotelForm").reset();
+  const modal = new bootstrap.Modal(document.getElementById("addHotelModal"));
+  modal.show();
+}
+
+// Add hotel function - THÊM HÀM NÀY
+async function addHotel() {
+  const hotelData = {
+    tenKhachSan: document.getElementById("hotelName").value,
+    thanhPho: document.getElementById("hotelCity").value,
+    diaChi: document.getElementById("hotelAddress").value,
+    danhGiaTrungBinh: parseFloat(document.getElementById("hotelRating").value) || 0,
+    moTa: document.getElementById("hotelDescription").value,
+    tienNghi: document.getElementById("hotelAmenities").value,
+  };
+
+  try {
+    const response = await fetch(`${API_URL}/hotels`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(hotelData),
+    });
+
+    if (response.ok) {
+      showAlert("Thêm khách sạn thành công!", "success");
+      bootstrap.Modal.getInstance(document.getElementById("addHotelModal")).hide();
+      loadHotels(); // Reload hotels list
+    } else {
+      const data = await response.json();
+      showAlert(data.message || "Có lỗi xảy ra!", "danger");
+    }
+  } catch (error) {
+    console.error("Error adding hotel:", error);
+    showAlert("Có lỗi xảy ra!", "danger");
+  }
+}
+
+// Form event listeners - THÊM PHẦN NÀY
+document.addEventListener("DOMContentLoaded", function () {
+  checkAdminAccess();
+  loadHotels();
+
+  // Add hotel form
+  const addHotelForm = document.getElementById("addHotelForm");
+  if (addHotelForm) {
+    addHotelForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await addHotel();
+    });
+  }
+
+  // Edit hotel form
+  const editHotelForm = document.getElementById("editHotelForm");
+  if (editHotelForm) {
+    editHotelForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await updateHotel();
+    });
+  }
+
+  // Add room type form
+  const addRoomTypeForm = document.getElementById("addRoomTypeForm");
+  if (addRoomTypeForm) {
+    addRoomTypeForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await addRoomType();
+    });
+  }
+
+  // Edit room type form
+  const editRoomTypeForm = document.getElementById("editRoomTypeForm");
+  if (editRoomTypeForm) {
+    editRoomTypeForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await updateRoomType();
+    });
+  }
+});

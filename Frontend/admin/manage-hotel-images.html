@@ -34,10 +34,13 @@
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
       }
 
+      /* FIXED: No crop for image management */
       .image-card img {
         width: 100%;
         height: 150px;
-        object-fit: cover;
+        object-fit: contain; /* FIXED: contain shows full image */
+        object-position: center;
+        background: #f8f9fa;
       }
 
       .image-card .card-body {
@@ -75,10 +78,12 @@
         overflow: hidden;
       }
 
+      /* FIXED: No crop for preview items */
       .preview-item img {
         width: 100%;
         height: 80px;
-        object-fit: cover;
+        object-fit: contain; /* FIXED: contain shows full image */
+        background: #f8f9fa;
       }
 
       .preview-remove {
@@ -131,32 +136,18 @@
       <div id="alertMessage"></div>
 
       <!-- Images Grid -->
-      <div class="row">
-        <div class="col-12">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="mb-0">
-                <i class="fas fa-images"></i> Danh sách ảnh
-                <span class="badge bg-primary" id="imageCount">0</span>
-              </h5>
-            </div>
-            <div class="card-body">
-              <div id="imagesGrid" class="image-grid">
-                <!-- Images will be loaded here -->
-              </div>
+      <div id="imagesGrid" class="image-grid">
+        <!-- Images will be loaded here -->
+      </div>
 
-              <!-- Empty state -->
-              <div id="emptyState" class="text-center py-5" style="display: none">
-                <i class="fas fa-images fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Chưa có ảnh nào</h5>
-                <p class="text-muted">Hãy thêm ảnh đầu tiên cho khách sạn này</p>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                  <i class="bi bi-plus-circle"></i> Thêm ảnh ngay
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Empty State -->
+      <div id="emptyState" class="text-center py-5" style="display: none">
+        <i class="fas fa-images fa-4x text-muted mb-3"></i>
+        <h4>Chưa có ảnh nào</h4>
+        <p class="text-muted">Khách sạn này chưa có ảnh. Hãy thêm ảnh đầu tiên!</p>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+          <i class="bi bi-plus-circle"></i> Thêm ảnh đầu tiên
+        </button>
       </div>
     </div>
 
@@ -165,16 +156,16 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title"><i class="fas fa-cloud-upload-alt"></i> Thêm ảnh mới</h5>
+            <h5 class="modal-title"><i class="fas fa-upload"></i> Thêm ảnh mới</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <form id="uploadForm" enctype="multipart/form-data">
+            <form id="uploadForm">
               <!-- Upload Zone -->
               <div class="upload-zone" id="uploadZone">
                 <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
                 <h5>Kéo thả ảnh vào đây hoặc click để chọn</h5>
-                <p class="text-muted">Hỗ trợ: JPG, PNG, WEBP. Tối đa 5MB mỗi ảnh</p>
+                <p class="text-muted mb-0">Hỗ trợ: JPG, PNG, GIF<br />Tối đa 5MB mỗi ảnh</p>
                 <input type="file" id="imageInput" multiple accept="image/*" style="display: none" />
               </div>
 
@@ -209,7 +200,12 @@
               <input type="hidden" id="editImageId" />
 
               <div class="text-center mb-3">
-                <img id="editImagePreview" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px" />
+                <img
+                  id="editImagePreview"
+                  src=""
+                  alt="Preview"
+                  class="img-fluid rounded"
+                  style="max-height: 200px; object-fit: contain; background: #f8f9fa" />
               </div>
 
               <div class="mb-3">
@@ -234,7 +230,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -243,22 +239,21 @@
           </div>
           <div class="modal-body">
             <p>Bạn có chắc chắn muốn xóa ảnh này không?</p>
-            <p class="text-muted small">Hành động này không thể hoàn tác.</p>
-            <input type="hidden" id="deleteImageId" />
+            <p class="text-muted"><small>Hành động này không thể hoàn tác.</small></p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="button" class="btn btn-danger" onclick="confirmDeleteImage()"><i class="fas fa-trash"></i> Xóa ảnh</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn"><i class="fas fa-trash"></i> Xóa</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Bootstrap JS -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/utils.js"></script>
     <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/admin.js"></script>
     <script src="../assets/js/manage-hotel-images.js"></script>
   </body>
 </html>

@@ -2,6 +2,7 @@
 // API_URL được định nghĩa trong utils.js
 
 // Check authentication status
+// Check authentication status
 function checkAuth() {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -20,38 +21,34 @@ function checkAuth() {
       if (username) username.textContent = user.hoTen || user.email;
     }
 
-    // Update dropdown menu based on role
-    if (userDropdownMenu && user.vaiTro === "Admin") {
-      // Add admin menu items - REMOVED dashboard link
-      userDropdownMenu.innerHTML = `
-        <li><h6 class="dropdown-header">Quản lý</h6></li>
-        <li><a class="dropdown-item" href="/admin/hotels.html"><i class="bi bi-building"></i> Quản lý khách sạn</a></li>
-        <li><a class="dropdown-item" href="/admin/users.html"><i class="bi bi-people"></i> Quản lý người dùng</a></li>
-        <li><a class="dropdown-item" href="/admin/bookings.html"><i class="bi bi-calendar-check"></i> Quản lý đặt phòng</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><h6 class="dropdown-header">Tài khoản</h6></li>
-        <li><a class="dropdown-item" href="/profile.html"><i class="bi bi-person-circle"></i> Thông tin cá nhân</a></li>
-        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
-      `;
-    } else if (userDropdownMenu) {
-      // Regular user menu
-      userDropdownMenu.innerHTML = `
-        <li><a class="dropdown-item" href="/profile.html"><i class="bi bi-person-circle"></i> Thông tin cá nhân</a></li>
-        <li><a class="dropdown-item" href="/my-bookings.html"><i class="bi bi-calendar-check"></i> Đặt phòng của tôi</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
-      `;
-    }
-
-    // Show admin menu if user is admin (for backward compatibility) - UPDATED link
+    // Show admin menu ONLY for admin users
     if (adminMenu && user.vaiTro === "Admin") {
       adminMenu.style.display = "block";
-      // Update the link to point to hotels instead of dashboard
-      const adminLink = adminMenu.querySelector("a");
-      if (adminLink) {
-        adminLink.href = "admin/hotels.html";
-        adminLink.textContent = "Quản lý";
-      }
+    } else if (adminMenu) {
+      adminMenu.style.display = "none";
+    }
+
+    // Update dropdown menu based on role
+    if (userDropdownMenu && user.vaiTro === "Admin") {
+      // Admin user dropdown
+      userDropdownMenu.innerHTML = `
+        <li><h6 class="dropdown-header">Quản lý</h6></li>
+        <li><a class="dropdown-item" href="admin/hotels.html"><i class="fas fa-hotel me-2"></i> Quản lý khách sạn</a></li>
+        <li><a class="dropdown-item" href="admin/users.html"><i class="fas fa-users me-2"></i> Quản lý người dùng</a></li>
+        <li><a class="dropdown-item" href="admin/bookings.html"><i class="fas fa-calendar-check me-2"></i> Quản lý đặt phòng</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><h6 class="dropdown-header">Tài khoản</h6></li>
+        <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i> Thông tin cá nhân</a></li>
+        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+      `;
+    } else if (userDropdownMenu) {
+      // Regular user dropdown
+      userDropdownMenu.innerHTML = `
+        <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i> Thông tin cá nhân</a></li>
+        <li><a class="dropdown-item" href="my-bookings.html"><i class="fas fa-calendar-check me-2"></i> Đặt phòng của tôi</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+      `;
     }
   } else {
     // User is not logged in
