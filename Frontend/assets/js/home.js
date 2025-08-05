@@ -68,11 +68,22 @@ function displayFeaturedHotels(hotels) {
 }
 
 function createFeaturedHotelCard(hotel) {
-  // Lấy ảnh đầu tiên hoặc ảnh placeholder
-  const imageUrl =
-    hotel.hinhAnhs && hotel.hinhAnhs.length > 0
-      ? `${API_BASE_URL}${hotel.hinhAnhs[0].duongDanAnh}`
-      : `${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg`;
+  // Lấy ảnh đầu tiên hoặc ảnh placeholder - SỬA ĐỔI QUAN TRỌNG
+  let imageUrl = `${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg`;
+
+  if (hotel.hinhAnhs && hotel.hinhAnhs.length > 0) {
+    const firstImage = hotel.hinhAnhs[0];
+    if (typeof firstImage === "object" && firstImage.duongDanAnh) {
+      imageUrl = firstImage.duongDanAnh.startsWith("/")
+        ? `${API_BASE_URL}${firstImage.duongDanAnh}`
+        : `${API_BASE_URL}/uploads/hotels/${firstImage.duongDanAnh}`;
+    } else if (typeof firstImage === "string") {
+      imageUrl = firstImage.startsWith("/") ? `${API_BASE_URL}${firstImage}` : `${API_BASE_URL}/uploads/hotels/${firstImage}`;
+    }
+    console.log("Home page image URL:", imageUrl, "from:", firstImage); // Debug
+  } else {
+    console.log("No images for featured hotel:", hotel.tenKhachSan); // Debug
+  }
 
   // Tính số loại phòng
   const roomTypesCount = hotel.loaiPhongs ? hotel.loaiPhongs.length : 0;
@@ -94,7 +105,8 @@ function createFeaturedHotelCard(hotel) {
                     <img src="${imageUrl}" 
                          class="card-img-top hotel-image" 
                          alt="${hotel.tenKhachSan}"
-                         onerror="this.src='${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg'">
+                         style="height: 200px; object-fit: cover;"
+                         onerror="console.log('Featured image failed:', this.src); this.src='${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg';">
                     <div class="position-absolute top-0 end-0 m-2">
                         <span class="badge bg-primary">${roomTypesCount} loại phòng</span>
                     </div>
@@ -205,16 +217,17 @@ function showLoading(show) {
   const featuredHotels = document.getElementById("featuredHotels");
 
   if (show) {
-    loadingIndicator.classList.remove("d-none");
-    featuredHotels.innerHTML = "";
+    if (loadingIndicator) loadingIndicator.classList.remove("d-none");
+    if (featuredHotels) featuredHotels.innerHTML = "";
   } else {
-    loadingIndicator.classList.add("d-none");
+    if (loadingIndicator) loadingIndicator.classList.add("d-none");
   }
 }
 
 function showError(message) {
   const container = document.getElementById("featuredHotels");
-  container.innerHTML = `
+  if (container) {
+    container.innerHTML = `
         <div class="col-12">
             <div class="alert alert-danger" role="alert">
                 <i class="fas fa-exclamation-triangle"></i>
@@ -222,4 +235,13 @@ function showError(message) {
             </div>
         </div>
     `;
+  }
 }
+
+// Add debugLog function if not defined elsewhere
+function debugLog(message, data = null) {
+  console.log(`[DEBUG] ${message}`, data || "");
+}
+
+// Add API_BASE_URL if not defined elsewhere
+const API_BASE_URL = "http://localhost:5233";

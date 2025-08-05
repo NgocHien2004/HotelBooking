@@ -45,84 +45,121 @@ function showAlert(message, type = "danger") {
 // Get image URL helper function - SỬAẠ ĐỔI: Cải thiện logic xử lý đường dẫn
 function getImageUrl(image) {
   const baseUrl = "http://localhost:5233";
+  const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
+
+  // Nếu không có ảnh, trả về placeholder
+  if (!image) {
+    return placeholderUrl;
+  }
 
   if (typeof image === "string") {
+    // Nếu là chuỗi rỗng, trả về placeholder
+    if (!image.trim()) {
+      return placeholderUrl;
+    }
+
     // Nếu đã là URL đầy đủ thì dùng trực tiếp
     if (image.startsWith("http")) {
       return image;
     }
+
     // Nếu bắt đầu bằng /uploads thì thêm base URL
     if (image.startsWith("/uploads")) {
       return `${baseUrl}${image}`;
     }
-    // Nếu là đường dẫn tương đối, thêm /uploads/
+
+    // Nếu là đường dẫn tương đối, thêm /uploads/hotels/
     if (!image.startsWith("/")) {
-      // Kiểm tra xem có phải là ảnh khách sạn hay phòng không
-      if (image.includes("hotel") || image.endsWith(".jpg") || image.endsWith(".png") || image.endsWith(".jpeg")) {
-        return `${baseUrl}/uploads/hotels/${image}`;
-      }
-      return `${baseUrl}/uploads/${image}`;
+      return `${baseUrl}/uploads/hotels/${image}`;
     }
+
     return `${baseUrl}${image}`;
   }
 
+  // Nếu là object với thuộc tính duongDanAnh
   if (image && image.duongDanAnh) {
     let imagePath = image.duongDanAnh;
+
+    if (!imagePath || !imagePath.trim()) {
+      return placeholderUrl;
+    }
 
     if (imagePath.startsWith("http")) {
       return imagePath;
     }
+
     if (imagePath.startsWith("/uploads")) {
       return `${baseUrl}${imagePath}`;
     }
+
     // Nếu chỉ có tên file, thêm đường dẫn đầy đủ
     if (!imagePath.startsWith("/")) {
       return `${baseUrl}/uploads/hotels/${imagePath}`;
     }
+
     return `${baseUrl}${imagePath}`;
   }
 
   // Fallback to placeholder
-  return `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
+  return placeholderUrl;
 }
 
 // Get room image URL - THÊM MỚI: Hàm riêng cho ảnh phòng
 function getRoomImageUrl(image) {
   const baseUrl = "http://localhost:5233";
+  const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
+
+  if (!image) {
+    return placeholderUrl;
+  }
 
   if (typeof image === "string") {
+    if (!image.trim()) {
+      return placeholderUrl;
+    }
+
     if (image.startsWith("http")) {
       return image;
     }
+
     if (image.startsWith("/uploads")) {
       return `${baseUrl}${image}`;
     }
+
     if (!image.startsWith("/")) {
       return `${baseUrl}/uploads/rooms/${image}`;
     }
+
     return `${baseUrl}${image}`;
   }
 
   if (image && image.duongDanAnh) {
     let imagePath = image.duongDanAnh;
 
+    if (!imagePath || !imagePath.trim()) {
+      return placeholderUrl;
+    }
+
     if (imagePath.startsWith("http")) {
       return imagePath;
     }
+
     if (imagePath.startsWith("/uploads")) {
       return `${baseUrl}${imagePath}`;
     }
+
     if (!imagePath.startsWith("/")) {
       return `${baseUrl}/uploads/rooms/${imagePath}`;
     }
+
     return `${baseUrl}${imagePath}`;
   }
 
   // Fallback to placeholder
-  return `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
+  return placeholderUrl;
 }
 
-// Create hotel card HTML - SỬAẠ ĐỔI: Cải thiện xử lý hình ảnh
+// Create hotel card HTML - GIỮ LAYOUT GIỐNG TRANG INDEX
 function createHotelCard(hotel) {
   // Map properties từ backend (tiếng Việt) sang frontend (tiếng Anh)
   const hotelData = {
@@ -145,8 +182,9 @@ function createHotelCard(hotel) {
         .join("")
     : '<span class="text-muted">Chưa cập nhật</span>';
 
-  // Lấy hình ảnh đầu tiên hoặc placeholder
+  // Lấy hình ảnh đầu tiên - QUAN TRỌNG: Xử lý ảnh thật
   let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
+
   if (hotelData.images && hotelData.images.length > 0) {
     const firstImage = hotelData.images[0];
     imageUrl = getImageUrl(firstImage);
@@ -154,13 +192,14 @@ function createHotelCard(hotel) {
 
   return `
     <div class="col-md-6 col-lg-4 mb-4">
-      <div class="card h-100 shadow-sm hotel-card">
+      <div class="card h-100 shadow-sm hotel-card fade-in">
         <div class="position-relative">
-          <img src="${imageUrl}" 
-               class="card-img-top" 
-               alt="${hotelData.name}" 
-               style="height: 200px; object-fit: cover;"
-               onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg';">
+          <div class="hotel-image-container">
+            <img src="${imageUrl}" 
+                 class="card-img-top" 
+                 alt="${hotelData.name}" 
+                 onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg';">
+          </div>
           <div class="position-absolute top-0 end-0 m-2">
             <span class="badge bg-primary">${hotelData.city}</span>
           </div>

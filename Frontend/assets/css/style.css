@@ -20,12 +20,16 @@ body {
   align-items: center;
 }
 
-/* Hotel Cards */
+/* Hotel Cards - IMPROVED NO CROP */
 .hotel-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   border: none;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  border-radius: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .hotel-card:hover {
@@ -33,32 +37,58 @@ body {
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
 }
 
-.hotel-image {
-  height: 200px;
-  object-fit: cover;
+/* Image Container - NO CROP SOLUTION */
+.hotel-image-container {
   width: 100%;
-  transition: transform 0.3s ease;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  position: relative;
+  background: #f8f9fa;
 }
 
-.hotel-card:hover .hotel-image {
-  transform: scale(1.05);
+.hotel-image,
+.hotel-card .card-img-top {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* CHANGED: contain instead of cover */
+  object-position: center;
+  transition: transform 0.3s ease;
+  background: white;
+}
+
+/* Fallback for images that look better with cover */
+.hotel-card:hover .hotel-image,
+.hotel-card:hover .card-img-top {
+  transform: scale(1.02); /* Reduced scale for contain */
 }
 
 .card-body {
   padding: 1.5rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-title {
   color: #2c3e50;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   font-size: 1.1rem;
+  line-height: 1.3;
+  min-height: 2.6rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .card-text {
   color: #6c757d;
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  flex-grow: 1;
 }
 
 /* Star Rating */
@@ -71,12 +101,15 @@ body {
   background: linear-gradient(45deg, #667eea, #764ba2);
   border: none;
   transition: all 0.3s ease;
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
 }
 
 .btn-primary:hover {
   background: linear-gradient(45deg, #764ba2, #667eea);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 /* Search Section */
@@ -153,7 +186,7 @@ footer {
     margin-bottom: 1.5rem;
   }
 
-  .hotel-image {
+  .hotel-image-container {
     height: 180px;
   }
 }
@@ -168,7 +201,7 @@ footer {
     font-size: 1.75rem;
   }
 
-  .hotel-image {
+  .hotel-image-container {
     height: 160px;
   }
 
@@ -216,8 +249,11 @@ footer {
 /* Hotel Details Specific Styles */
 .hotel-detail-image {
   height: 400px;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   border-radius: 10px;
+  background: white;
+  border: 1px solid #dee2e6;
 }
 
 .hotel-info-section {
@@ -238,61 +274,135 @@ footer {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Admin Dashboard Styles */
-.sidebar {
-  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-  min-height: 100vh;
-  color: white;
+/* ADMIN STYLES - IMPROVED */
+
+/* Admin Navigation */
+.navbar-dark {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
 }
 
-.sidebar .nav-link {
-  color: rgba(255, 255, 255, 0.8);
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  margin: 0 0.2rem;
   transition: all 0.3s ease;
-  padding: 0.75rem 1rem;
-  margin: 0.25rem 0;
-  border-radius: 5px;
 }
 
-.sidebar .nav-link:hover,
-.sidebar .nav-link.active {
-  color: white;
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: rgba(255, 255, 255, 1);
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.main-content {
-  background-color: #f8f9fa;
-  min-height: 100vh;
+.navbar-dark .navbar-nav .nav-link.active {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.navbar-dark .navbar-nav .nav-link i {
+  margin-right: 0.5rem;
+  width: 16px;
+}
+
+/* Admin Cards - IMPROVED */
+.hotel-admin-card {
+  border: none;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.hotel-admin-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Admin Card Image - NO CROP */
+.hotel-admin-card .card-img-top {
+  height: 200px;
+  object-fit: contain;
+  object-position: center;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.hotel-admin-card .card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.hotel-admin-card .card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #2c3e50;
+  min-height: 2.4rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hotel-admin-card .text-muted {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.hotel-admin-card .btn-group-vertical {
+  margin-top: auto;
+}
+
+/* Admin Action Buttons */
+.btn-outline-info:hover {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+}
+
+.btn-outline-warning:hover {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
 }
 
 /* Statistics Cards */
 .stat-card {
   background: white;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease;
+  border-left: 4px solid #667eea;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
-.stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  color: white;
+.stat-card h3 {
+  color: #2c3e50;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
 }
 
-/* Table Styles */
+.stat-card p {
+  color: #6c757d;
+  margin-bottom: 0;
+  font-weight: 500;
+}
+
+/* Tables */
 .table-responsive {
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
 }
 
 .table {
@@ -300,14 +410,24 @@ footer {
 }
 
 .table thead th {
-  background-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   font-weight: 600;
+  padding: 1rem;
+}
+
+.table tbody tr {
+  transition: background-color 0.2s ease;
 }
 
 .table tbody tr:hover {
   background-color: #f8f9fa;
+}
+
+.table tbody td {
+  padding: 1rem;
+  vertical-align: middle;
 }
 
 /* Modal Improvements */
@@ -321,10 +441,142 @@ footer {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-radius: 15px 15px 0 0;
+  padding: 1.5rem;
 }
 
 .modal-header .btn-close {
   filter: invert(1);
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.modal-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Image Upload Preview */
+#imagePreview,
+#currentImages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.image-container {
+  position: relative;
+  display: inline-block;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-container img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.remove-image {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.remove-image:hover {
+  background-color: #c82333;
+  transform: scale(1.1);
+}
+
+/* View Toggle Buttons */
+.btn-group .btn {
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+}
+
+.btn-group .btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+}
+
+/* Hotel Details Modal in Admin */
+#hotelDetailsModal .modal-dialog {
+  max-width: 1000px;
+}
+
+#hotelDetailsModal img {
+  cursor: pointer;
+  transition: transform 0.2s;
+  border-radius: 8px;
+}
+
+#hotelDetailsModal img:hover {
+  transform: scale(1.02);
+}
+
+/* Form Improvements */
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Responsive Admin */
+@media (max-width: 768px) {
+  .hotel-admin-card .card-img-top {
+    height: 150px;
+  }
+
+  .hotel-admin-card .card-body {
+    padding: 1rem;
+  }
+
+  .btn-group .btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .stat-card {
+    margin-bottom: 1rem;
+    text-align: center;
+  }
 }
 
 /* Utility Classes */
@@ -340,7 +592,7 @@ footer {
 }
 
 .shadow-soft {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .border-radius-lg {
@@ -349,7 +601,7 @@ footer {
 
 /* Animation Classes */
 .fade-in {
-  animation: fadeIn 0.5s ease-in-out;
+  animation: fadeIn 0.6s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -364,16 +616,30 @@ footer {
 }
 
 .slide-up {
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.4s ease-out;
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(10px);
+    transform: translateY(15px);
     opacity: 0;
   }
   to {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  border-radius: 0 0 15px 15px;
+}
+
+.page-header h2 {
+  color: #2c3e50;
+  font-weight: 700;
+  margin-bottom: 0;
 }

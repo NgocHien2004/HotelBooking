@@ -129,5 +129,5 @@ app.MapGet("/test-image", () =>
         filesInTemp = files.Select(f => Path.GetFileName(f)).ToArray()
     };
 });
-
+app.UseStaticFiles();
 app.Run();

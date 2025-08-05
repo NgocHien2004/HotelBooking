@@ -212,49 +212,99 @@ function mapHotelData(hotel) {
   };
 }
 
-// Create hotel card for grid view với đầy đủ chức năng CRUD
+// Create hotel card for grid view với đầy đủ chức năng CRUD - SỬA ĐỔI QUAN TRỌNG
 function createHotelCard(hotel) {
   let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
 
+  // Xử lý ảnh thật từ database - QUAN TRỌNG
   if (hotel.images && hotel.images.length > 0) {
-    imageUrl = getImageUrl(hotel.images[0]);
+    const firstImage = hotel.images[0];
+    imageUrl = getImageUrl(firstImage);
   }
+
+  // Truncate name và address cho giao diện gọn
+  const truncatedName = hotel.name.length > 30 ? hotel.name.substring(0, 30) + "..." : hotel.name;
+  const truncatedAddress = hotel.address.length > 50 ? hotel.address.substring(0, 50) + "..." : hotel.address;
 
   return `
     <div class="col-md-6 col-lg-4 mb-4">
-      <div class="card h-100 hotel-admin-card">
-        <img src="${imageUrl}" class="card-img-top" alt="${hotel.name}" 
-             onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'"
-             style="height: 200px; object-fit: cover;">
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${hotel.name}</h5>
-          <p class="text-muted mb-1"><i class="bi bi-geo-alt"></i> ${hotel.city}</p>
-          <p class="text-muted mb-2 small">${hotel.address}</p>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="text-primary fw-bold">
-              ${hotel.price > 0 ? `Từ ${formatCurrency(hotel.price)}` : "Chưa có giá"}
-            </span>
-            <span class="text-warning">
-              <i class="bi bi-star-fill"></i> ${hotel.rating.toFixed(1)}
+      <div class="card hotel-admin-card fade-in">
+        <!-- Image Container - NO CROP -->
+        <div class="position-relative">
+          <img src="${imageUrl}" 
+               class="card-img-top" 
+               alt="${hotel.name}" 
+               onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg';">
+          
+          <!-- Status Badge -->
+          <div class="position-absolute top-0 end-0 m-2">
+            <span class="badge bg-success">
+              <i class="bi bi-check-circle"></i> Hoạt động
             </span>
           </div>
-          <div class="mt-auto">
-            <div class="row g-2">
-              <div class="col-12">
-                <button type="button" class="btn btn-outline-info btn-sm w-100" onclick="viewHotelDetails(${hotel.id})">
-                  <i class="bi bi-eye"></i> Xem Loại Phòng
-                </button>
+
+          <!-- Image Count Badge -->
+          ${
+            hotel.images && hotel.images.length > 0
+              ? `
+          <div class="position-absolute bottom-0 start-0 m-2">
+            <span class="badge bg-dark bg-opacity-75">
+              <i class="bi bi-images"></i> ${hotel.images.length}
+            </span>
+          </div>
+          `
+              : ""
+          }
+        </div>
+
+        <div class="card-body">
+          <h5 class="card-title" title="${hotel.name}">${truncatedName}</h5>
+          
+          <div class="mb-2">
+            <small class="text-muted">
+              <i class="bi bi-geo-alt-fill"></i> ${hotel.city}
+            </small>
+          </div>
+          
+          <div class="mb-2">
+            <small class="text-muted" title="${hotel.address}">
+              <i class="bi bi-building"></i> ${truncatedAddress}
+            </small>
+          </div>
+
+          <div class="mb-3">
+            <div class="row">
+              <div class="col-6">
+                <small class="text-muted d-block">Giá từ:</small>
+                <span class="text-success fw-bold">
+                  ${hotel.price > 0 ? formatCurrency(hotel.price) : "Chưa có"}
+                </span>
               </div>
               <div class="col-6">
-                <button type="button" class="btn btn-outline-warning btn-sm w-100" onclick="editHotel(${hotel.id})">
-                  <i class="bi bi-pencil"></i> Sửa
-                </button>
+                <small class="text-muted d-block">Đánh giá:</small>
+                <span class="text-warning fw-bold">
+                  <i class="bi bi-star-fill"></i> ${hotel.rating.toFixed(1)}
+                </span>
               </div>
-              <div class="col-6">
-                <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="deleteHotel(${hotel.id})">
-                  <i class="bi bi-trash"></i> Xóa
-                </button>
-              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="row g-2">
+            <div class="col-12">
+              <button type="button" class="btn btn-outline-info btn-sm w-100" onclick="viewHotelDetails(${hotel.id})">
+                <i class="bi bi-eye"></i> Xem Chi Tiết & Phòng
+              </button>
+            </div>
+            <div class="col-6">
+              <button type="button" class="btn btn-outline-warning btn-sm w-100" onclick="editHotel(${hotel.id})">
+                <i class="bi bi-pencil-square"></i> Sửa
+              </button>
+            </div>
+            <div class="col-6">
+              <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="deleteHotel(${hotel.id})">
+                <i class="bi bi-trash3"></i> Xóa
+              </button>
             </div>
           </div>
         </div>
@@ -268,33 +318,64 @@ function filterHotels() {
   displayHotels();
 }
 
-// Get image URL helper
+// Get image URL helper - SỬA ĐỔI: Cải thiện xử lý ảnh
 function getImageUrl(image) {
+  const baseUrl = "http://localhost:5233";
+  const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
+
+  console.log("Processing image:", image); // Debug
+
+  if (!image) {
+    console.log("No image provided, using placeholder"); // Debug
+    return placeholderUrl;
+  }
+
   if (typeof image === "string") {
+    if (!image.trim()) {
+      return placeholderUrl;
+    }
+
     // Nếu đã là URL đầy đủ thì dùng trực tiếp
     if (image.startsWith("http")) {
+      console.log("Full URL detected:", image); // Debug
       return image;
     }
+
     // Nếu bắt đầu bằng /uploads thì thêm API_URL
     if (image.startsWith("/uploads")) {
-      return `http://localhost:5233${image}`;
+      const url = `${baseUrl}${image}`;
+      console.log("Uploads path detected, generated:", url); // Debug
+      return url;
     }
-    // Nếu không có /uploads thì thêm vào
-    return `http://localhost:5233/uploads/${image}`;
+
+    // Nếu chỉ có tên file
+    const url = `${baseUrl}/uploads/hotels/${image}`;
+    console.log("Filename only, generated:", url); // Debug
+    return url;
   }
 
   if (image && image.duongDanAnh) {
-    if (image.duongDanAnh.startsWith("http")) {
-      return image.duongDanAnh;
+    const imagePath = image.duongDanAnh;
+    console.log("Object with duongDanAnh:", imagePath); // Debug
+
+    if (!imagePath || !imagePath.trim()) {
+      return placeholderUrl;
     }
-    if (image.duongDanAnh.startsWith("/uploads")) {
-      return `http://localhost:5233${image.duongDanAnh}`;
+
+    if (imagePath.startsWith("http")) {
+      return imagePath;
     }
-    return `http://localhost:5233/uploads/${image.duongDanAnh}`;
+
+    if (imagePath.startsWith("/uploads")) {
+      return `${baseUrl}${imagePath}`;
+    }
+
+    return `${baseUrl}/uploads/hotels/${imagePath}`;
   }
 
   // Fallback to placeholder
-  return "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
+  console.log("Fallback to placeholder"); // Debug
+  return placeholderUrl;
 }
 
 // View hotel details with room types
@@ -396,24 +477,35 @@ function showHotelDetailsModal(hotel, roomTypes) {
     `;
   }
 
-  // Create images section
+  // Create images section - SỬA ĐỔI: Hiển thị ảnh thật
   let imagesHtml = "";
   if (hotel.images && hotel.images.length > 0) {
     imagesHtml = `
       <div class="mb-4">
-        <h6>Hình Ảnh</h6>
+        <h6>Hình Ảnh (${hotel.images.length})</h6>
         <div class="row">
           ${hotel.images
-            .map(
-              (image) => `
+            .map((image) => {
+              const imageUrl = getImageUrl(image);
+              return `
             <div class="col-md-3 mb-2">
-              <img src="${getImageUrl(image)}" class="img-fluid rounded" alt="Hotel Image"
-                   style="width: 100%; height: 100px; object-fit: cover;"
+              <img src="${imageUrl}" class="img-fluid rounded" alt="Hotel Image"
+                   style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;"
+                   onclick="window.open('${imageUrl}', '_blank')"
                    onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg';">
             </div>
-          `
-            )
+          `;
+            })
             .join("")}
+        </div>
+      </div>
+    `;
+  } else {
+    imagesHtml = `
+      <div class="mb-4">
+        <h6>Hình Ảnh</h6>
+        <div class="alert alert-info">
+          <p class="mb-0">Chưa có hình ảnh nào.</p>
         </div>
       </div>
     `;
