@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý ảnh khách sạn - Admin</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" />
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <!-- Custom CSS -->
+    <link href="../assets/css/admin.css" rel="stylesheet" />
+
+    <style>
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+      }
+
+      .image-card {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: white;
+      }
+
+      .image-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .image-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+      }
+
+      .image-card .card-body {
+        padding: 15px;
+      }
+
+      .upload-zone {
+        border: 2px dashed #007bff;
+        border-radius: 10px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .upload-zone:hover {
+        background-color: #f8f9fa;
+      }
+
+      .upload-zone.dragover {
+        background-color: #e3f2fd;
+        border-color: #1976d2;
+      }
+
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .preview-item {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .preview-item img {
+        width: 100%;
+        height: 80px;
+        object-fit: cover;
+      }
+
+      .preview-remove {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="index.html"> <i class="bi bi-shield-check"></i> Admin Panel </a>
+
+        <div class="navbar-nav ms-auto">
+          <div class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"> <i class="bi bi-person-circle"></i> Admin </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#" onclick="logout()">Đăng xuất</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+      <!-- Page Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2>Quản lý ảnh khách sạn</h2>
+          <p class="text-muted mb-0" id="hotelName">Đang tải thông tin khách sạn...</p>
+        </div>
+        <div>
+          <a href="hotels.html" class="btn btn-secondary me-2"> <i class="bi bi-arrow-left"></i> Quay lại </a>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal"><i class="bi bi-plus-circle"></i> Thêm ảnh mới</button>
+        </div>
+      </div>
+
+      <!-- Alert Message -->
+      <div id="alertMessage"></div>
+
+      <!-- Images Grid -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-images"></i> Danh sách ảnh
+                <span class="badge bg-primary" id="imageCount">0</span>
+              </h5>
+            </div>
+            <div class="card-body">
+              <div id="imagesGrid" class="image-grid">
+                <!-- Images will be loaded here -->
+              </div>
+
+              <!-- Empty state -->
+              <div id="emptyState" class="text-center py-5" style="display: none">
+                <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Chưa có ảnh nào</h5>
+                <p class="text-muted">Hãy thêm ảnh đầu tiên cho khách sạn này</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                  <i class="bi bi-plus-circle"></i> Thêm ảnh ngay
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-cloud-upload-alt"></i> Thêm ảnh mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="uploadForm" enctype="multipart/form-data">
+              <!-- Upload Zone -->
+              <div class="upload-zone" id="uploadZone">
+                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                <h5>Kéo thả ảnh vào đây hoặc click để chọn</h5>
+                <p class="text-muted">Hỗ trợ: JPG, PNG, WEBP. Tối đa 5MB mỗi ảnh</p>
+                <input type="file" id="imageInput" multiple accept="image/*" style="display: none" />
+              </div>
+
+              <!-- Preview Grid -->
+              <div id="previewGrid" class="preview-grid" style="display: none"></div>
+
+              <!-- Description Input -->
+              <div class="mt-3">
+                <label class="form-label">Mô tả ảnh (tùy chọn)</label>
+                <textarea class="form-control" id="imageDescription" rows="2" placeholder="Nhập mô tả cho ảnh..."></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" id="uploadBtn" disabled><i class="fas fa-upload"></i> Upload ảnh</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Image Modal -->
+    <div class="modal fade" id="editImageModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-edit"></i> Chỉnh sửa ảnh</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editImageForm">
+              <input type="hidden" id="editImageId" />
+
+              <div class="text-center mb-3">
+                <img id="editImagePreview" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px" />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Mô tả ảnh</label>
+                <textarea class="form-control" id="editImageDescription" rows="3"></textarea>
+              </div>
+
+              <div class="mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="setAsMainImage" />
+                  <label class="form-check-label" for="setAsMainImage"> Đặt làm ảnh chính </label>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="updateImage()"><i class="fas fa-save"></i> Lưu thay đổi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle"></i> Xác nhận xóa</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Bạn có chắc chắn muốn xóa ảnh này không?</p>
+            <p class="text-muted small">Hành động này không thể hoàn tác.</p>
+            <input type="hidden" id="deleteImageId" />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-danger" onclick="confirmDeleteImage()"><i class="fas fa-trash"></i> Xóa ảnh</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/manage-hotel-images.js"></script>
+  </body>
+</html>
