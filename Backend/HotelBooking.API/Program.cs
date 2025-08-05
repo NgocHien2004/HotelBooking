@@ -1,68 +1,66 @@
-using Microsoft.EntityFrameworkCore;
+using HotelBooking.API.Data;
+using HotelBooking.API.Services.Implementations;
+using HotelBooking.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using HotelBooking.API.Data;
-using HotelBooking.API.Services.Interfaces;
-using HotelBooking.API.Services.Implementations;
-using HotelBooking.API.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Configure Entity Framework
-builder.Services.AddDbContext<HotelBookingContext>(
-    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Configure AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingProfile));
-
-// Configure CORS
+// Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+    options.AddPolicy("AllowAll",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
 });
 
-// Configure JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"];
-if (string.IsNullOrEmpty(jwtKey))
-{
-    throw new InvalidOperationException("JWT Key is not configured");
-}
+// Add DbContext
+builder.Services.AddDbContext<HotelBookingContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(Program));
+
+// Add Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IHotelService, HotelService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IUserService, UserService>();
+// Add other services here...
+
+// Add Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ValidateIssuer = false,
-            ValidateAudience = false
+            ValidIssuer = builder.Configuration["JWT:Issuer"],
+            ValidAudience = builder.Configuration["JWT:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"] ?? ""))
         };
     });
-
-// Register services với interface
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IHotelService, HotelService>();
-builder.Services.AddScoped<IRoomService, RoomService>();
-builder.Services.AddScoped<IBookingService, BookingService>();
-builder.Services.AddScoped<IImageService, ImageService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IReviewService, ReviewService>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// KHÔNG dùng HTTPS redirect trong development
+// app.UseHttpsRedirection();
 
-// Tạo thư mục uploads
+// Tạo thư mục uploads trực tiếp trong project root (không dùng wwwroot)
 var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
 var tempPath = Path.Combine(uploadsPath, "temp");
 var hotelsPath = Path.Combine(uploadsPath, "hotels");
@@ -99,7 +97,7 @@ Console.WriteLine($"Placeholder exists: {File.Exists(placeholderPath)}");
 // Serve static files từ uploads folder với đường dẫn /uploads
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
 
