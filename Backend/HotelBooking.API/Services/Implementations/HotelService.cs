@@ -3,21 +3,10 @@ using AutoMapper;
 using HotelBooking.API.Data;
 using HotelBooking.API.Models;
 using HotelBooking.API.DTOs;
-using HotelBooking.API.Services.Implementations;
+using HotelBooking.API.Services.Interfaces;
 
 namespace HotelBooking.API.Services.Implementations
 {
-    public interface IHotelService
-    {
-        Task<IEnumerable<KhachSanDto>> GetAllHotelsAsync();
-        Task<KhachSanDto?> GetHotelByIdAsync(int id);
-        Task<IEnumerable<KhachSanDto>> SearchHotelsAsync(string? searchTerm, string? city);
-        Task<KhachSanDto> CreateHotelAsync(CreateKhachSanDto createHotelDto);
-        Task<KhachSanDto?> UpdateHotelAsync(int id, UpdateKhachSanDto updateHotelDto);
-        Task<bool> DeleteHotelAsync(int id);
-        Task<IEnumerable<string>> GetAvailableCitiesAsync();
-    }
-
     public class HotelService : IHotelService
     {
         private readonly HotelBookingContext _context;
@@ -44,6 +33,7 @@ namespace HotelBooking.API.Services.Implementations
                 var hotels = await _context.KhachSans
                     .Include(h => h.HinhAnhKhachSans)
                     .Include(h => h.LoaiPhongs)
+                    .OrderBy(h => h.TenKhachSan)
                     .ToListAsync();
 
                 var hotelDtos = _mapper.Map<IEnumerable<KhachSanDto>>(hotels);
@@ -72,6 +62,12 @@ namespace HotelBooking.API.Services.Implementations
                                     MoTa = "Ảnh chính"
                                 }
                             };
+                        }
+
+                        // Tính giá phòng thấp nhất
+                        if (hotelDto.LoaiPhongs != null && hotelDto.LoaiPhongs.Any())
+                        {
+                            hotelDto.GiaPhongThapNhat = hotelDto.LoaiPhongs.Min(lp => lp.GiaMotDem);
                         }
                     }
                     catch (Exception ex)
@@ -131,6 +127,12 @@ namespace HotelBooking.API.Services.Implementations
                         };
                     }
 
+                    // Tính giá phòng thấp nhất
+                    if (hotelDto.LoaiPhongs != null && hotelDto.LoaiPhongs.Any())
+                    {
+                        hotelDto.GiaPhongThapNhat = hotelDto.LoaiPhongs.Min(lp => lp.GiaMotDem);
+                    }
+
                     // Đồng bộ ảnh từ thư mục nếu cần
                     await _imageService.SyncImagesFromFolderToDbAsync(id);
                 }
@@ -169,7 +171,7 @@ namespace HotelBooking.API.Services.Implementations
                     query = query.Where(h => h.ThanhPho != null && h.ThanhPho.Contains(city));
                 }
 
-                var hotels = await query.ToListAsync();
+                var hotels = await query.OrderBy(h => h.TenKhachSan).ToListAsync();
                 var hotelDtos = _mapper.Map<IEnumerable<KhachSanDto>>(hotels);
 
                 // Cập nhật ảnh chính cho từng khách sạn
@@ -193,6 +195,12 @@ namespace HotelBooking.API.Services.Implementations
                                     MoTa = "Ảnh chính"
                                 }
                             };
+                        }
+
+                        // Tính giá phòng thấp nhất
+                        if (hotelDto.LoaiPhongs != null && hotelDto.LoaiPhongs.Any())
+                        {
+                            hotelDto.GiaPhongThapNhat = hotelDto.LoaiPhongs.Min(lp => lp.GiaMotDem);
                         }
                     }
                     catch (Exception ex)

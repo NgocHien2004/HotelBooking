@@ -10,7 +10,7 @@ namespace HotelBooking.API.DTOs
         public decimal GiaMotDem { get; set; }
         public int SucChua { get; set; }
         public string? MoTa { get; set; }
-        public string TenKhachSan { get; set; } = string.Empty;
+        public string? TenKhachSan { get; set; }
         public List<PhongDto> Phongs { get; set; } = new List<PhongDto>();
     }
 
@@ -24,7 +24,7 @@ namespace HotelBooking.API.DTOs
         public string TenLoaiPhong { get; set; } = string.Empty;
 
         [Required]
-        [Range(0, double.MaxValue)]
+        [Range(0.01, double.MaxValue)]
         public decimal GiaMotDem { get; set; }
 
         [Required]
@@ -36,17 +36,14 @@ namespace HotelBooking.API.DTOs
 
     public class UpdateLoaiPhongDto
     {
-        [Required]
         [StringLength(100)]
-        public string TenLoaiPhong { get; set; } = string.Empty;
+        public string? TenLoaiPhong { get; set; }
 
-        [Required]
-        [Range(0, double.MaxValue)]
-        public decimal GiaMotDem { get; set; }
+        [Range(0.01, double.MaxValue)]
+        public decimal? GiaMotDem { get; set; }
 
-        [Required]
         [Range(1, int.MaxValue)]
-        public int SucChua { get; set; }
+        public int? SucChua { get; set; }
 
         public string? MoTa { get; set; }
     }
@@ -57,9 +54,9 @@ namespace HotelBooking.API.DTOs
         public int MaLoaiPhong { get; set; }
         public string SoPhong { get; set; } = string.Empty;
         public string TrangThai { get; set; } = string.Empty;
-        public string TenLoaiPhong { get; set; } = string.Empty;
-        public decimal GiaMotDem { get; set; }
-        public int SucChua { get; set; }
+        public string? TenLoaiPhong { get; set; }
+        public decimal? GiaMotDem { get; set; }
+        public int? SucChua { get; set; }
     }
 
     public class CreatePhongDto
@@ -77,13 +74,11 @@ namespace HotelBooking.API.DTOs
 
     public class UpdatePhongDto
     {
-        [Required]
         [StringLength(50)]
-        public string SoPhong { get; set; } = string.Empty;
+        public string? SoPhong { get; set; }
 
-        [Required]
         [StringLength(50)]
-        public string TrangThai { get; set; } = string.Empty;
+        public string? TrangThai { get; set; }
     }
 
     public class RoomAvailabilityDto

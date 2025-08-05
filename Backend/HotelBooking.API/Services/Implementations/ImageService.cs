@@ -13,7 +13,6 @@ namespace HotelBooking.API.Services.Implementations
         private readonly IMapper _mapper;
         private readonly ILogger<ImageService> _logger;
         private readonly string _hotelsPath;
-        private readonly string _placeholderPath;
 
         public ImageService(
             HotelBookingContext context,
@@ -26,7 +25,6 @@ namespace HotelBooking.API.Services.Implementations
             
             // Đường dẫn tuyệt đối đến thư mục uploads
             _hotelsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\hotels";
-            _placeholderPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\temp\hotel-placeholder.jpg";
             
             // Tạo thư mục nếu chưa tồn tại
             EnsureDirectoriesExist();
@@ -253,12 +251,12 @@ namespace HotelBooking.API.Services.Implementations
             }
         }
 
-        public async Task<bool> ImageExistsInFolder(string imagePath)
+        public Task<bool> ImageExistsInFolder(string imagePath)
         {
             try
             {
                 if (string.IsNullOrEmpty(imagePath))
-                    return false;
+                    return Task.FromResult(false);
 
                 var fullPath = GetFullImagePath(imagePath);
                 var exists = File.Exists(fullPath);
@@ -268,12 +266,12 @@ namespace HotelBooking.API.Services.Implementations
                     _logger.LogDebug($"Image not found: {fullPath}");
                 }
                 
-                return exists;
+                return Task.FromResult(exists);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error checking image existence: {imagePath}");
-                return false;
+                return Task.FromResult(false);
             }
         }
 

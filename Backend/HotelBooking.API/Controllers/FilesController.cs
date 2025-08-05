@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using HotelBooking.API.Services.Implementations;
+using HotelBooking.API.Services.Interfaces; // SỬA DÒNG NÀY
 
 namespace HotelBooking.API.Controllers
 {
     [ApiController]
     [Route("api/upload")]
-    public class UploadController : ControllerBase
-    {
+    public class UploadController : ControllerBase    {
         private readonly ILogger<UploadController> _logger;
         private readonly IImageService _imageService;
         private readonly string _hotelsPath = @"D:\Temp\HotelBooking\Backend\HotelBooking.API\uploads\hotels";

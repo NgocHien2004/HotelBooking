@@ -205,5 +205,36 @@ namespace HotelBooking.API.Services.Implementations
                 throw;
             }
         }
-    }
+
+        public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            try
+            {
+        var user = await _context.NguoiDungs.FindAsync(userId);
+            if (user == null)
+            {
+            return false;
+            }
+
+        // Verify current password
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.MatKhau))
+            {
+            return false;
+            }
+
+        // Update with new password
+                user.MatKhau = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Password changed for user: {user.Email}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error changing password for user {userId}");
+                return false;
+            }
+        }
+            }
+    
 }

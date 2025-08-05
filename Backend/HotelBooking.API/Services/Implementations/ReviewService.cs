@@ -11,11 +11,13 @@ namespace HotelBooking.API.Services.Implementations
     {
         private readonly HotelBookingContext _context;
         private readonly IMapper _mapper;
+        private readonly ILogger<ReviewService> _logger;
 
-        public ReviewService(HotelBookingContext context, IMapper mapper)
+        public ReviewService(HotelBookingContext context, IMapper mapper, ILogger<ReviewService> logger)
         {
             _context = context;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<DanhGiaDto>> GetAllReviewsAsync()
@@ -65,41 +67,23 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<DanhGiaDto> CreateReviewAsync(int userId, CreateDanhGiaDto createReviewDto)
         {
-            // Check if user can review this hotel
-            var canReview = await CanUserReviewHotelAsync(userId, createReviewDto.MaKhachSan);
-            if (!canReview)
-            {
-                throw new InvalidOperationException("Bạn chỉ có thể đánh giá khách sạn mà bạn đã từng đặt phòng");
-            }
-
-            // Check if user already reviewed this hotel
-            var existingReview = await _context.DanhGias
-                .FirstOrDefaultAsync(r => r.MaNguoiDung == userId && r.MaKhachSan == createReviewDto.MaKhachSan);
-
-            if (existingReview != null)
-            {
-                throw new InvalidOperationException("Bạn đã đánh giá khách sạn này rồi");
-            }
-
             var review = _mapper.Map<DanhGia>(createReviewDto);
             review.MaNguoiDung = userId;
+            review.NgayTao = DateTime.Now;
 
             _context.DanhGias.Add(review);
             await _context.SaveChangesAsync();
 
             // Update hotel average rating
-            await UpdateHotelAverageRatingAsync(createReviewDto.MaKhachSan);
+            await UpdateHotelAverageRatingAsync(review.MaKhachSan);
 
-            return await GetReviewByIdAsync(review.MaDanhGia) ?? 
-                   throw new InvalidOperationException("Không thể tạo đánh giá");
+            return await GetReviewByIdAsync(review.MaDanhGia) ?? throw new InvalidOperationException("Không thể tạo đánh giá");
         }
 
         public async Task<DanhGiaDto?> UpdateReviewAsync(int id, int userId, UpdateDanhGiaDto updateReviewDto)
         {
-            var existingReview = await _context.DanhGias
-                .FirstOrDefaultAsync(r => r.MaDanhGia == id && r.MaNguoiDung == userId);
-
-            if (existingReview == null)
+            var existingReview = await _context.DanhGias.FindAsync(id);
+            if (existingReview == null || existingReview.MaNguoiDung != userId)
             {
                 return null;
             }
@@ -115,10 +99,8 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<bool> DeleteReviewAsync(int id, int userId)
         {
-            var review = await _context.DanhGias
-                .FirstOrDefaultAsync(r => r.MaDanhGia == id && r.MaNguoiDung == userId);
-
-            if (review == null)
+            var review = await _context.DanhGias.FindAsync(id);
+            if (review == null || review.MaNguoiDung != userId)
             {
                 return false;
             }
@@ -135,57 +117,78 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<ReviewSummaryDto?> GetReviewSummaryAsync(int hotelId)
         {
+            var reviews = await _context.DanhGias
+                .Where(r => r.MaKhachSan == hotelId && r.DiemDanhGia.HasValue)
+                .ToListAsync();
+
+            if (!reviews.Any())
+            {
+                return null;
+            }
+
             var hotel = await _context.KhachSans.FindAsync(hotelId);
             if (hotel == null)
             {
                 return null;
             }
 
-            var reviews = await _context.DanhGias
-                .Where(r => r.MaKhachSan == hotelId && r.DiemDanhGia.HasValue)
-                .ToListAsync();
-
             var summary = new ReviewSummaryDto
             {
                 MaKhachSan = hotelId,
                 TenKhachSan = hotel.TenKhachSan,
                 TongSoDanhGia = reviews.Count,
-                DanhGiaTrungBinh = reviews.Any() ? (decimal)reviews.Average(r => r.DiemDanhGia!.Value) : 0
+                DanhGiaTrungBinh = (decimal)reviews.Average(r => r.DiemDanhGia!.Value),
+                PhanBoSao = reviews.GroupBy(r => r.DiemDanhGia!.Value)
+                                 .ToDictionary(g => g.Key, g => g.Count())
             };
-
-            // Calculate rating distribution
-            for (int i = 1; i <= 5; i++)
-            {
-                summary.PhanBoSao[i] = reviews.Count(r => r.DiemDanhGia == i);
-            }
 
             return summary;
         }
 
         public async Task<bool> CanUserReviewHotelAsync(int userId, int hotelId)
         {
-            // User can review if they have completed bookings at this hotel
-            return await _context.DatPhongs
+            // Check if user has a completed booking for this hotel
+            var hasCompletedBooking = await _context.DatPhongs
+                .Include(b => b.Phong)
+                .ThenInclude(p => p.LoaiPhong)
                 .AnyAsync(b => b.MaNguoiDung == userId &&
                               b.Phong.LoaiPhong.MaKhachSan == hotelId &&
                               b.TrangThai == "Completed" &&
                               b.NgayTraPhong < DateTime.Now);
+
+            if (!hasCompletedBooking)
+            {
+                return false;
+            }
+
+            // Check if user already reviewed this hotel
+            var existingReview = await _context.DanhGias
+                .AnyAsync(r => r.MaNguoiDung == userId && r.MaKhachSan == hotelId);
+
+            return !existingReview;
         }
 
         public async Task UpdateHotelAverageRatingAsync(int hotelId)
         {
-            var hotel = await _context.KhachSans.FindAsync(hotelId);
-            if (hotel == null)
-            {
-                return;
-            }
-
-            var averageRating = await _context.DanhGias
+            var reviews = await _context.DanhGias
                 .Where(r => r.MaKhachSan == hotelId && r.DiemDanhGia.HasValue)
-                .AverageAsync(r => (decimal?)r.DiemDanhGia) ?? 0;
+                .ToListAsync();
 
-            hotel.DanhGiaTrungBinh = Math.Round(averageRating, 1);
-            await _context.SaveChangesAsync();
+            var hotel = await _context.KhachSans.FindAsync(hotelId);
+            if (hotel != null)
+            {
+                if (reviews.Any())
+                {
+                    hotel.DanhGiaTrungBinh = (decimal)reviews.Average(r => r.DiemDanhGia!.Value);
+                }
+                else
+                {
+                    hotel.DanhGiaTrungBinh = 0;
+                }
+
+                await _context.SaveChangesAsync();
+                _logger.LogInformation($"Updated average rating for hotel {hotelId}: {hotel.DanhGiaTrungBinh}");
+            }
         }
     }
 }

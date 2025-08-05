@@ -12,6 +12,8 @@ namespace HotelBooking.API.Mappings
             CreateMap<NguoiDung, UserDto>();
             CreateMap<RegisterDto, NguoiDung>()
                 .ForMember(dest => dest.NgayTao, opt => opt.MapFrom(src => DateTime.Now));
+            CreateMap<UpdateUserDto, NguoiDung>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Hotel mappings
             CreateMap<KhachSan, KhachSanDto>()
@@ -30,7 +32,8 @@ namespace HotelBooking.API.Mappings
                 .ForMember(dest => dest.TenKhachSan, opt => opt.MapFrom(src => src.KhachSan.TenKhachSan))
                 .ForMember(dest => dest.Phongs, opt => opt.MapFrom(src => src.Phongs));
             CreateMap<CreateLoaiPhongDto, LoaiPhong>();
-            CreateMap<UpdateLoaiPhongDto, LoaiPhong>();
+            CreateMap<UpdateLoaiPhongDto, LoaiPhong>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Room mappings
             CreateMap<Phong, PhongDto>()
@@ -38,7 +41,8 @@ namespace HotelBooking.API.Mappings
                 .ForMember(dest => dest.GiaMotDem, opt => opt.MapFrom(src => src.LoaiPhong.GiaMotDem))
                 .ForMember(dest => dest.SucChua, opt => opt.MapFrom(src => src.LoaiPhong.SucChua));
             CreateMap<CreatePhongDto, Phong>();
-            CreateMap<UpdatePhongDto, Phong>();
+            CreateMap<UpdatePhongDto, Phong>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Booking mappings
             CreateMap<DatPhong, DatPhongDto>()
@@ -51,7 +55,8 @@ namespace HotelBooking.API.Mappings
             CreateMap<CreateDatPhongDto, DatPhong>()
                 .ForMember(dest => dest.NgayDat, opt => opt.MapFrom(src => DateTime.Now))
                 .ForMember(dest => dest.TrangThai, opt => opt.MapFrom(src => "Pending"));
-            CreateMap<UpdateDatPhongDto, DatPhong>();
+            CreateMap<UpdateDatPhongDto, DatPhong>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Payment mappings
             CreateMap<ThanhToan, ThanhToanDto>()
@@ -69,13 +74,7 @@ namespace HotelBooking.API.Mappings
                 .ForMember(dest => dest.TenKhachSan, opt => opt.MapFrom(src => src.KhachSan.TenKhachSan));
             CreateMap<CreateDanhGiaDto, DanhGia>()
                 .ForMember(dest => dest.NgayTao, opt => opt.MapFrom(src => DateTime.Now));
-            CreateMap<UpdateDanhGiaDto, DanhGia>();
-
-            // User mappings (thêm vào constructor của MappingProfile)
-            CreateMap<NguoiDung, UserDto>();
-            CreateMap<RegisterDto, NguoiDung>()
-                .ForMember(dest => dest.NgayTao, opt => opt.MapFrom(src => DateTime.Now));
-            CreateMap<UpdateUserDto, NguoiDung>()
+            CreateMap<UpdateDanhGiaDto, DanhGia>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
