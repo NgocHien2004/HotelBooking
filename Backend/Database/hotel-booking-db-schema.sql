@@ -12,7 +12,7 @@ CREATE TABLE NguoiDung (
     email NVARCHAR(100) UNIQUE NOT NULL,
     mat_khau NVARCHAR(255) NOT NULL,
     so_dien_thoai NVARCHAR(20),
-    vai_tro NVARCHAR(50) DEFAULT 'Customer', -- Admin, Customer, Staff
+    vai_tro NVARCHAR(50) DEFAULT 'Customer', -- Admin, Customer
     ngay_tao DATETIME DEFAULT GETDATE()
 );
 
@@ -98,7 +98,6 @@ ADD FOREIGN KEY (ma_khach_san) REFERENCES KhachSan(ma_khach_san);
 ALTER TABLE DanhGia
 ADD FOREIGN KEY (ma_khach_san) REFERENCES KhachSan(ma_khach_san);
 
--- Tạo một số indexes để tối ưu hiệu suất
 CREATE INDEX IX_DatPhong_NgayNhanPhong ON DatPhong(ngay_nhan_phong);
 CREATE INDEX IX_DatPhong_NgayTraPhong ON DatPhong(ngay_tra_phong);
 CREATE INDEX IX_Phong_TrangThai ON Phong(trang_thai);

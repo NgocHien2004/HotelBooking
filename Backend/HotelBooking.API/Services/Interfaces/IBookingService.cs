@@ -10,7 +10,6 @@ namespace HotelBooking.API.Services.Interfaces
         Task<IEnumerable<DatPhongDto>> GetBookingsByHotelAsync(int hotelId);
         Task<DatPhongDto> CreateBookingAsync(int userId, CreateDatPhongDto createBookingDto);
         Task<DatPhongDto?> UpdateBookingAsync(int id, UpdateDatPhongDto updateBookingDto);
-        Task<bool> DeleteBookingAsync(int id);
         Task<DatPhongDto?> UpdateBookingStatusAsync(int id, string status);
         Task<decimal> CalculateBookingTotalAsync(int roomId, DateTime checkIn, DateTime checkOut);
         Task<bool> CanCancelBookingAsync(int bookingId, int userId);
