@@ -123,6 +123,58 @@ namespace HotelBooking.API.Controllers
             }
         }
 
+        // THÊM MỚI: Cho phép user tự tạo payment
+        [HttpPost("user-payment")]
+        public async Task<ActionResult<ThanhToanDto>> CreateUserPayment(CreateThanhToanDto createPaymentDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
+                }
+
+                var currentUserId = GetCurrentUserId();
+                
+                // Verify booking exists and belongs to user
+                var booking = await _bookingService.GetBookingByIdAsync(createPaymentDto.MaDatPhong);
+                if (booking == null)
+                {
+                    return BadRequest(new { success = false, message = "Không tìm thấy đặt phòng" });
+                }
+
+                if (booking.MaNguoiDung != currentUserId)
+                {
+                    return Forbid();
+                }
+
+                // Verify payment amount doesn't exceed remaining amount
+                var existingPayments = await _paymentService.GetPaymentsByBookingAsync(createPaymentDto.MaDatPhong);
+                var totalPaid = existingPayments.Sum(p => p.SoTien);
+                var remainingAmount = booking.TongTien - totalPaid;
+
+                if (createPaymentDto.SoTien > remainingAmount)
+                {
+                    return BadRequest(new { success = false, message = $"Số tiền thanh toán không được vượt quá số tiền còn lại: {remainingAmount:N0} VNĐ" });
+                }
+
+                if (createPaymentDto.SoTien <= 0)
+                {
+                    return BadRequest(new { success = false, message = "Số tiền thanh toán phải lớn hơn 0" });
+                }
+
+                var payment = await _paymentService.CreatePaymentAsync(createPaymentDto);
+                
+                return CreatedAtAction(nameof(GetPayment), new { id = payment.MaThanhToan }, 
+                    new { success = true, data = payment });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating user payment");
+                return StatusCode(500, new { success = false, message = "Lỗi tạo thanh toán" });
+            }
+        }
+
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ThanhToanDto>> CreatePayment(CreateThanhToanDto createPaymentDto)
@@ -150,6 +202,35 @@ namespace HotelBooking.API.Controllers
             {
                 _logger.LogError(ex, "Error creating payment");
                 return StatusCode(500, new { success = false, message = "Lỗi tạo thanh toán" });
+            }
+        }
+
+        // THÊM MỚI: Admin mark booking as paid
+        [HttpPost("mark-paid/{bookingId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> MarkBookingAsPaid(int bookingId)
+        {
+            try
+            {
+                var booking = await _bookingService.GetBookingByIdAsync(bookingId);
+                if (booking == null)
+                {
+                    return NotFound(new { success = false, message = "Không tìm thấy đặt phòng" });
+                }
+
+                // Update booking status to Paid
+                var updatedBooking = await _bookingService.UpdateBookingStatusAsync(bookingId, "Paid");
+                if (updatedBooking == null)
+                {
+                    return BadRequest(new { success = false, message = "Không thể cập nhật trạng thái" });
+                }
+
+                return Ok(new { success = true, message = "Đã đánh dấu đặt phòng là đã thanh toán", data = updatedBooking });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking booking {BookingId} as paid", bookingId);
+                return StatusCode(500, new { success = false, message = "Lỗi cập nhật trạng thái" });
             }
         }
 
