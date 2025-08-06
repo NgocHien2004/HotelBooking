@@ -3,557 +3,215 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hotel Booking API Tester</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
-    <style>
-      body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-      }
-      .api-tester {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        margin: 20px auto;
-        max-width: 1200px;
-      }
-      .endpoint-card {
-        background: #f8f9fa;
-        border-radius: 10px;
-        border: 1px solid #e9ecef;
-        margin-bottom: 15px;
-        transition: all 0.3s ease;
-      }
-      .endpoint-card:hover {
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
-      }
-      .method-badge {
-        font-size: 0.8em;
-        font-weight: bold;
-        padding: 4px 8px;
-        border-radius: 4px;
-      }
-      .get {
-        background: #28a745;
-        color: white;
-      }
-      .post {
-        background: #007bff;
-        color: white;
-      }
-      .put {
-        background: #ffc107;
-        color: black;
-      }
-      .delete {
-        background: #dc3545;
-        color: white;
-      }
-      .response-box {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        font-family: "Courier New", monospace;
-        font-size: 0.9em;
-        max-height: 300px;
-        overflow-y: auto;
-        padding: 15px;
-      }
-      .status-success {
-        color: #28a745;
-        font-weight: bold;
-      }
-      .status-error {
-        color: #dc3545;
-        font-weight: bold;
-      }
-      .auth-section {
-        background: linear-gradient(45deg, #667eea, #764ba2);
-        color: white;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
-      }
-    </style>
+    <title>Debug Room Type Functions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   </head>
   <body>
-    <div class="container-fluid p-4">
-      <div class="api-tester p-4">
-        <h1 class="text-center mb-4">🏨 Hotel Booking API Tester</h1>
+    <div class="container mt-5">
+      <h2>Debug Room Type Functions</h2>
 
-        <!-- Auth Section -->
-        <div class="auth-section">
-          <div class="row">
-            <div class="col-md-4">
-              <h5>🔐 Authentication</h5>
-              <div class="mb-3">
-                <label class="form-label">API Base URL:</label>
-                <input type="text" id="apiUrl" class="form-control" value="https://localhost:5001/api" placeholder="https://localhost:5001/api" />
-              </div>
-              <div class="mb-3">
-                <label class="form-label">JWT Token:</label>
-                <input type="text" id="jwtToken" class="form-control" placeholder="Paste JWT token here" />
-              </div>
-            </div>
-            <div class="col-md-4">
-              <h5>📋 Quick Login Test</h5>
-              <div class="mb-2">
-                <input type="email" id="loginEmail" class="form-control" placeholder="Email" value="admin@hotel.com" />
-              </div>
-              <div class="mb-2">
-                <input type="password" id="loginPassword" class="form-control" placeholder="Password" value="admin123" />
-              </div>
-              <button class="btn btn-light" onclick="testLogin()">🚀 Login & Get Token</button>
-            </div>
-            <div class="col-md-4">
-              <h5>📊 Status</h5>
-              <div id="authStatus" class="mt-2">
-                <span class="badge bg-warning">Not Authenticated</span>
-              </div>
-              <button class="btn btn-light mt-2" onclick="testConnection()">🔗 Test Connection</button>
-            </div>
-          </div>
+      <div class="alert alert-info">
+        <h5>Các bước kiểm tra:</h5>
+        <ol>
+          <li>Mở Developer Tools (F12)</li>
+          <li>Vào tab Console</li>
+          <li>Click các nút test bên dưới và xem kết quả trong console</li>
+        </ol>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5>1. Test Backend Connection</h5>
         </div>
-
-        <!-- API Endpoints -->
-        <div class="row">
-          <!-- Users Management -->
-          <div class="col-md-6">
-            <h3>👥 User Management</h3>
-
-            <div class="endpoint-card p-3">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span><span class="method-badge get">GET</span> /api/users</span>
-                <button class="btn btn-sm btn-primary" onclick="testEndpoint('GET', '/users')">Test</button>
-              </div>
-              <small class="text-muted">Get all users (Admin only)</small>
-              <div id="response-users" class="response-box mt-2" style="display: none"></div>
-            </div>
-
-            <div class="endpoint-card p-3">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span><span class="method-badge get">GET</span> /api/users/{id}</span>
-                <div>
-                  <input
-                    type="number"
-                    id="userId"
-                    class="form-control form-control-sm d-inline-block"
-                    style="width: 80px"
-                    placeholder="ID"
-                    value="1" />
-                  <button class="btn btn-sm btn-primary ms-1" onclick="testUserById()">Test</button>
-                </div>
-              </div>
-              <small class="text-muted">Get user by ID</small>
-              <div id="response-user-id" class="response-box mt-2" style="display: none"></div>
-            </div>
-
-            <div class="endpoint-card p-3">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span><span class="method-badge post">POST</span> /api/users</span>
-                <button class="btn btn-sm btn-success" onclick="testCreateUser()">Test</button>
-              </div>
-              <small class="text-muted">Create new user</small>
-              <textarea
-                id="createUserData"
-                class="form-control mt-2"
-                rows="4"
-                placeholder='{"hoTen": "Test User", "email": "test@email.com", "matKhau": "password123", "soDienThoai": "0123456789", "vaiTro": "Customer"}'></textarea>
-              <div id="response-create-user" class="response-box mt-2" style="display: none"></div>
-            </div>
-          </div>
-
-          <!-- Booking Management -->
-          <div class="col-md-6">
-            <h3>📅 Booking Management</h3>
-
-            <div class="endpoint-card p-3">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span><span class="method-badge get">GET</span> /api/bookings</span>
-                <button class="btn btn-sm btn-primary" onclick="testEndpoint('GET', '/bookings')">Test</button>
-              </div>
-              <small class="text-muted">Get all bookings (Admin only)</small>
-              <div id="response-bookings" class="response-box mt-2" style="display: none"></div>
-            </div>
-
-            <div class="endpoint-card p-3">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span><span class="method-badge get">GET</span> /api/bookings/{id}</span>
-                <div>
-                  <input
-                    type="number"
-                    id="bookingId"
-                    class="form-control form-control-sm d-inline-block"
-                    style="width: 80px"
-                    placeholder="ID"
-                    value="1" />
-                  <button class="btn btn-sm btn-primary ms-1" onclick="testBookingById()">Test</button>
-                </div>
-              </div>
-              <small class="text-muted">Get booking by ID</small>
-              <div id="response-booking-id" class="response-box mt-2" style="display: none"></div>
-            </div>
-
-            <div class="endpoint-card p-3">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span><span class="method-badge get">GET</span> /api/bookings/my-bookings</span>
-                <button class="btn btn-sm btn-primary" onclick="testEndpoint('GET', '/bookings/my-bookings')">Test</button>
-              </div>
-              <small class="text-muted">Get current user's bookings</small>
-              <div id="response-my-bookings" class="response-box mt-2" style="display: none"></div>
-            </div>
-
-            <div class="endpoint-card p-3">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span><span class="method-badge post">POST</span> /api/bookings</span>
-                <button class="btn btn-sm btn-success" onclick="testCreateBooking()">Test</button>
-              </div>
-              <small class="text-muted">Create new booking</small>
-              <textarea
-                id="createBookingData"
-                class="form-control mt-2"
-                rows="3"
-                placeholder='{"maPhong": 1, "ngayNhanPhong": "2024-12-01", "ngayTraPhong": "2024-12-03"}'></textarea>
-              <div id="response-create-booking" class="response-box mt-2" style="display: none"></div>
-            </div>
-          </div>
+        <div class="card-body">
+          <button class="btn btn-primary" onclick="testBackendConnection()">Test Backend</button>
+          <div id="backendResult" class="mt-3"></div>
         </div>
+      </div>
 
-        <!-- Additional Tests -->
-        <div class="row mt-4">
-          <div class="col-md-12">
-            <h3>🏨 Hotel & Room Tests</h3>
-
-            <div class="row">
-              <div class="col-md-4">
-                <div class="endpoint-card p-3">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span><span class="method-badge get">GET</span> /api/hotels</span>
-                    <button class="btn btn-sm btn-primary" onclick="testEndpoint('GET', '/hotels')">Test</button>
-                  </div>
-                  <small class="text-muted">Get all hotels</small>
-                  <div id="response-hotels" class="response-box mt-2" style="display: none"></div>
-                </div>
-              </div>
-
-              <div class="col-md-4">
-                <div class="endpoint-card p-3">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span><span class="method-badge get">GET</span> /api/rooms</span>
-                    <button class="btn btn-sm btn-primary" onclick="testEndpoint('GET', '/rooms')">Test</button>
-                  </div>
-                  <small class="text-muted">Get all rooms</small>
-                  <div id="response-rooms" class="response-box mt-2" style="display: none"></div>
-                </div>
-              </div>
-
-              <div class="col-md-4">
-                <div class="endpoint-card p-3">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span><span class="method-badge get">GET</span> /api/auth/profile</span>
-                    <button class="btn btn-sm btn-primary" onclick="testEndpoint('GET', '/auth/profile')">Test</button>
-                  </div>
-                  <small class="text-muted">Get user profile</small>
-                  <div id="response-profile" class="response-box mt-2" style="display: none"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5>2. Test Room Types Endpoint</h5>
         </div>
+        <div class="card-body">
+          <button class="btn btn-success" onclick="testRoomTypesEndpoint()">Test Room Types API</button>
+          <div id="roomTypesResult" class="mt-3"></div>
+        </div>
+      </div>
 
-        <!-- Database Connection Test -->
-        <div class="row mt-4">
-          <div class="col-md-12">
-            <div class="endpoint-card p-3">
-              <h4>🗄️ Database Connection Test</h4>
-              <p>Test database connectivity and basic queries:</p>
-              <div class="row">
-                <div class="col-md-3">
-                  <button class="btn btn-info w-100" onclick="testDatabaseConnection()">Test DB Connection</button>
-                </div>
-                <div class="col-md-3">
-                  <button class="btn btn-warning w-100" onclick="runSQLQuery('SELECT COUNT(*) as total_users FROM NguoiDung', 'user-count')">
-                    Count Users
-                  </button>
-                </div>
-                <div class="col-md-3">
-                  <button class="btn btn-warning w-100" onclick="runSQLQuery('SELECT COUNT(*) as total_bookings FROM DatPhong', 'booking-count')">
-                    Count Bookings
-                  </button>
-                </div>
-                <div class="col-md-3">
-                  <button class="btn btn-warning w-100" onclick="runSQLQuery('SELECT COUNT(*) as total_hotels FROM KhachSan', 'hotel-count')">
-                    Count Hotels
-                  </button>
-                </div>
-              </div>
-              <div id="response-db-test" class="response-box mt-3" style="display: none"></div>
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5>3. Test Add Room Type</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <input type="number" id="testHotelId" class="form-control" placeholder="Hotel ID (e.g., 1)" value="1" />
+            </div>
+            <div class="col-md-6">
+              <input type="text" id="testRoomName" class="form-control" placeholder="Room Type Name" value="Test Room" />
             </div>
           </div>
+          <button class="btn btn-warning" onclick="testAddRoomType()">Test Add Room Type</button>
+          <div id="addResult" class="mt-3"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5>4. Check Console Errors</h5>
+        </div>
+        <div class="card-body">
+          <pre id="consoleErrors" class="bg-dark text-white p-3" style="max-height: 300px; overflow-y: auto"></pre>
         </div>
       </div>
     </div>
 
     <script>
-      let authToken = "";
+      const API_URL = "http://localhost:5233/api";
+      const consoleLog = [];
 
-      // Test connection
-      async function testConnection() {
-        const apiUrl = document.getElementById("apiUrl").value;
-        const statusDiv = document.getElementById("authStatus");
+      // Override console.error to capture errors
+      const originalError = console.error;
+      console.error = function (...args) {
+        consoleLog.push({ type: "error", message: args.join(" "), time: new Date().toLocaleTimeString() });
+        updateConsoleDisplay();
+        originalError.apply(console, args);
+      };
+
+      // Override console.log to capture logs
+      const originalLog = console.log;
+      console.log = function (...args) {
+        consoleLog.push({ type: "log", message: args.join(" "), time: new Date().toLocaleTimeString() });
+        updateConsoleDisplay();
+        originalLog.apply(console, args);
+      };
+
+      function updateConsoleDisplay() {
+        const display = document.getElementById("consoleErrors");
+        display.innerHTML = consoleLog
+          .map((log) => `<span class="${log.type === "error" ? "text-danger" : "text-success"}">[${log.time}] ${log.message}</span>`)
+          .join("\n");
+        display.scrollTop = display.scrollHeight;
+      }
+
+      function getAuthHeaders() {
+        const token = localStorage.getItem("token");
+        return {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        };
+      }
+
+      async function testBackendConnection() {
+        const resultDiv = document.getElementById("backendResult");
+        resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Testing...';
 
         try {
-          const response = await fetch(`${apiUrl}/health`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
+          console.log("Testing backend connection...");
+          const response = await fetch(`${API_URL}/hotels`, {
+            headers: getAuthHeaders(),
           });
 
+          console.log("Response status:", response.status);
+          console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+
           if (response.ok) {
-            statusDiv.innerHTML = '<span class="badge bg-success">✅ API Connected</span>';
+            const data = await response.json();
+            resultDiv.innerHTML = `<div class="alert alert-success">✅ Backend connected! Found ${
+              data.length || data.data?.length || 0
+            } hotels</div>`;
+            console.log("Backend data:", data);
           } else {
-            statusDiv.innerHTML = '<span class="badge bg-danger">❌ API Connection Failed</span>';
+            resultDiv.innerHTML = `<div class="alert alert-danger">❌ Backend error: ${response.status} ${response.statusText}</div>`;
           }
         } catch (error) {
-          statusDiv.innerHTML = '<span class="badge bg-danger">❌ Connection Error</span>';
-          console.error("Connection test failed:", error);
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Connection failed: ${error.message}</div>`;
+          console.error("Connection error:", error);
         }
       }
 
-      // Test login
-      async function testLogin() {
-        const apiUrl = document.getElementById("apiUrl").value;
-        const email = document.getElementById("loginEmail").value;
-        const password = document.getElementById("loginPassword").value;
+      async function testRoomTypesEndpoint() {
+        const resultDiv = document.getElementById("roomTypesResult");
+        resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Testing...';
 
         try {
-          const response = await fetch(`${apiUrl}/auth/login`, {
+          console.log("Testing room types endpoint...");
+          const response = await fetch(`${API_URL}/roomtypes`, {
+            headers: getAuthHeaders(),
+          });
+
+          console.log("Room types response status:", response.status);
+
+          if (response.ok) {
+            const data = await response.json();
+            resultDiv.innerHTML = `<div class="alert alert-success">✅ Room Types API working! Found ${
+              data.data?.length || data.length || 0
+            } room types</div>`;
+            console.log("Room types data:", data);
+          } else {
+            const errorText = await response.text();
+            resultDiv.innerHTML = `<div class="alert alert-danger">❌ Room Types API error: ${response.status}<br>Details: ${errorText}</div>`;
+            console.error("Room types error:", errorText);
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Request failed: ${error.message}</div>`;
+          console.error("Room types request error:", error);
+        }
+      }
+
+      async function testAddRoomType() {
+        const resultDiv = document.getElementById("addResult");
+        const hotelId = document.getElementById("testHotelId").value;
+        const roomName = document.getElementById("testRoomName").value;
+
+        if (!hotelId || !roomName) {
+          resultDiv.innerHTML = '<div class="alert alert-warning">Please enter Hotel ID and Room Name</div>';
+          return;
+        }
+
+        resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Testing...';
+
+        const roomTypeData = {
+          maKhachSan: parseInt(hotelId),
+          tenLoaiPhong: roomName,
+          giaMotDem: 500000,
+          sucChua: 2,
+          moTa: "Test room type",
+        };
+
+        try {
+          console.log("Testing add room type with data:", roomTypeData);
+          const response = await fetch(`${API_URL}/roomtypes`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              ...getAuthHeaders(),
             },
-            body: JSON.stringify({
-              email: email,
-              matKhau: password,
-            }),
+            body: JSON.stringify(roomTypeData),
           });
 
-          const data = await response.json();
+          console.log("Add room type response status:", response.status);
+          const responseText = await response.text();
+          console.log("Response text:", responseText);
 
-          if (response.ok && data.success && data.data.token) {
-            authToken = data.data.token;
-            document.getElementById("jwtToken").value = authToken;
-            document.getElementById("authStatus").innerHTML =
-              '<span class="badge bg-success">✅ Authenticated</span><br>' + `<small>Role: ${data.data.vaiTro || "Unknown"}</small>`;
-
-            showResponse("auth-login", {
-              status: response.status,
-              success: true,
-              message: "Login successful!",
-              data: data,
-            });
+          if (response.ok) {
+            const data = JSON.parse(responseText);
+            resultDiv.innerHTML = `<div class="alert alert-success">✅ Room type added successfully!<br>ID: ${data.data?.maLoaiPhong || "N/A"}</div>`;
           } else {
-            document.getElementById("authStatus").innerHTML = '<span class="badge bg-danger">❌ Login Failed</span>';
-
-            showResponse("auth-login", {
-              status: response.status,
-              success: false,
-              error: data.message || "Login failed",
-              data: data,
-            });
+            resultDiv.innerHTML = `<div class="alert alert-danger">❌ Failed to add room type: ${response.status}<br>Details: ${responseText}</div>`;
           }
         } catch (error) {
-          document.getElementById("authStatus").innerHTML = '<span class="badge bg-danger">❌ Login Error</span>';
-          console.error("Login failed:", error);
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Request failed: ${error.message}</div>`;
+          console.error("Add room type error:", error);
         }
       }
 
-      // Generic endpoint tester
-      async function testEndpoint(method, endpoint, data = null) {
-        const apiUrl = document.getElementById("apiUrl").value;
-        const token = document.getElementById("jwtToken").value || authToken;
-
-        const options = {
-          method: method,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        };
-
-        if (token) {
-          options.headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        if (data) {
-          options.body = JSON.stringify(data);
-        }
-
-        try {
-          const response = await fetch(`${apiUrl}${endpoint}`, options);
-          const responseData = await response.json();
-
-          const responseKey = endpoint.replace(/\//g, "-").replace(/[{}]/g, "");
-          showResponse(`response${responseKey}`, {
-            status: response.status,
-            success: response.ok,
-            data: responseData,
-          });
-        } catch (error) {
-          const responseKey = endpoint.replace(/\//g, "-").replace(/[{}]/g, "");
-          showResponse(`response${responseKey}`, {
-            status: "Error",
-            success: false,
-            error: error.message,
-          });
-        }
-      }
-
-      // Test user by ID
-      function testUserById() {
-        const userId = document.getElementById("userId").value;
-        testEndpoint("GET", `/users/${userId}`);
-      }
-
-      // Test booking by ID
-      function testBookingById() {
-        const bookingId = document.getElementById("bookingId").value;
-        testEndpoint("GET", `/bookings/${bookingId}`);
-      }
-
-      // Test create user
-      function testCreateUser() {
-        try {
-          const userData = JSON.parse(document.getElementById("createUserData").value || "{}");
-          testEndpoint("POST", "/users", userData);
-        } catch (error) {
-          showResponse("response-create-user", {
-            status: "Error",
-            success: false,
-            error: "Invalid JSON data",
-          });
-        }
-      }
-
-      // Test create booking
-      function testCreateBooking() {
-        try {
-          const bookingData = JSON.parse(document.getElementById("createBookingData").value || "{}");
-          testEndpoint("POST", "/bookings", bookingData);
-        } catch (error) {
-          showResponse("response-create-booking", {
-            status: "Error",
-            success: false,
-            error: "Invalid JSON data",
-          });
-        }
-      }
-
-      // Test database connection
-      async function testDatabaseConnection() {
-        const apiUrl = document.getElementById("apiUrl").value;
-        const token = document.getElementById("jwtToken").value || authToken;
-
-        try {
-          // Test multiple endpoints to verify DB connectivity
-          const tests = [
-            { name: "Hotels", endpoint: "/hotels" },
-            { name: "Users", endpoint: "/users" },
-            { name: "Bookings", endpoint: "/bookings" },
-          ];
-
-          const results = [];
-
-          for (const test of tests) {
-            try {
-              const response = await fetch(`${apiUrl}${test.endpoint}`, {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: token ? `Bearer ${token}` : "",
-                },
-              });
-
-              results.push({
-                name: test.name,
-                status: response.status,
-                success: response.ok,
-                endpoint: test.endpoint,
-              });
-            } catch (error) {
-              results.push({
-                name: test.name,
-                status: "Error",
-                success: false,
-                error: error.message,
-                endpoint: test.endpoint,
-              });
-            }
-          }
-
-          showResponse("response-db-test", {
-            message: "Database connectivity test results:",
-            results: results,
-          });
-        } catch (error) {
-          showResponse("response-db-test", {
-            status: "Error",
-            success: false,
-            error: error.message,
-          });
-        }
-      }
-
-      // Run SQL query (mock function - would need actual endpoint)
-      async function runSQLQuery(query, responseId) {
-        // This is a mock function since direct SQL queries aren't typically exposed
-        // In a real scenario, you'd have specific endpoints for these operations
-        showResponse("response-db-test", {
-          message: "SQL Query simulation (not implemented in API)",
-          query: query,
-          note: "To implement this, create specific endpoints in your API that return these statistics",
-        });
-      }
-
-      // Show response helper
-      function showResponse(elementId, response) {
-        const element = document.getElementById(elementId);
-        if (element) {
-          element.style.display = "block";
-          element.innerHTML = `
-                    <div class="${response.success ? "status-success" : "status-error"}">
-                        Status: ${response.status} ${response.success ? "✅" : "❌"}
-                    </div>
-                    <pre>${JSON.stringify(response, null, 2)}</pre>
-                `;
-        }
-      }
-
-      // Initialize
-      window.onload = function () {
-        // Try to load saved settings
-        const savedApiUrl = localStorage.getItem("hotelApiUrl");
-        const savedToken = localStorage.getItem("hotelAuthToken");
-
-        if (savedApiUrl) {
-          document.getElementById("apiUrl").value = savedApiUrl;
-        }
-
-        if (savedToken) {
-          document.getElementById("jwtToken").value = savedToken;
-          authToken = savedToken;
-        }
-
-        // Save settings on change
-        document.getElementById("apiUrl").addEventListener("change", function () {
-          localStorage.setItem("hotelApiUrl", this.value);
-        });
-
-        document.getElementById("jwtToken").addEventListener("change", function () {
-          localStorage.setItem("hotelAuthToken", this.value);
-          authToken = this.value;
-        });
-      };
+      // Test connection on load
+      window.addEventListener("load", () => {
+        console.log("Debug page loaded. API URL:", API_URL);
+        console.log("Current auth token:", localStorage.getItem("token") ? "Present" : "Not found");
+      });
     </script>
   </body>
 </html>
