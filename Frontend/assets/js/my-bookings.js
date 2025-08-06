@@ -8,11 +8,24 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
+  // Check if there's a new booking notification
+  if (localStorage.getItem("newBookingCreated") === "true") {
+    localStorage.removeItem("newBookingCreated");
+    const lastBookingId = localStorage.getItem("lastBookingId");
+    if (lastBookingId) {
+      showAlert(`Đặt phòng #${lastBookingId} đã được tạo thành công!`, "success");
+      localStorage.removeItem("lastBookingId");
+    }
+  }
+
   loadMyBookings();
 
   // Event listeners
   document.getElementById("statusFilter").addEventListener("change", filterBookings);
   document.getElementById("dateFilter").addEventListener("change", filterBookings);
+
+  // Auto refresh every 30 seconds to check for updates
+  setInterval(loadMyBookings, 30000);
 });
 
 async function loadMyBookings() {
@@ -22,6 +35,9 @@ async function loadMyBookings() {
     if (response.success) {
       currentBookings = response.data;
       displayBookings(currentBookings);
+
+      // Update page title with booking count
+      document.title = `Đặt phòng của tôi (${currentBookings.length}) - Hotel Booking`;
     } else {
       showAlert(response.message || "Lỗi tải danh sách đặt phòng", "danger");
     }
@@ -63,37 +79,30 @@ function displayBookings(bookings) {
                             <p class="card-text">
                                 <i class="bi bi-geo-alt"></i> ${booking.diaChiKhachSan}<br>
                                 <i class="bi bi-calendar"></i> ${formatDate(booking.ngayNhanPhong)} - ${formatDate(booking.ngayTraPhong)}<br>
-                                <i class="bi bi-moon"></i> ${booking.soDem} đêm<br>
                                 <i class="bi bi-currency-dollar"></i> ${formatCurrency(booking.tongTien)}
                             </p>
-                            <small class="text-muted">
-                                Đặt ngày: ${formatDateTime(booking.ngayDat)}
-                            </small>
                         </div>
                         <div class="col-md-4 text-end">
-                            <div class="mb-2">
-                                <strong>Mã đặt phòng: #${booking.maDatPhong}</strong>
-                            </div>
+                            <p class="text-muted small">
+                                Mã đặt phòng: #${booking.maDatPhong}<br>
+                                Đặt ngày: ${formatDate(booking.ngayDat)}
+                            </p>
                             <div class="btn-group" role="group">
                                 <button class="btn btn-outline-primary btn-sm" onclick="viewBookingDetail(${booking.maDatPhong})">
                                     <i class="bi bi-eye"></i> Chi tiết
                                 </button>
                                 ${
                                   canEdit
-                                    ? `
-                                    <button class="btn btn-outline-warning btn-sm" onclick="editBooking(${booking.maDatPhong})">
+                                    ? `<button class="btn btn-outline-warning btn-sm" onclick="editBooking(${booking.maDatPhong})">
                                         <i class="bi bi-pencil"></i> Sửa
-                                    </button>
-                                `
+                                    </button>`
                                     : ""
                                 }
                                 ${
                                   canCancel
-                                    ? `
-                                    <button class="btn btn-outline-danger btn-sm" onclick="cancelBooking(${booking.maDatPhong})">
+                                    ? `<button class="btn btn-outline-danger btn-sm" onclick="cancelBooking(${booking.maDatPhong})">
                                         <i class="bi bi-x-circle"></i> Hủy
-                                    </button>
-                                `
+                                    </button>`
                                     : ""
                                 }
                             </div>
@@ -140,26 +149,23 @@ async function viewBookingDetail(bookingId) {
                         <p><strong>Tên:</strong> ${booking.tenKhachSan}</p>
                         <p><strong>Địa chỉ:</strong> ${booking.diaChiKhachSan}</p>
                         
-                        <h6 class="mt-4">Thông tin phòng</h6>
+                        <h6 class="mt-3">Thông tin phòng</h6>
                         <p><strong>Loại phòng:</strong> ${booking.tenLoaiPhong}</p>
-                        <p><strong>Số phòng:</strong> ${booking.soPhong}</p>
+                        <p><strong>Số phòng:</strong> ${booking.soPhong || "Chưa xác định"}</p>
                         <p><strong>Sức chứa:</strong> ${booking.sucChua} người</p>
                         <p><strong>Giá/đêm:</strong> ${formatCurrency(booking.giaMotDem)}</p>
                     </div>
                     <div class="col-md-6">
                         <h6>Thông tin đặt phòng</h6>
                         <p><strong>Mã đặt phòng:</strong> #${booking.maDatPhong}</p>
+                        <p><strong>Ngày đặt:</strong> ${formatDateTime(booking.ngayDat)}</p>
                         <p><strong>Ngày nhận phòng:</strong> ${formatDate(booking.ngayNhanPhong)}</p>
                         <p><strong>Ngày trả phòng:</strong> ${formatDate(booking.ngayTraPhong)}</p>
-                        <p><strong>Số đêm:</strong> ${booking.soDem}</p>
+                        <p><strong>Số đêm:</strong> ${booking.soDem || calculateNights(booking.ngayNhanPhong, booking.ngayTraPhong)}</p>
+                        <p><strong>Tổng tiền:</strong> ${formatCurrency(booking.tongTien)}</p>
                         <p><strong>Trạng thái:</strong> <span class="badge ${getStatusClass(booking.trangThai)}">${getStatusText(
         booking.trangThai
       )}</span></p>
-                        
-                        <h6 class="mt-4">Chi tiết thanh toán</h6>
-                        <p><strong>Tổng tiền:</strong> ${formatCurrency(booking.tongTien)}</p>
-                        <p><strong>Đã thanh toán:</strong> ${formatCurrency(booking.totalPaid || 0)}</p>
-                        <p><strong>Còn lại:</strong> ${formatCurrency(booking.remainingAmount || booking.tongTien)}</p>
                     </div>
                 </div>
             `;
@@ -227,7 +233,9 @@ async function saveBookingChanges() {
     if (response.success) {
       showAlert("Cập nhật đặt phòng thành công", "success");
       bootstrap.Modal.getInstance(document.getElementById("editBookingModal")).hide();
-      loadMyBookings();
+
+      // Force reload bookings to get fresh data
+      await loadMyBookings();
     } else {
       showAlert(response.message || "Lỗi cập nhật đặt phòng", "danger");
     }
@@ -254,7 +262,8 @@ async function cancelBooking(bookingId = null) {
       const detailModal = bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal"));
       if (detailModal) detailModal.hide();
 
-      loadMyBookings();
+      // Force reload bookings to get fresh data
+      await loadMyBookings();
     } else {
       showAlert(response.message || "Lỗi hủy đặt phòng", "danger");
     }
@@ -262,6 +271,13 @@ async function cancelBooking(bookingId = null) {
     console.error("Error cancelling booking:", error);
     showAlert("Lỗi hủy đặt phòng", "danger");
   }
+}
+
+function calculateNights(checkIn, checkOut) {
+  const checkInDate = new Date(checkIn);
+  const checkOutDate = new Date(checkOut);
+  const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+  return Math.ceil(timeDiff / (1000 * 3600 * 24));
 }
 
 function getStatusClass(status) {
@@ -306,4 +322,31 @@ function showAlert(message, type = "danger") {
   setTimeout(() => {
     alertDiv.innerHTML = "";
   }, 5000);
+}
+
+// Utility functions
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN");
+}
+
+function formatDateTime(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleString("vi-VN");
+}
+
+function formatCurrency(amount) {
+  if (typeof amount !== "number") {
+    amount = parseFloat(amount) || 0;
+  }
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+}
+
+function isAuthenticated() {
+  return localStorage.getItem("token") !== null;
 }

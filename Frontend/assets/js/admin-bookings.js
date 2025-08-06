@@ -359,3 +359,41 @@ function showAlert(message, type = "danger") {
     alertDiv.innerHTML = "";
   }, 5000);
 }
+async function loadBookings() {
+  try {
+    const response = await apiCall("/api/bookings", "GET");
+
+    if (response.success) {
+      currentBookings = response.data;
+      displayBookings(currentBookings);
+      updatePagination(currentBookings.length);
+
+      // Update page title with booking count
+      document.title = `Quản lý đặt phòng (${currentBookings.length}) - Admin`;
+    } else {
+      showAlert(response.message || "Lỗi tải danh sách đặt phòng", "danger");
+    }
+  } catch (error) {
+    console.error("Error loading bookings:", error);
+    showAlert("Lỗi tải danh sách đặt phòng", "danger");
+  }
+}
+
+// Thêm vào cuối file sau loadBookings function
+document.addEventListener("DOMContentLoaded", function () {
+  // Check admin authentication
+  if (!isAuthenticated() || !isAdmin()) {
+    window.location.href = "../login.html";
+    return;
+  }
+
+  loadBookings();
+
+  // Event listeners
+  document.getElementById("searchInput").addEventListener("input", debounce(filterBookings, 300));
+  document.getElementById("statusFilter").addEventListener("change", filterBookings);
+  document.getElementById("dateFilter").addEventListener("change", filterBookings);
+
+  // Auto refresh every 30 seconds
+  setInterval(loadBookings, 30000);
+});

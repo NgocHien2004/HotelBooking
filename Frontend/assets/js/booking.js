@@ -75,50 +75,45 @@ async function loadBookingData() {
 
     if (roomTypeResponse.success) {
       currentRoomType = roomTypeResponse.data;
-      displayRoomInfo();
+      displayRoomTypeInfo();
+      calculateTotal(); // Calculate initial total
     } else {
       throw new Error("Failed to load room type data");
     }
-
-    // If specific room is selected, get room data
-    if (currentRoomId) {
-      console.log("Loading specific room:", currentRoomId);
-      const roomResponse = await apiCall(`/api/rooms/${currentRoomId}`, "GET");
-      console.log("Room response:", roomResponse);
-    }
-
-    // Calculate initial total
-    calculateTotal();
-
-    console.log("Booking data loaded successfully");
   } catch (error) {
     console.error("Error loading booking data:", error);
-    showAlert("Lỗi tải thông tin đặt phòng: " + error.message, "danger");
+    showAlert("Không thể tải thông tin đặt phòng", "danger");
+    setTimeout(() => (window.location.href = "index.html"), 2000);
   }
 }
 
 function displayHotelInfo() {
-  if (currentHotel) {
-    document.getElementById("hotelName").textContent = currentHotel.tenKhachSan;
-    document.getElementById("hotelAddress").textContent = currentHotel.diaChi;
+  if (!currentHotel) return;
+
+  // Display hotel information
+  document.getElementById("hotelName").textContent = currentHotel.tenKhachSan;
+  document.getElementById("hotelAddress").textContent = currentHotel.diaChi;
+
+  // Display hotel images if available
+  if (currentHotel.hinhAnhs && currentHotel.hinhAnhs.length > 0) {
+    const hotelImage = document.getElementById("hotelImage");
+    if (hotelImage) {
+      hotelImage.src = currentHotel.hinhAnhs[0].duongDanAnh;
+      hotelImage.alt = currentHotel.tenKhachSan;
+    }
   }
 }
 
-function displayRoomInfo() {
-  if (currentRoomType) {
-    document.getElementById("roomTypeName").textContent = currentRoomType.tenLoaiPhong;
-    document.getElementById("roomPrice").textContent = formatCurrency(currentRoomType.giaMotDem);
-    document.getElementById("roomCapacity").textContent = `${currentRoomType.sucChua} người`;
+function displayRoomTypeInfo() {
+  if (!currentRoomType) return;
 
-    // Update the second price display in summary
-    const roomPrice2 = document.getElementById("roomPrice2");
-    if (roomPrice2) {
-      roomPrice2.textContent = formatCurrency(currentRoomType.giaMotDem);
-    }
+  // Display room type information
+  document.getElementById("roomTypeName").textContent = currentRoomType.tenLoaiPhong;
+  document.getElementById("roomPrice").textContent = formatCurrency(currentRoomType.giaMotDem);
+  document.getElementById("roomCapacity").textContent = `${currentRoomType.sucChua} người`;
 
-    if (currentRoomType.moTa) {
-      document.getElementById("roomDescription").textContent = currentRoomType.moTa;
-    }
+  if (currentRoomType.moTa) {
+    document.getElementById("roomDescription").textContent = currentRoomType.moTa;
   }
 }
 
@@ -127,6 +122,8 @@ function calculateTotal() {
   const checkOutDate = document.getElementById("checkOutDate").value;
 
   if (!checkInDate || !checkOutDate || !currentRoomType) {
+    document.getElementById("totalPrice").textContent = "0 VNĐ";
+    document.getElementById("numberOfNights").textContent = "0";
     return;
   }
 
@@ -196,10 +193,20 @@ async function submitBooking(event) {
     console.log("Booking response:", response);
 
     if (response.success) {
-      // Show success modal
+      // Show success modal with booking code
       document.getElementById("bookingCode").textContent = `#${response.data.maDatPhong}`;
+
+      // Set flag to indicate new booking was created
+      localStorage.setItem("newBookingCreated", "true");
+      localStorage.setItem("lastBookingId", response.data.maDatPhong);
+
       const successModal = new bootstrap.Modal(document.getElementById("successModal"));
       successModal.show();
+
+      // Optional: Auto redirect to my-bookings after 3 seconds
+      setTimeout(() => {
+        window.location.href = "my-bookings.html";
+      }, 3000);
     } else {
       showAlert(response.message || "Có lỗi xảy ra khi đặt phòng", "danger");
     }
