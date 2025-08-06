@@ -236,3 +236,185 @@ function createHotelCard(hotel) {
     </div>
   `;
 }
+
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN");
+}
+
+// Format datetime for display
+function formatDateTime(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleString("vi-VN");
+}
+
+// Format currency for display
+function formatCurrency(amount) {
+  if (amount === null || amount === undefined) return "0 VND";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+}
+
+// Check if user is admin
+function isAdmin() {
+  const user = getCurrentUser();
+  return user && user.vaiTro === "Admin";
+}
+
+// Get current user from token
+function getCurrentUser() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return {
+      id: payload.nameid,
+      email: payload.email,
+      hoTen: payload.given_name,
+      vaiTro: payload.role,
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+// Calculate number of nights between two dates
+function calculateNights(checkIn, checkOut) {
+  const startDate = new Date(checkIn);
+  const endDate = new Date(checkOut);
+  const timeDiff = endDate.getTime() - startDate.getTime();
+  return Math.ceil(timeDiff / (1000 * 3600 * 24));
+}
+
+// Validate booking dates
+function validateBookingDates(checkIn, checkOut) {
+  const checkInDate = new Date(checkIn);
+  const checkOutDate = new Date(checkOut);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (checkInDate < today) {
+    return { valid: false, message: "Ngày nhận phòng không thể là quá khứ" };
+  }
+
+  if (checkOutDate <= checkInDate) {
+    return { valid: false, message: "Ngày trả phòng phải sau ngày nhận phòng" };
+  }
+
+  const maxAdvanceDays = 365; // Maximum 1 year in advance
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + maxAdvanceDays);
+
+  if (checkInDate > maxDate) {
+    return { valid: false, message: "Không thể đặt phòng quá 1 năm trước" };
+  }
+
+  return { valid: true };
+}
+
+// Get booking status badge class
+function getBookingStatusBadge(status) {
+  const statusClasses = {
+    Pending: "badge bg-warning text-dark",
+    Confirmed: "badge bg-success",
+    Cancelled: "badge bg-danger",
+    Completed: "badge bg-info",
+  };
+  return statusClasses[status] || "badge bg-secondary";
+}
+
+// Get payment method display text
+function getPaymentMethodDisplay(method) {
+  const methods = {
+    Cash: "Tiền mặt",
+    "Credit Card": "Thẻ tín dụng",
+    "Bank Transfer": "Chuyển khoản ngân hàng",
+    "E-Wallet": "Ví điện tử",
+  };
+  return methods[method] || method;
+}
+
+// Show loading spinner
+function showLoading(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Đang tải...</p>
+            </div>
+        `;
+  }
+}
+
+// Hide loading spinner
+function hideLoading(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.innerHTML = "";
+  }
+}
+
+// Enhanced API call with better error handling
+async function apiCall(endpoint, method = "GET", data = null, customHeaders = {}) {
+  const token = localStorage.getItem("token");
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...customHeaders,
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const config = {
+    method,
+    headers,
+  };
+
+  if (data && method !== "GET") {
+    if (typeof data === "string") {
+      config.body = JSON.stringify(data);
+    } else {
+      config.body = JSON.stringify(data);
+    }
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+      return null;
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || `HTTP error! status: ${response.status}`);
+      }
+
+      return result;
+    } else {
+      // Handle non-JSON responses
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return { success: true };
+    }
+  } catch (error) {
+    console.error("API call error:", error);
+    throw error;
+  }
+}
