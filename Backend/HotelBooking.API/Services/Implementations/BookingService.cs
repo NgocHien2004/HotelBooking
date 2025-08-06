@@ -25,9 +25,8 @@ namespace HotelBooking.API.Services.Implementations
             var bookings = await _context.DatPhongs
                 .Include(b => b.NguoiDung)
                 .Include(b => b.Phong)
-                    .ThenInclude(r => r.LoaiPhong)
-                        .ThenInclude(rt => rt.KhachSan)
-                .OrderByDescending(b => b.NgayDat)
+                    .ThenInclude(p => p.LoaiPhong)
+                        .ThenInclude(lp => lp.KhachSan)
                 .ToListAsync();
 
             return _mapper.Map<IEnumerable<DatPhongDto>>(bookings);
@@ -38,8 +37,8 @@ namespace HotelBooking.API.Services.Implementations
             var booking = await _context.DatPhongs
                 .Include(b => b.NguoiDung)
                 .Include(b => b.Phong)
-                    .ThenInclude(r => r.LoaiPhong)
-                        .ThenInclude(rt => rt.KhachSan)
+                    .ThenInclude(p => p.LoaiPhong)
+                        .ThenInclude(lp => lp.KhachSan)
                 .FirstOrDefaultAsync(b => b.MaDatPhong == id);
 
             return booking == null ? null : _mapper.Map<DatPhongDto>(booking);
@@ -50,8 +49,8 @@ namespace HotelBooking.API.Services.Implementations
             var bookings = await _context.DatPhongs
                 .Include(b => b.NguoiDung)
                 .Include(b => b.Phong)
-                    .ThenInclude(r => r.LoaiPhong)
-                        .ThenInclude(rt => rt.KhachSan)
+                    .ThenInclude(p => p.LoaiPhong)
+                        .ThenInclude(lp => lp.KhachSan)
                 .Where(b => b.MaNguoiDung == userId)
                 .OrderByDescending(b => b.NgayDat)
                 .ToListAsync();
@@ -64,8 +63,8 @@ namespace HotelBooking.API.Services.Implementations
             var bookings = await _context.DatPhongs
                 .Include(b => b.NguoiDung)
                 .Include(b => b.Phong)
-                    .ThenInclude(r => r.LoaiPhong)
-                        .ThenInclude(rt => rt.KhachSan)
+                    .ThenInclude(p => p.LoaiPhong)
+                        .ThenInclude(lp => lp.KhachSan)
                 .Where(b => b.Phong.LoaiPhong.MaKhachSan == hotelId)
                 .OrderByDescending(b => b.NgayDat)
                 .ToListAsync();
@@ -83,35 +82,37 @@ namespace HotelBooking.API.Services.Implementations
 
             if (createBookingDto.NgayNhanPhong < DateTime.Today)
             {
-                throw new ArgumentException("Ngày nhận phòng không thể là ngày trong quá khứ");
+                throw new ArgumentException("Ngày nhận phòng không thể là ngày quá khứ");
             }
 
             // Check room availability
             var isAvailable = await _roomService.IsRoomAvailableAsync(
-                createBookingDto.MaPhong, 
-                createBookingDto.NgayNhanPhong, 
+                createBookingDto.MaPhong,
+                createBookingDto.NgayNhanPhong,
                 createBookingDto.NgayTraPhong);
 
             if (!isAvailable)
             {
-                throw new InvalidOperationException("Phòng không có sẵn trong thời gian đã chọn");
+                throw new InvalidOperationException("Phòng không có sẵn trong thời gian này");
             }
 
-            // Calculate total amount
-            var totalAmount = await CalculateBookingTotalAsync(
-                createBookingDto.MaPhong, 
-                createBookingDto.NgayNhanPhong, 
+            // Calculate total
+            var total = await CalculateBookingTotalAsync(
+                createBookingDto.MaPhong,
+                createBookingDto.NgayNhanPhong,
                 createBookingDto.NgayTraPhong);
 
             var booking = _mapper.Map<DatPhong>(createBookingDto);
             booking.MaNguoiDung = userId;
-            booking.TongTien = totalAmount;
+            booking.TongTien = total;
+            booking.NgayDat = DateTime.Now;
+            booking.TrangThai = "Pending";
 
             _context.DatPhongs.Add(booking);
             await _context.SaveChangesAsync();
 
-            return await GetBookingByIdAsync(booking.MaDatPhong) ?? 
-                   throw new InvalidOperationException("Không thể tạo đặt phòng");
+            var result = await GetBookingByIdAsync(booking.MaDatPhong);
+            return result ?? throw new InvalidOperationException("Không thể tạo đặt phòng");
         }
 
         public async Task<DatPhongDto?> UpdateBookingAsync(int id, UpdateDatPhongDto updateBookingDto)
@@ -122,20 +123,26 @@ namespace HotelBooking.API.Services.Implementations
                 return null;
             }
 
-            // Validate dates
-            if (updateBookingDto.NgayNhanPhong >= updateBookingDto.NgayTraPhong)
+            // Validate dates if they are provided
+            if (updateBookingDto.NgayNhanPhong.HasValue && updateBookingDto.NgayTraPhong.HasValue)
             {
-                throw new ArgumentException("Ngày trả phòng phải sau ngày nhận phòng");
+                if (updateBookingDto.NgayNhanPhong.Value >= updateBookingDto.NgayTraPhong.Value)
+                {
+                    throw new ArgumentException("Ngày trả phòng phải sau ngày nhận phòng");
+                }
             }
 
             // Check if dates are changing and validate availability
-            if (existingBooking.NgayNhanPhong != updateBookingDto.NgayNhanPhong ||
-                existingBooking.NgayTraPhong != updateBookingDto.NgayTraPhong)
+            if ((updateBookingDto.NgayNhanPhong.HasValue && existingBooking.NgayNhanPhong != updateBookingDto.NgayNhanPhong.Value) ||
+                (updateBookingDto.NgayTraPhong.HasValue && existingBooking.NgayTraPhong != updateBookingDto.NgayTraPhong.Value))
             {
+                var checkInDate = updateBookingDto.NgayNhanPhong ?? existingBooking.NgayNhanPhong;
+                var checkOutDate = updateBookingDto.NgayTraPhong ?? existingBooking.NgayTraPhong;
+
                 var isAvailable = await _roomService.IsRoomAvailableAsync(
                     existingBooking.MaPhong,
-                    updateBookingDto.NgayNhanPhong,
-                    updateBookingDto.NgayTraPhong);
+                    checkInDate,
+                    checkOutDate);
 
                 if (!isAvailable)
                 {
@@ -145,12 +152,20 @@ namespace HotelBooking.API.Services.Implementations
                 // Recalculate total
                 existingBooking.TongTien = await CalculateBookingTotalAsync(
                     existingBooking.MaPhong,
-                    updateBookingDto.NgayNhanPhong,
-                    updateBookingDto.NgayTraPhong);
+                    checkInDate,
+                    checkOutDate);
             }
 
-            existingBooking.NgayNhanPhong = updateBookingDto.NgayNhanPhong;
-            existingBooking.NgayTraPhong = updateBookingDto.NgayTraPhong;
+            // Update properties if provided
+            if (updateBookingDto.NgayNhanPhong.HasValue)
+            {
+                existingBooking.NgayNhanPhong = updateBookingDto.NgayNhanPhong.Value;
+            }
+
+            if (updateBookingDto.NgayTraPhong.HasValue)
+            {
+                existingBooking.NgayTraPhong = updateBookingDto.NgayTraPhong.Value;
+            }
             
             if (!string.IsNullOrEmpty(updateBookingDto.TrangThai))
             {

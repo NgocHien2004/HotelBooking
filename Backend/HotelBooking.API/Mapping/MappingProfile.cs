@@ -44,14 +44,19 @@ namespace HotelBooking.API.Mappings
             CreateMap<DatPhong, DatPhongDto>()
                 .ForMember(dest => dest.HoTenKhach, opt => opt.MapFrom(src => src.NguoiDung.HoTen))
                 .ForMember(dest => dest.EmailKhach, opt => opt.MapFrom(src => src.NguoiDung.Email))
+                .ForMember(dest => dest.SoDienThoaiKhach, opt => opt.MapFrom(src => src.NguoiDung.SoDienThoai))
                 .ForMember(dest => dest.SoPhong, opt => opt.MapFrom(src => src.Phong.SoPhong))
                 .ForMember(dest => dest.TenLoaiPhong, opt => opt.MapFrom(src => src.Phong.LoaiPhong.TenLoaiPhong))
                 .ForMember(dest => dest.TenKhachSan, opt => opt.MapFrom(src => src.Phong.LoaiPhong.KhachSan.TenKhachSan))
-                .ForMember(dest => dest.SoNgayO, opt => opt.MapFrom(src => (src.NgayTraPhong - src.NgayNhanPhong).Days));
+                .ForMember(dest => dest.DiaChiKhachSan, opt => opt.MapFrom(src => src.Phong.LoaiPhong.KhachSan.DiaChi))
+                .ForMember(dest => dest.GiaMotDem, opt => opt.MapFrom(src => src.Phong.LoaiPhong.GiaMotDem))
+                .ForMember(dest => dest.SucChua, opt => opt.MapFrom(src => src.Phong.LoaiPhong.SucChua))
+                .ForMember(dest => dest.SoDem, opt => opt.MapFrom(src => (src.NgayTraPhong - src.NgayNhanPhong).Days));
             CreateMap<CreateDatPhongDto, DatPhong>()
                 .ForMember(dest => dest.NgayDat, opt => opt.MapFrom(src => DateTime.Now))
                 .ForMember(dest => dest.TrangThai, opt => opt.MapFrom(src => "Pending"));
-            CreateMap<UpdateDatPhongDto, DatPhong>();
+            CreateMap<UpdateDatPhongDto, DatPhong>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Payment mappings
             CreateMap<ThanhToan, ThanhToanDto>()

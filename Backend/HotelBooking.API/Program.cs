@@ -36,6 +36,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IBookingService, BookingService>(); // Thêm dòng này
 // Add other services here...
 
 // Add Authentication
@@ -129,5 +130,7 @@ app.MapGet("/test-image", () =>
         filesInTemp = files.Select(f => Path.GetFileName(f)).ToArray()
     };
 });
+
 app.UseStaticFiles();
+
 app.Run();

@@ -50,5 +50,6 @@ namespace HotelBooking.API.DTOs
     {
         public DateTime? NgayNhanPhong { get; set; }
         public DateTime? NgayTraPhong { get; set; }
+        public string? TrangThai { get; set; } // Thêm property này
     }
 }
