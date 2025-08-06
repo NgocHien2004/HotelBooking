@@ -10,6 +10,51 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
+// Format date
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN");
+}
+
+// Format datetime for display
+function formatDateTime(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleString("vi-VN");
+}
+
+// Check if user is authenticated
+function isAuthenticated() {
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
+  return token && user;
+}
+
+// Check if user is admin
+function isAdmin() {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  return user && user.vaiTro === "Admin";
+}
+
+// Get current user from token
+function getCurrentUser() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return {
+      id: payload.nameid,
+      email: payload.email,
+      hoTen: payload.given_name,
+      vaiTro: payload.role,
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
 // Get auth headers
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
@@ -179,35 +224,28 @@ function createHotelCard(hotel) {
     ? hotelData.amenities
         .split(",")
         .slice(0, 3)
-        .map((amenity) => `<span class="badge bg-light text-dark me-1">${amenity.trim()}</span>`)
+        .map((a) => `<span class="badge bg-light text-dark me-1">${a.trim()}</span>`)
         .join("")
-    : '<span class="text-muted">Chưa cập nhật</span>';
+    : "";
 
-  // Lấy hình ảnh đầu tiên - QUAN TRỌNG: Xử lý ảnh thật
-  let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
-
+  // Lấy ảnh đầu tiên hoặc placeholder
+  let imageUrl;
   if (hotelData.images && hotelData.images.length > 0) {
     const firstImage = hotelData.images[0];
     imageUrl = getImageUrl(firstImage);
+  } else {
+    imageUrl = getImageUrl(null); // Will return placeholder
   }
 
   return `
-    <div class="col-md-6 col-lg-4 mb-4">
-      <div class="card h-100 shadow-sm hotel-card fade-in">
-        <div class="position-relative">
-          <div class="hotel-image-container">
-            <img src="${imageUrl}" 
-                 class="card-img-top" 
-                 alt="${hotelData.name}" 
-                 onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg';">
-          </div>
-          <div class="position-absolute top-0 end-0 m-2">
-            <span class="badge bg-primary">${hotelData.city}</span>
-          </div>
-        </div>
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm hotel-card">
+        <img src="${imageUrl}" class="card-img-top" alt="${hotelData.name}" style="height: 200px; object-fit: cover;">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${hotelData.name}</h5>
-          <p class="card-text text-muted small">${hotelData.address}</p>
+          <p class="text-muted mb-2">
+            <i class="bi bi-geo-alt"></i> ${hotelData.city}
+          </p>
           ${
             hotelData.description
               ? `<p class="card-text">${hotelData.description.substring(0, 100)}${hotelData.description.length > 100 ? "..." : ""}</p>`
@@ -236,52 +274,6 @@ function createHotelCard(hotel) {
       </div>
     </div>
   `;
-}
-
-function formatDate(dateString) {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("vi-VN");
-}
-
-// Format datetime for display
-function formatDateTime(dateString) {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleString("vi-VN");
-}
-
-// Format currency for display
-function formatCurrency(amount) {
-  if (amount === null || amount === undefined) return "0 VND";
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(amount);
-}
-
-// Check if user is admin
-function isAdmin() {
-  const user = getCurrentUser();
-  return user && user.vaiTro === "Admin";
-}
-
-// Get current user from token
-function getCurrentUser() {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return {
-      id: payload.nameid,
-      email: payload.email,
-      hoTen: payload.given_name,
-      vaiTro: payload.role,
-    };
-  } catch (error) {
-    return null;
-  }
 }
 
 // Calculate number of nights between two dates
@@ -357,6 +349,14 @@ function showLoading(elementId) {
 
 // Hide loading spinner
 function hideLoading(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.innerHTML = "";
+  }
+}
+
+// Clear an element's content
+function clearElement(elementId) {
   const element = document.getElementById(elementId);
   if (element) {
     element.innerHTML = "";
