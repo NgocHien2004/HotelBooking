@@ -18,6 +18,8 @@ document.addEventListener("DOMContentLoaded", function () {
   currentRoomTypeId = urlParams.get("roomType");
   currentRoomId = urlParams.get("room");
 
+  console.log("Booking page parameters:", { currentHotelId, currentRoomTypeId, currentRoomId });
+
   if (!currentHotelId || !currentRoomTypeId) {
     showAlert("Thông tin không hợp lệ", "danger");
     setTimeout(() => (window.location.href = "index.html"), 2000);
@@ -52,53 +54,72 @@ function setMinimumDates() {
 
 async function loadBookingData() {
   try {
+    console.log("Loading booking data...");
+
     // Load hotel data
+    console.log("Loading hotel:", currentHotelId);
     const hotelResponse = await apiCall(`/api/hotels/${currentHotelId}`, "GET");
+    console.log("Hotel response:", hotelResponse);
+
     if (hotelResponse.success) {
       currentHotel = hotelResponse.data;
+      displayHotelInfo();
+    } else {
+      throw new Error("Failed to load hotel data");
     }
 
     // Load room type data
+    console.log("Loading room type:", currentRoomTypeId);
     const roomTypeResponse = await apiCall(`/api/roomtypes/${currentRoomTypeId}`, "GET");
+    console.log("Room type response:", roomTypeResponse);
+
     if (roomTypeResponse.success) {
       currentRoomType = roomTypeResponse.data;
+      displayRoomInfo();
+    } else {
+      throw new Error("Failed to load room type data");
     }
 
     // If specific room is selected, get room data
     if (currentRoomId) {
+      console.log("Loading specific room:", currentRoomId);
       const roomResponse = await apiCall(`/api/rooms/${currentRoomId}`, "GET");
-      if (roomResponse.success) {
-        currentRoom = roomResponse.data;
-      }
+      console.log("Room response:", roomResponse);
     }
 
-    updateBookingSummary();
+    // Calculate initial total
     calculateTotal();
+
+    console.log("Booking data loaded successfully");
   } catch (error) {
     console.error("Error loading booking data:", error);
-    showAlert("Lỗi tải thông tin đặt phòng", "danger");
+    showAlert("Lỗi tải thông tin đặt phòng: " + error.message, "danger");
   }
 }
 
-function updateBookingSummary() {
-  if (!currentHotel || !currentRoomType) return;
+function displayHotelInfo() {
+  if (currentHotel) {
+    document.getElementById("hotelName").textContent = currentHotel.tenKhachSan;
+    document.getElementById("hotelAddress").textContent = currentHotel.diaChi;
+  }
+}
 
-  const summaryHtml = `
-        <div class="mb-3">
-            <h6><i class="bi bi-building"></i> ${currentHotel.tenKhachSan}</h6>
-            <p class="text-muted mb-1">${currentHotel.diaChi}</p>
-            <small class="text-muted">${currentHotel.thanhPho}</small>
-        </div>
-        
-        <div class="mb-3">
-            <h6><i class="bi bi-door-open"></i> ${currentRoomType.tenLoaiPhong}</h6>
-            <p class="mb-1">Sức chứa: ${currentRoomType.sucChua} người</p>
-            <p class="mb-1">Giá: ${formatCurrency(currentRoomType.giaMotDem)}/đêm</p>
-            ${currentRoomType.moTa ? `<small class="text-muted">${currentRoomType.moTa}</small>` : ""}
-        </div>
-    `;
+function displayRoomInfo() {
+  if (currentRoomType) {
+    document.getElementById("roomTypeName").textContent = currentRoomType.tenLoaiPhong;
+    document.getElementById("roomPrice").textContent = formatCurrency(currentRoomType.giaMotDem);
+    document.getElementById("roomCapacity").textContent = `${currentRoomType.sucChua} người`;
 
-  document.getElementById("bookingSummary").innerHTML = summaryHtml;
+    // Update the second price display in summary
+    const roomPrice2 = document.getElementById("roomPrice2");
+    if (roomPrice2) {
+      roomPrice2.textContent = formatCurrency(currentRoomType.giaMotDem);
+    }
+
+    if (currentRoomType.moTa) {
+      document.getElementById("roomDescription").textContent = currentRoomType.moTa;
+    }
+  }
 }
 
 function calculateTotal() {
@@ -113,45 +134,16 @@ function calculateTotal() {
   const checkOut = new Date(checkOutDate);
 
   if (checkOut <= checkIn) {
-    document.getElementById("priceBreakdown").innerHTML = `
-            <div class="alert alert-warning">
-                <i class="bi bi-exclamation-triangle"></i> 
-                Ngày trả phòng phải sau ngày nhận phòng
-            </div>
-        `;
+    document.getElementById("totalPrice").textContent = "0 VNĐ";
+    document.getElementById("numberOfNights").textContent = "0";
     return;
   }
 
   const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-  const roomPrice = currentRoomType.giaMotDem;
-  const subtotal = nights * roomPrice;
-  const tax = subtotal * 0.1; // 10% tax
-  const total = subtotal + tax;
+  const total = nights * currentRoomType.giaMotDem;
 
-  const breakdownHtml = `
-        <div class="d-flex justify-content-between mb-2">
-            <span>${formatCurrency(roomPrice)} × ${nights} đêm</span>
-            <span>${formatCurrency(subtotal)}</span>
-        </div>
-        <div class="d-flex justify-content-between mb-2">
-            <span>Thuế và phí (10%)</span>
-            <span>${formatCurrency(tax)}</span>
-        </div>
-        <hr>
-        <div class="d-flex justify-content-between">
-            <strong>Tổng cộng</strong>
-            <strong class="text-primary">${formatCurrency(total)}</strong>
-        </div>
-        
-        <div class="mt-3">
-            <small class="text-muted">
-                <i class="bi bi-info-circle"></i> 
-                Thanh toán tại khách sạn khi nhận phòng
-            </small>
-        </div>
-    `;
-
-  document.getElementById("priceBreakdown").innerHTML = breakdownHtml;
+  document.getElementById("numberOfNights").textContent = nights;
+  document.getElementById("totalPrice").textContent = formatCurrency(total);
 }
 
 async function submitBooking(event) {
@@ -159,78 +151,130 @@ async function submitBooking(event) {
 
   const checkInDate = document.getElementById("checkInDate").value;
   const checkOutDate = document.getElementById("checkOutDate").value;
-  const agreeTerms = document.getElementById("agreeTerms").checked;
 
-  if (!agreeTerms) {
-    showAlert("Vui lòng đồng ý với điều khoản và điều kiện", "warning");
+  console.log("Submitting booking with dates:", { checkInDate, checkOutDate });
+
+  if (!checkInDate || !checkOutDate) {
+    showAlert("Vui lòng chọn ngày nhận phòng và trả phòng", "warning");
     return;
   }
 
-  // Validate dates
-  const checkIn = new Date(checkInDate);
-  const checkOut = new Date(checkOutDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  if (checkIn < today) {
-    showAlert("Ngày nhận phòng không thể là quá khứ", "warning");
-    return;
-  }
-
-  if (checkOut <= checkIn) {
+  if (new Date(checkOutDate) <= new Date(checkInDate)) {
     showAlert("Ngày trả phòng phải sau ngày nhận phòng", "warning");
     return;
   }
 
+  // Disable submit button to prevent double submission
+  const submitBtn = document.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Đang xử lý...";
+
   try {
-    // Find available room if not specified
+    // If no specific room selected, find available room
     let roomId = currentRoomId;
     if (!roomId) {
-      const availableRooms = await apiCall(
-        `/api/rooms/available?roomTypeId=${currentRoomTypeId}&checkIn=${checkInDate}&checkOut=${checkOutDate}`,
-        "GET"
-      );
-
-      if (!availableRooms.success || availableRooms.data.length === 0) {
+      console.log("Finding available room...");
+      roomId = await findAvailableRoom();
+      if (!roomId) {
         showAlert("Không có phòng trống trong thời gian này", "warning");
         return;
       }
-
-      roomId = availableRooms.data[0].maPhong;
     }
 
+    // Create booking data
     const bookingData = {
-      maPhong: roomId,
+      maPhong: parseInt(roomId),
       ngayNhanPhong: checkInDate,
       ngayTraPhong: checkOutDate,
     };
 
+    console.log("Sending booking data:", bookingData);
+
+    // Call API to create booking
     const response = await apiCall("/api/bookings", "POST", bookingData);
+    console.log("Booking response:", response);
 
     if (response.success) {
+      // Show success modal
       document.getElementById("bookingCode").textContent = `#${response.data.maDatPhong}`;
-
       const successModal = new bootstrap.Modal(document.getElementById("successModal"));
       successModal.show();
     } else {
-      showAlert(response.message || "Lỗi tạo đặt phòng", "danger");
+      showAlert(response.message || "Có lỗi xảy ra khi đặt phòng", "danger");
     }
   } catch (error) {
     console.error("Error creating booking:", error);
-    showAlert("Lỗi tạo đặt phòng. Vui lòng thử lại.", "danger");
+    showAlert("Có lỗi xảy ra khi đặt phòng: " + error.message, "danger");
+  } finally {
+    // Re-enable submit button
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
   }
 }
 
-function showAlert(message, type = "danger") {
-  const alertDiv = document.getElementById("alertMessage");
-  alertDiv.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
+async function findAvailableRoom() {
+  try {
+    const checkInDate = document.getElementById("checkInDate").value;
+    const checkOutDate = document.getElementById("checkOutDate").value;
 
+    console.log("Searching for available rooms with params:", {
+      maLoaiPhong: currentRoomTypeId,
+      ngayNhanPhong: checkInDate,
+      ngayTraPhong: checkOutDate,
+    });
+
+    // Get available rooms for this room type
+    const response = await apiCall(
+      `/api/rooms/available?maLoaiPhong=${currentRoomTypeId}&ngayNhanPhong=${checkInDate}&ngayTraPhong=${checkOutDate}`,
+      "GET"
+    );
+
+    console.log("Available rooms response:", response);
+
+    if (response.success && response.data.length > 0) {
+      return response.data[0].maPhong;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error finding available room:", error);
+    return null;
+  }
+}
+
+// Utility function to format currency
+function formatCurrency(amount) {
+  if (typeof amount !== "number") {
+    amount = parseFloat(amount) || 0;
+  }
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+}
+
+// Check if user is authenticated
+function isAuthenticated() {
+  return localStorage.getItem("token") !== null;
+}
+
+// Show alert message
+function showAlert(message, type = "info") {
+  const alertContainer = document.getElementById("alertContainer") || document.body;
+  const alertElement = document.createElement("div");
+  alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+  alertElement.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+
+  alertContainer.insertBefore(alertElement, alertContainer.firstChild);
+
+  // Auto-hide after 5 seconds
   setTimeout(() => {
-    alertDiv.innerHTML = "";
+    if (alertElement.parentNode) {
+      alertElement.remove();
+    }
   }, 5000);
 }

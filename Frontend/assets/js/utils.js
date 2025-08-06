@@ -1,5 +1,6 @@
 // API Base URL - Sử dụng port 5233 theo backend của bạn
 const API_URL = "http://localhost:5233/api";
+const API_BASE_URL = "http://localhost:5233";
 
 // Format currency
 function formatCurrency(amount) {
