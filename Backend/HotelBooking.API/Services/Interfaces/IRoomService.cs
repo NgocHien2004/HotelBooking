@@ -24,5 +24,6 @@ namespace HotelBooking.API.Services.Interfaces
         // Availability methods
         Task<IEnumerable<PhongDto>> GetAvailableRoomsAsync(RoomAvailabilityDto availabilityDto);
         Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut);
+        Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut, int? excludeBookingId);
     }
 }

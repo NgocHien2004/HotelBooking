@@ -139,10 +139,12 @@ namespace HotelBooking.API.Services.Implementations
                 var checkInDate = updateBookingDto.NgayNhanPhong ?? existingBooking.NgayNhanPhong;
                 var checkOutDate = updateBookingDto.NgayTraPhong ?? existingBooking.NgayTraPhong;
 
+                // Sử dụng overload mới với excludeBookingId
                 var isAvailable = await _roomService.IsRoomAvailableAsync(
                     existingBooking.MaPhong,
                     checkInDate,
-                    checkOutDate);
+                    checkOutDate,
+                    id); // Loại trừ booking hiện tại khi kiểm tra
 
                 if (!isAvailable)
                 {
