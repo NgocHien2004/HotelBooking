@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   setMinimumDates();
+
   loadBookingData();
 
   document.getElementById("checkInDate").addEventListener("change", calculateTotal);
@@ -102,12 +103,6 @@ function displayRoomTypeInfo() {
   if (currentRoomType.moTa) {
     document.getElementById("roomDescription").textContent = currentRoomType.moTa;
   }
-
-  // Update second price display
-  const roomPrice2Element = document.getElementById("roomPrice2");
-  if (roomPrice2Element) {
-    roomPrice2Element.textContent = formatCurrency(currentRoomType.giaMotDem);
-  }
 }
 
 function calculateTotal() {
@@ -126,15 +121,14 @@ function calculateTotal() {
   if (checkOut <= checkIn) {
     document.getElementById("totalPrice").textContent = "0 VNĐ";
     document.getElementById("numberOfNights").textContent = "0";
-    showAlert("Ngày trả phòng phải sau ngày nhận phòng", "warning");
     return;
   }
 
-  const numberOfNights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-  const totalPrice = numberOfNights * currentRoomType.giaMotDem;
+  const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+  const total = nights * currentRoomType.giaMotDem;
 
-  document.getElementById("numberOfNights").textContent = numberOfNights;
-  document.getElementById("totalPrice").textContent = formatCurrency(totalPrice);
+  document.getElementById("numberOfNights").textContent = nights;
+  document.getElementById("totalPrice").textContent = formatCurrency(total);
 }
 
 async function submitBooking(event) {
@@ -143,166 +137,126 @@ async function submitBooking(event) {
   const checkInDate = document.getElementById("checkInDate").value;
   const checkOutDate = document.getElementById("checkOutDate").value;
 
+  console.log("Submitting booking with dates:", { checkInDate, checkOutDate });
+
   if (!checkInDate || !checkOutDate) {
     showAlert("Vui lòng chọn ngày nhận phòng và trả phòng", "warning");
     return;
   }
 
-  const checkIn = new Date(checkInDate);
-  const checkOut = new Date(checkOutDate);
-
-  if (checkOut <= checkIn) {
+  if (new Date(checkOutDate) <= new Date(checkInDate)) {
     showAlert("Ngày trả phòng phải sau ngày nhận phòng", "warning");
     return;
   }
 
+  const submitBtn = document.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Đang xử lý...";
+
   try {
+    let roomId = currentRoomId;
+    if (!roomId) {
+      console.log("Finding available room...");
+      roomId = await findAvailableRoom();
+      if (!roomId) {
+        showAlert("Không có phòng trống trong thời gian này", "warning");
+        return;
+      }
+    }
+
     const bookingData = {
-      maPhong: currentRoomId || 1, // Sử dụng room ID từ URL hoặc mặc định
+      maPhong: parseInt(roomId),
       ngayNhanPhong: checkInDate,
       ngayTraPhong: checkOutDate,
     };
 
-    console.log("Submitting booking:", bookingData);
+    console.log("Sending booking data:", bookingData);
 
     const response = await apiCall("/api/bookings", "POST", bookingData);
+    console.log("Booking response:", response);
 
     if (response.success) {
-      const booking = response.data;
+      document.getElementById("bookingCode").textContent = `#${response.data.maDatPhong}`;
 
-      // Hiển thị thông báo thành công và modal thanh toán
-      showBookingSuccessModal(booking);
-    } else {
-      showAlert(response.message || "Không thể đặt phòng", "danger");
-    }
-  } catch (error) {
-    console.error("Error submitting booking:", error);
-    showAlert("Có lỗi xảy ra khi đặt phòng. Vui lòng thử lại!", "danger");
-  }
-}
+      localStorage.setItem("newBookingCreated", "true");
+      localStorage.setItem("lastBookingId", response.data.maDatPhong);
 
-function showBookingSuccessModal(booking) {
-  const modalHtml = `
-    <div class="modal fade" id="bookingSuccessModal" tabindex="-1">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header bg-success text-white">
-            <h5 class="modal-title">
-              <i class="bi bi-check-circle"></i> Đặt phòng thành công
-            </h5>
-          </div>
-          <div class="modal-body">
-            <div class="alert alert-success">
-              <strong>Mã đặt phòng:</strong> #${booking.maDatPhong}<br>
-              <strong>Tổng tiền:</strong> ${formatCurrency(booking.tongTien)}<br>
-              <strong>Trạng thái:</strong> Chờ xác nhận
-            </div>
-            
-            <div class="mb-3">
-              <h6>Bạn có muốn thanh toán ngay không?</h6>
-              <p class="text-muted small">
-                Bạn có thể thanh toán một phần hoặc toàn bộ số tiền. 
-                Admin sẽ xác nhận đặt phòng sau khi nhận được thanh toán.
-              </p>
-            </div>
-            
-            <div class="row">
-              <div class="col-md-6">
-                <label for="paymentAmount" class="form-label">Số tiền thanh toán (VNĐ)</label>
-                <input type="number" class="form-control" id="paymentAmount" 
-                       max="${booking.tongTien}" min="0" 
-                       placeholder="Nhập số tiền">
-                <div class="form-text">Tối đa: ${formatCurrency(booking.tongTien)}</div>
-              </div>
-              <div class="col-md-6">
-                <label for="paymentMethod" class="form-label">Phương thức thanh toán</label>
-                <select class="form-select" id="paymentMethod">
-                  <option value="Cash">Tiền mặt</option>
-                  <option value="Credit Card">Thẻ tín dụng</option>
-                  <option value="Bank Transfer">Chuyển khoản ngân hàng</option>
-                  <option value="E-Wallet">Ví điện tử</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" onclick="skipPayment()">
-              Thanh toán sau
-            </button>
-            <button type="button" class="btn btn-success" onclick="processPayment(${booking.maDatPhong}, ${booking.tongTien})">
-              <i class="bi bi-credit-card"></i> Thanh toán ngay
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.insertAdjacentHTML("beforeend", modalHtml);
-  const modal = new bootstrap.Modal(document.getElementById("bookingSuccessModal"));
-  modal.show();
-
-  // Set default payment amount to full amount
-  document.getElementById("paymentAmount").value = booking.tongTien;
-}
-
-async function processPayment(bookingId, totalAmount) {
-  const paymentAmount = parseFloat(document.getElementById("paymentAmount").value);
-  const paymentMethod = document.getElementById("paymentMethod").value;
-
-  if (!paymentAmount || paymentAmount <= 0) {
-    showAlert("Vui lòng nhập số tiền thanh toán hợp lệ", "warning");
-    return;
-  }
-
-  if (paymentAmount > totalAmount) {
-    showAlert("Số tiền thanh toán không được vượt quá tổng tiền đặt phòng", "warning");
-    return;
-  }
-
-  try {
-    const paymentData = {
-      maDatPhong: bookingId,
-      soTien: paymentAmount,
-      phuongThuc: paymentMethod,
-    };
-
-    const response = await apiCall("/api/payments/user-payment", "POST", paymentData);
-
-    if (response.success) {
-      showAlert("Thanh toán thành công! Vui lòng chờ admin xác nhận đặt phòng.", "success");
-
-      // Đóng modal và chuyển đến trang đặt phòng của tôi
-      const modal = bootstrap.Modal.getInstance(document.getElementById("bookingSuccessModal"));
-      modal.hide();
+      const successModal = new bootstrap.Modal(document.getElementById("successModal"));
+      successModal.show();
 
       setTimeout(() => {
         window.location.href = "my-bookings.html";
-      }, 2000);
+      }, 3000);
     } else {
-      showAlert(response.message || "Không thể xử lý thanh toán", "danger");
+      showAlert(response.message || "Có lỗi xảy ra khi đặt phòng", "danger");
     }
   } catch (error) {
-    console.error("Error processing payment:", error);
-    showAlert("Có lỗi xảy ra khi xử lý thanh toán", "danger");
+    console.error("Error creating booking:", error);
+    showAlert("Có lỗi xảy ra khi đặt phòng: " + error.message, "danger");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
   }
 }
 
-function skipPayment() {
-  showAlert("Đặt phòng thành công! Bạn có thể thanh toán sau trong mục 'Đặt phòng của tôi'.", "info");
+async function findAvailableRoom() {
+  try {
+    const checkInDate = document.getElementById("checkInDate").value;
+    const checkOutDate = document.getElementById("checkOutDate").value;
 
-  const modal = bootstrap.Modal.getInstance(document.getElementById("bookingSuccessModal"));
-  modal.hide();
+    console.log("Searching for available rooms with params:", {
+      maLoaiPhong: currentRoomTypeId,
+      ngayNhanPhong: checkInDate,
+      ngayTraPhong: checkOutDate,
+    });
+
+    const response = await apiCall(
+      `/api/rooms/available?maLoaiPhong=${currentRoomTypeId}&ngayNhanPhong=${checkInDate}&ngayTraPhong=${checkOutDate}`,
+      "GET"
+    );
+
+    console.log("Available rooms response:", response);
+
+    if (response.success && response.data.length > 0) {
+      return response.data[0].maPhong;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error finding available room:", error);
+    return null;
+  }
+}
+
+function formatCurrency(amount) {
+  if (typeof amount !== "number") {
+    amount = parseFloat(amount) || 0;
+  }
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+}
+
+function isAuthenticated() {
+  return localStorage.getItem("token") !== null;
+}
+
+function showAlert(message, type = "info") {
+  const alertContainer = document.getElementById("alertContainer") || document.body;
+  const alertElement = document.createElement("div");
+  alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+  alertElement.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+
+  alertContainer.insertBefore(alertElement, alertContainer.firstChild);
 
   setTimeout(() => {
-    window.location.href = "my-bookings.html";
-  }, 2000);
+    if (alertElement.parentNode) {
+      alertElement.remove();
+    }
+  }, 5000);
 }
-
-// Cleanup modal when page unloads
-window.addEventListener("beforeunload", function () {
-  const modal = document.getElementById("bookingSuccessModal");
-  if (modal) {
-    modal.remove();
-  }
-});

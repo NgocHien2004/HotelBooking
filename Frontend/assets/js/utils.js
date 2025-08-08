@@ -1,18 +1,8 @@
-// Enhanced API configuration
-const API_BASE_URL = "http://localhost:5233";
+// API Base URL - Sử dụng port 5233 theo backend của bạn
 const API_URL = "http://localhost:5233/api";
+const API_BASE_URL = "http://localhost:5233";
 
-// Authentication helpers
-function isAuthenticated() {
-  return localStorage.getItem("token") !== null;
-}
-
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-// Utility functions
+// Format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -20,15 +10,62 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
+// Format date
 function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString("vi-VN");
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN");
 }
 
+// Format datetime for display
 function formatDateTime(dateString) {
-  return new Date(dateString).toLocaleString("vi-VN");
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleString("vi-VN");
 }
 
-function showAlert(message, type = "info") {
+// Check if user is authenticated
+function isAuthenticated() {
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
+  return token && user;
+}
+
+// Check if user is admin
+function isAdmin() {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  return user && user.vaiTro === "Admin";
+}
+
+// Get current user from token
+function getCurrentUser() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return {
+      id: payload.nameid,
+      email: payload.email,
+      hoTen: payload.given_name,
+      vaiTro: payload.role,
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+// Get auth headers
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    Authorization: token ? `Bearer ${token}` : "",
+  };
+}
+
+// Show alert message
+function showAlert(message, type = "danger") {
   const alertDiv = document.getElementById("alertMessage");
   if (alertDiv) {
     alertDiv.innerHTML = `
@@ -37,28 +74,232 @@ function showAlert(message, type = "info") {
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
+
+    // Auto dismiss after 5 seconds
     setTimeout(() => {
-      alertDiv.innerHTML = "";
+      const alert = alertDiv.querySelector(".alert");
+      if (alert) {
+        alert.classList.remove("show");
+        setTimeout(() => {
+          alertDiv.innerHTML = "";
+        }, 150);
+      }
     }, 5000);
   }
 }
 
-// Date validation helpers
-function validateDateRange(checkInDate, checkOutDate) {
-  const checkIn = new Date(checkInDate);
-  const checkOut = new Date(checkOutDate);
+// Get image URL helper function - SỬAẠ ĐỔI: Cải thiện logic xử lý đường dẫn
+function getImageUrl(image) {
+  const baseUrl = "http://localhost:5233";
+  const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
+
+  // Nếu không có ảnh, trả về placeholder
+  if (!image) {
+    return placeholderUrl;
+  }
+
+  if (typeof image === "string") {
+    // Nếu là chuỗi rỗng, trả về placeholder
+    if (!image.trim()) {
+      return placeholderUrl;
+    }
+
+    // Nếu đã là URL đầy đủ thì dùng trực tiếp
+    if (image.startsWith("http")) {
+      return image;
+    }
+
+    // Nếu bắt đầu bằng /uploads thì thêm base URL
+    if (image.startsWith("/uploads")) {
+      return `${baseUrl}${image}`;
+    }
+
+    // Nếu là đường dẫn tương đối, thêm /uploads/hotels/
+    if (!image.startsWith("/")) {
+      return `${baseUrl}/uploads/hotels/${image}`;
+    }
+
+    return `${baseUrl}${image}`;
+  }
+
+  // Nếu là object với thuộc tính duongDanAnh
+  if (image && image.duongDanAnh) {
+    let imagePath = image.duongDanAnh;
+
+    if (!imagePath || !imagePath.trim()) {
+      return placeholderUrl;
+    }
+
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+
+    if (imagePath.startsWith("/uploads")) {
+      return `${baseUrl}${imagePath}`;
+    }
+
+    // Nếu chỉ có tên file, thêm đường dẫn đầy đủ
+    if (!imagePath.startsWith("/")) {
+      return `${baseUrl}/uploads/hotels/${imagePath}`;
+    }
+
+    return `${baseUrl}${imagePath}`;
+  }
+
+  // Fallback to placeholder
+  return placeholderUrl;
+}
+
+// Get room image URL - THÊM MỚI: Hàm riêng cho ảnh phòng
+function getRoomImageUrl(image) {
+  const baseUrl = "http://localhost:5233";
+  const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
+
+  if (!image) {
+    return placeholderUrl;
+  }
+
+  if (typeof image === "string") {
+    if (!image.trim()) {
+      return placeholderUrl;
+    }
+
+    if (image.startsWith("http")) {
+      return image;
+    }
+
+    if (image.startsWith("/uploads")) {
+      return `${baseUrl}${image}`;
+    }
+
+    if (!image.startsWith("/")) {
+      return `${baseUrl}/uploads/rooms/${image}`;
+    }
+
+    return `${baseUrl}${image}`;
+  }
+
+  if (image && image.duongDanAnh) {
+    let imagePath = image.duongDanAnh;
+
+    if (!imagePath || !imagePath.trim()) {
+      return placeholderUrl;
+    }
+
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+
+    if (imagePath.startsWith("/uploads")) {
+      return `${baseUrl}${imagePath}`;
+    }
+
+    if (!imagePath.startsWith("/")) {
+      return `${baseUrl}/uploads/rooms/${imagePath}`;
+    }
+
+    return `${baseUrl}${imagePath}`;
+  }
+
+  // Fallback to placeholder
+  return placeholderUrl;
+}
+
+// Create hotel card HTML - GIỮ LAYOUT GIỐNG TRANG INDEX
+function createHotelCard(hotel) {
+  // Map properties từ backend (tiếng Việt) sang frontend (tiếng Anh)
+  const hotelData = {
+    id: hotel.maKhachSan || hotel.id,
+    name: hotel.tenKhachSan || hotel.name,
+    city: hotel.thanhPho || hotel.city,
+    address: hotel.diaChi || hotel.address,
+    price: hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0,
+    rating: hotel.danhGiaTrungBinh || hotel.rating || 4.0,
+    description: hotel.moTa || hotel.description,
+    images: hotel.hinhAnhs || hotel.hinhAnhKhachSans || hotel.images || [],
+    amenities: hotel.tienNghi || hotel.amenities || "",
+  };
+
+  const amenities = hotelData.amenities
+    ? hotelData.amenities
+        .split(",")
+        .slice(0, 3)
+        .map((a) => `<span class="badge bg-light text-dark me-1">${a.trim()}</span>`)
+        .join("")
+    : "";
+
+  // Lấy ảnh đầu tiên hoặc placeholder
+  let imageUrl;
+  if (hotelData.images && hotelData.images.length > 0) {
+    const firstImage = hotelData.images[0];
+    imageUrl = getImageUrl(firstImage);
+  } else {
+    imageUrl = getImageUrl(null); // Will return placeholder
+  }
+
+  return `
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm hotel-card">
+        <img src="${imageUrl}" class="card-img-top" alt="${hotelData.name}" style="height: 200px; object-fit: cover;">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${hotelData.name}</h5>
+          <p class="text-muted mb-2">
+            <i class="bi bi-geo-alt"></i> ${hotelData.city}
+          </p>
+          ${
+            hotelData.description
+              ? `<p class="card-text">${hotelData.description.substring(0, 100)}${hotelData.description.length > 100 ? "..." : ""}</p>`
+              : ""
+          }
+          <div class="mb-2">
+            <small class="text-muted">Tiện ích:</small><br>
+            ${amenities}
+          </div>
+          <div class="mt-auto">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="h6 mb-0 text-success">
+                ${hotelData.price > 0 ? `Từ ${formatCurrency(hotelData.price)}` : "Chưa có giá"}
+              </span>
+              <span class="text-warning">
+                <i class="bi bi-star-fill"></i> ${hotelData.rating.toFixed(1)}
+              </span>
+            </div>
+            <div class="d-grid gap-2">
+              <a href="hotel-detail.html?id=${hotelData.id}" class="btn btn-primary btn-sm">
+                <i class="bi bi-eye"></i> Xem Chi Tiết
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Calculate number of nights between two dates
+function calculateNights(checkIn, checkOut) {
+  const startDate = new Date(checkIn);
+  const endDate = new Date(checkOut);
+  const timeDiff = endDate.getTime() - startDate.getTime();
+  return Math.ceil(timeDiff / (1000 * 3600 * 24));
+}
+
+// Validate booking dates
+function validateBookingDates(checkIn, checkOut) {
+  const checkInDate = new Date(checkIn);
+  const checkOutDate = new Date(checkOut);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  if (checkIn < today) {
-    return { valid: false, message: "Ngày nhận phòng không thể là ngày trong quá khứ" };
+  if (checkInDate < today) {
+    return { valid: false, message: "Ngày nhận phòng không thể là quá khứ" };
   }
 
-  if (checkOut <= checkIn) {
+  if (checkOutDate <= checkInDate) {
     return { valid: false, message: "Ngày trả phòng phải sau ngày nhận phòng" };
   }
 
-  const maxAdvanceDays = 365;
+  const maxAdvanceDays = 365; // Maximum 1 year in advance
   const maxDate = new Date();
   maxDate.setDate(maxDate.getDate() + maxAdvanceDays);
 
@@ -69,40 +310,15 @@ function validateDateRange(checkInDate, checkOutDate) {
   return { valid: true };
 }
 
-// Get booking status badge class với trạng thái thanh toán mới
+// Get booking status badge class
 function getBookingStatusBadge(status) {
   const statusClasses = {
     Pending: "badge bg-warning text-dark",
     Confirmed: "badge bg-success",
     Cancelled: "badge bg-danger",
     Completed: "badge bg-info",
-    "Awaiting Payment": "badge bg-secondary", // Chờ thanh toán
   };
   return statusClasses[status] || "badge bg-secondary";
-}
-
-// Get status text in Vietnamese
-function getStatusText(status) {
-  const statusTexts = {
-    Pending: "Chờ xác nhận",
-    Confirmed: "Đã xác nhận",
-    Cancelled: "Đã hủy",
-    Completed: "Hoàn thành",
-    "Awaiting Payment": "Chờ thanh toán",
-  };
-  return statusTexts[status] || status;
-}
-
-// Get status class for styling
-function getStatusClass(status) {
-  const statusClasses = {
-    Pending: "bg-warning text-dark",
-    Confirmed: "bg-success",
-    Cancelled: "bg-danger",
-    Completed: "bg-info",
-    "Awaiting Payment": "bg-secondary",
-  };
-  return statusClasses[status] || "bg-secondary";
 }
 
 // Get payment method display text
@@ -114,14 +330,6 @@ function getPaymentMethodDisplay(method) {
     "E-Wallet": "Ví điện tử",
   };
   return methods[method] || method;
-}
-
-// Calculate nights between dates
-function calculateNights(checkIn, checkOut) {
-  const checkInDate = new Date(checkIn);
-  const checkOutDate = new Date(checkOut);
-  const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
-  return Math.ceil(timeDiff / (1000 * 3600 * 24));
 }
 
 // Show loading spinner
@@ -209,16 +417,5 @@ async function apiCall(endpoint, method = "GET", data = null, customHeaders = {}
   } catch (error) {
     console.error("API call error:", error);
     throw error;
-  }
-}
-
-// Format payment status for display
-function getPaymentStatus(totalPaid, totalAmount) {
-  if (totalPaid === 0) {
-    return { text: "Chưa thanh toán", class: "text-danger" };
-  } else if (totalPaid < totalAmount) {
-    return { text: "Thanh toán một phần", class: "text-warning" };
-  } else {
-    return { text: "Đã thanh toán đủ", class: "text-success" };
   }
 }

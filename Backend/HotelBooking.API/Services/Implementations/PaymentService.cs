@@ -58,51 +58,50 @@ namespace HotelBooking.API.Services.Implementations
             _context.ThanhToans.Add(payment);
             await _context.SaveChangesAsync();
 
-            // Tự động cập nhật trạng thái booking nếu cần
-            await UpdateBookingStatusAfterPayment(payment.MaDatPhong);
-
-            return await GetPaymentByIdAsync(payment.MaThanhToan) ??
-                   throw new InvalidOperationException("Không thể tạo thanh toán");
-        }
-
-        public async Task<bool> DeletePaymentAsync(int id)
-        {
-            var payment = await _context.ThanhToans.FindAsync(id);
-            if (payment == null)
+            var booking = await _context.DatPhongs.FindAsync(payment.MaDatPhong);
+            if (booking != null)
             {
-                return false;
+                var totalPaid = await _context.ThanhToans
+                    .Where(p => p.MaDatPhong == booking.MaDatPhong)
+                    .SumAsync(p => p.SoTien);
+
+                if (totalPaid >= booking.TongTien)
+                {
+                    booking.TrangThai = "Confirmed";
+                    await _context.SaveChangesAsync();
+                }
             }
 
-            var bookingId = payment.MaDatPhong;
-            _context.ThanhToans.Remove(payment);
-            await _context.SaveChangesAsync();
+            return await GetPaymentByIdAsync(payment.MaThanhToan) ?? 
+                throw new InvalidOperationException("Không thể tạo thanh toán");
+        }
 
-            // Cập nhật lại trạng thái booking sau khi xóa thanh toán
-            await UpdateBookingStatusAfterPayment(bookingId);
+        public async Task<bool> ProcessPaymentAsync(int paymentId)
+        {
+            var payment = await _context.ThanhToans.FindAsync(paymentId);
+            if (payment == null) return false;
+
+
             return true;
         }
 
-        private async Task UpdateBookingStatusAfterPayment(int bookingId)
+        public async Task<bool> RefundPaymentAsync(int paymentId)
         {
-            var booking = await _context.DatPhongs
-                .Include(d => d.ThanhToans)
-                .FirstOrDefaultAsync(d => d.MaDatPhong == bookingId);
+            var payment = await _context.ThanhToans.FindAsync(paymentId);
+            if (payment == null) return false;
 
-            if (booking == null) return;
-
-            var totalPaid = booking.ThanhToans.Sum(t => t.SoTien);
-            
-            // Chỉ cập nhật trạng thái nếu booking đã được confirm
-            if (booking.TrangThai == "Confirmed")
+            var refund = new ThanhToan
             {
-                if (totalPaid >= booking.TongTien)
-                {
-                    booking.TrangThai = "Completed";
-                }
-                // Nếu thanh toán chưa đủ thì vẫn giữ trạng thái "Confirmed"
-            }
+                MaDatPhong = payment.MaDatPhong,
+                SoTien = -payment.SoTien, 
+                PhuongThuc = payment.PhuongThuc,
+                NgayThanhToan = DateTime.Now
+            };
 
+            _context.ThanhToans.Add(refund);
             await _context.SaveChangesAsync();
+
+            return true;
         }
     }
 }
