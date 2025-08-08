@@ -11,105 +11,123 @@ namespace HotelBooking.API.Services.Implementations
     {
         private readonly HotelBookingContext _context;
         private readonly IMapper _mapper;
-        private readonly IRoomService _roomService;
 
-        public BookingService(HotelBookingContext context, IMapper mapper, IRoomService roomService)
+        public BookingService(HotelBookingContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
-            _roomService = roomService;
         }
 
         public async Task<IEnumerable<DatPhongDto>> GetAllBookingsAsync()
         {
             var bookings = await _context.DatPhongs
-                .Include(b => b.NguoiDung)
-                .Include(b => b.Phong)
+                .Include(d => d.NguoiDung)
+                .Include(d => d.Phong)
                     .ThenInclude(p => p.LoaiPhong)
-                        .ThenInclude(lp => lp.KhachSan)
+                    .ThenInclude(lp => lp.KhachSan)
+                .Include(d => d.ThanhToans)
+                .OrderByDescending(d => d.NgayDat)
                 .ToListAsync();
 
-            return _mapper.Map<IEnumerable<DatPhongDto>>(bookings);
+            var bookingDtos = _mapper.Map<List<DatPhongDto>>(bookings);
+
+            // Tính toán số tiền đã thanh toán và số tiền còn lại
+            foreach (var booking in bookingDtos)
+            {
+                var originalBooking = bookings.FirstOrDefault(b => b.MaDatPhong == booking.MaDatPhong);
+                if (originalBooking != null)
+                {
+                    booking.TotalPaid = originalBooking.ThanhToans.Sum(t => t.SoTien);
+                    booking.RemainingAmount = booking.TongTien - booking.TotalPaid;
+                }
+            }
+
+            return bookingDtos;
         }
 
         public async Task<DatPhongDto?> GetBookingByIdAsync(int id)
         {
             var booking = await _context.DatPhongs
-                .Include(b => b.NguoiDung)
-                .Include(b => b.Phong)
+                .Include(d => d.NguoiDung)
+                .Include(d => d.Phong)
                     .ThenInclude(p => p.LoaiPhong)
-                        .ThenInclude(lp => lp.KhachSan)
-                .FirstOrDefaultAsync(b => b.MaDatPhong == id);
+                    .ThenInclude(lp => lp.KhachSan)
+                .Include(d => d.ThanhToans)
+                .FirstOrDefaultAsync(d => d.MaDatPhong == id);
 
-            return booking == null ? null : _mapper.Map<DatPhongDto>(booking);
+            if (booking == null) return null;
+
+            var bookingDto = _mapper.Map<DatPhongDto>(booking);
+            bookingDto.TotalPaid = booking.ThanhToans.Sum(t => t.SoTien);
+            bookingDto.RemainingAmount = bookingDto.TongTien - bookingDto.TotalPaid;
+
+            return bookingDto;
         }
 
         public async Task<IEnumerable<DatPhongDto>> GetBookingsByUserAsync(int userId)
         {
             var bookings = await _context.DatPhongs
-                .Include(b => b.NguoiDung)
-                .Include(b => b.Phong)
+                .Include(d => d.NguoiDung)
+                .Include(d => d.Phong)
                     .ThenInclude(p => p.LoaiPhong)
-                        .ThenInclude(lp => lp.KhachSan)
-                .Where(b => b.MaNguoiDung == userId)
-                .OrderByDescending(b => b.NgayDat)
+                    .ThenInclude(lp => lp.KhachSan)
+                .Include(d => d.ThanhToans)
+                .Where(d => d.MaNguoiDung == userId)
+                .OrderByDescending(d => d.NgayDat)
                 .ToListAsync();
 
-            return _mapper.Map<IEnumerable<DatPhongDto>>(bookings);
-        }
+            var bookingDtos = _mapper.Map<List<DatPhongDto>>(bookings);
 
-        public async Task<IEnumerable<DatPhongDto>> GetBookingsByHotelAsync(int hotelId)
-        {
-            var bookings = await _context.DatPhongs
-                .Include(b => b.NguoiDung)
-                .Include(b => b.Phong)
-                    .ThenInclude(p => p.LoaiPhong)
-                        .ThenInclude(lp => lp.KhachSan)
-                .Where(b => b.Phong.LoaiPhong.MaKhachSan == hotelId)
-                .OrderByDescending(b => b.NgayDat)
-                .ToListAsync();
-
-            return _mapper.Map<IEnumerable<DatPhongDto>>(bookings);
-        }
-
-        public async Task<DatPhongDto> CreateBookingAsync(int userId, CreateDatPhongDto createBookingDto)
-        {
-            if (createBookingDto.NgayNhanPhong >= createBookingDto.NgayTraPhong)
+            // Tính toán số tiền đã thanh toán và số tiền còn lại
+            foreach (var booking in bookingDtos)
             {
-                throw new ArgumentException("Ngày trả phòng phải sau ngày nhận phòng");
+                var originalBooking = bookings.FirstOrDefault(b => b.MaDatPhong == booking.MaDatPhong);
+                if (originalBooking != null)
+                {
+                    booking.TotalPaid = originalBooking.ThanhToans.Sum(t => t.SoTien);
+                    booking.RemainingAmount = booking.TongTien - booking.TotalPaid;
+                }
             }
 
-            if (createBookingDto.NgayNhanPhong < DateTime.Today)
+            return bookingDtos;
+        }
+
+        public async Task<DatPhongDto> CreateBookingAsync(CreateDatPhongDto createBookingDto, int userId)
+        {
+            var room = await _context.Phongs
+                .Include(p => p.LoaiPhong)
+                .FirstOrDefaultAsync(p => p.MaPhong == createBookingDto.MaPhong);
+
+            if (room == null)
             {
-                throw new ArgumentException("Ngày nhận phòng không thể là ngày quá khứ");
+                throw new ArgumentException("Phòng không tồn tại");
             }
 
-            var isAvailable = await _roomService.IsRoomAvailableAsync(
+            // Kiểm tra phòng có trống trong khoảng thời gian đó không
+            var isRoomAvailable = await IsRoomAvailableAsync(
                 createBookingDto.MaPhong,
                 createBookingDto.NgayNhanPhong,
-                createBookingDto.NgayTraPhong);
+                createBookingDto.NgayTraPhong
+            );
 
-            if (!isAvailable)
+            if (!isRoomAvailable)
             {
                 throw new InvalidOperationException("Phòng không có sẵn trong thời gian này");
             }
 
-            var total = await CalculateBookingTotalAsync(
-                createBookingDto.MaPhong,
-                createBookingDto.NgayNhanPhong,
-                createBookingDto.NgayTraPhong);
-
             var booking = _mapper.Map<DatPhong>(createBookingDto);
             booking.MaNguoiDung = userId;
-            booking.TongTien = total;
+            booking.TrangThai = "Pending"; // Trạng thái ban đầu là Pending
             booking.NgayDat = DateTime.Now;
-            booking.TrangThai = "Pending";
+
+            // Tính tổng tiền
+            var numberOfNights = (createBookingDto.NgayTraPhong - createBookingDto.NgayNhanPhong).Days;
+            booking.TongTien = room.LoaiPhong.GiaMotDem * numberOfNights;
 
             _context.DatPhongs.Add(booking);
             await _context.SaveChangesAsync();
 
-            var result = await GetBookingByIdAsync(booking.MaDatPhong);
-            return result ?? throw new InvalidOperationException("Không thể tạo đặt phòng");
+            return await GetBookingByIdAsync(booking.MaDatPhong) ?? throw new InvalidOperationException("Không thể tạo đặt phòng");
         }
 
         public async Task<DatPhongDto?> UpdateBookingAsync(int id, UpdateDatPhongDto updateBookingDto)
@@ -118,37 +136,6 @@ namespace HotelBooking.API.Services.Implementations
             if (existingBooking == null)
             {
                 return null;
-            }
-
-            if (updateBookingDto.NgayNhanPhong.HasValue && updateBookingDto.NgayTraPhong.HasValue)
-            {
-                if (updateBookingDto.NgayNhanPhong.Value >= updateBookingDto.NgayTraPhong.Value)
-                {
-                    throw new ArgumentException("Ngày trả phòng phải sau ngày nhận phòng");
-                }
-            }
-
-            if ((updateBookingDto.NgayNhanPhong.HasValue && existingBooking.NgayNhanPhong != updateBookingDto.NgayNhanPhong.Value) ||
-                (updateBookingDto.NgayTraPhong.HasValue && existingBooking.NgayTraPhong != updateBookingDto.NgayTraPhong.Value))
-            {
-                var checkInDate = updateBookingDto.NgayNhanPhong ?? existingBooking.NgayNhanPhong;
-                var checkOutDate = updateBookingDto.NgayTraPhong ?? existingBooking.NgayTraPhong;
-
-                var isAvailable = await _roomService.IsRoomAvailableAsync(
-                    existingBooking.MaPhong,
-                    checkInDate,
-                    checkOutDate,
-                    id); 
-
-                if (!isAvailable)
-                {
-                    throw new InvalidOperationException("Phòng không có sẵn trong thời gian mới");
-                }
-
-                existingBooking.TongTien = await CalculateBookingTotalAsync(
-                    existingBooking.MaPhong,
-                    checkInDate,
-                    checkOutDate);
             }
 
             if (updateBookingDto.NgayNhanPhong.HasValue)
@@ -160,7 +147,7 @@ namespace HotelBooking.API.Services.Implementations
             {
                 existingBooking.NgayTraPhong = updateBookingDto.NgayTraPhong.Value;
             }
-            
+
             if (!string.IsNullOrEmpty(updateBookingDto.TrangThai))
             {
                 existingBooking.TrangThai = updateBookingDto.TrangThai;
@@ -185,15 +172,40 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<DatPhongDto?> UpdateBookingStatusAsync(int id, string status)
         {
-            var booking = await _context.DatPhongs.FindAsync(id);
+            var booking = await _context.DatPhongs.Include(d => d.ThanhToans).FirstOrDefaultAsync(d => d.MaDatPhong == id);
             if (booking == null)
             {
                 return null;
             }
 
-            booking.TrangThai = status;
-            await _context.SaveChangesAsync();
+            // Logic xử lý trạng thái mới
+            if (status == "Confirmed")
+            {
+                // Khi admin xác nhận đặt phòng
+                var totalPaid = booking.ThanhToans.Sum(t => t.SoTien);
+                
+                if (totalPaid >= booking.TongTien)
+                {
+                    // Nếu đã thanh toán đủ thì chuyển sang "Completed"
+                    booking.TrangThai = "Completed";
+                }
+                else if (totalPaid > 0)
+                {
+                    // Nếu đã thanh toán một phần thì giữ "Confirmed"
+                    booking.TrangThai = "Confirmed";
+                }
+                else
+                {
+                    // Nếu chưa thanh toán gì thì chuyển sang "Confirmed" và chờ thanh toán
+                    booking.TrangThai = "Confirmed";
+                }
+            }
+            else
+            {
+                booking.TrangThai = status;
+            }
 
+            await _context.SaveChangesAsync();
             return await GetBookingByIdAsync(id);
         }
 
@@ -224,6 +236,38 @@ namespace HotelBooking.API.Services.Implementations
 
             return (booking.TrangThai == "Pending" || booking.TrangThai == "Confirmed") &&
                    booking.NgayNhanPhong > DateTime.Now.AddDays(1);
+        }
+
+        public async Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut)
+        {
+            var conflictingBookings = await _context.DatPhongs
+                .Where(b => b.MaPhong == roomId &&
+                           b.TrangThai != "Cancelled" &&
+                           ((b.NgayNhanPhong < checkOut && b.NgayTraPhong > checkIn)))
+                .CountAsync();
+
+            return conflictingBookings == 0;
+        }
+
+        // Thêm method để tự động cập nhật trạng thái khi có thanh toán mới
+        public async Task<DatPhongDto?> UpdateBookingAfterPaymentAsync(int bookingId)
+        {
+            var booking = await _context.DatPhongs.Include(d => d.ThanhToans).FirstOrDefaultAsync(d => d.MaDatPhong == bookingId);
+            if (booking == null)
+            {
+                return null;
+            }
+
+            var totalPaid = booking.ThanhToans.Sum(t => t.SoTien);
+            
+            // Chỉ cập nhật trạng thái nếu đặt phòng đã được xác nhận
+            if (booking.TrangThai == "Confirmed" && totalPaid >= booking.TongTien)
+            {
+                booking.TrangThai = "Completed";
+                await _context.SaveChangesAsync();
+            }
+
+            return await GetBookingByIdAsync(bookingId);
         }
     }
 }

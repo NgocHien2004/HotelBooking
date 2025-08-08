@@ -1,146 +1,169 @@
-let currentBookings = [];
+let userBookings = [];
 let currentBookingId = null;
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Check authentication
   if (!isAuthenticated()) {
     window.location.href = "login.html";
     return;
   }
 
-  // Check if there's a new booking notification
-  if (localStorage.getItem("newBookingCreated") === "true") {
-    localStorage.removeItem("newBookingCreated");
-    const lastBookingId = localStorage.getItem("lastBookingId");
-    if (lastBookingId) {
-      showAlert(`Đặt phòng #${lastBookingId} đã được tạo thành công!`, "success");
-      localStorage.removeItem("lastBookingId");
-    }
-  }
-
-  loadMyBookings();
-
-  // Event listeners
-  document.getElementById("statusFilter").addEventListener("change", filterBookings);
-  document.getElementById("dateFilter").addEventListener("change", filterBookings);
-
-  // Auto refresh every 30 seconds to check for updates
-  setInterval(loadMyBookings, 30000);
+  loadUserBookings();
 });
 
-async function loadMyBookings() {
+async function loadUserBookings() {
   try {
+    showLoading("bookingsContainer");
+
     const response = await apiCall("/api/bookings/my-bookings", "GET");
 
     if (response.success) {
-      currentBookings = response.data;
-      displayBookings(currentBookings);
-
-      // Update page title with booking count
-      document.title = `Đặt phòng của tôi (${currentBookings.length}) - Hotel Booking`;
+      userBookings = response.data;
+      displayBookings();
     } else {
-      showAlert(response.message || "Lỗi tải danh sách đặt phòng", "danger");
+      throw new Error(response.message || "Không thể tải danh sách đặt phòng");
     }
   } catch (error) {
     console.error("Error loading bookings:", error);
-    showAlert("Lỗi tải danh sách đặt phòng", "danger");
+    document.getElementById("bookingsContainer").innerHTML = `
+            <div class="alert alert-danger">
+                <h5>Không thể tải danh sách đặt phòng</h5>
+                <p>${error.message}</p>
+                <button class="btn btn-outline-danger" onclick="loadUserBookings()">Thử lại</button>
+            </div>
+        `;
   }
 }
 
-function displayBookings(bookings) {
-  const bookingsList = document.getElementById("bookingsList");
-  const emptyState = document.getElementById("emptyState");
+function displayBookings() {
+  const container = document.getElementById("bookingsContainer");
 
-  if (!bookings || bookings.length === 0) {
-    bookingsList.innerHTML = "";
-    emptyState.style.display = "block";
+  if (userBookings.length === 0) {
+    container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-x display-1 text-muted"></i>
+                <h3>Chưa có đặt phòng nào</h3>
+                <p class="text-muted">Hãy bắt đầu đặt phòng đầu tiên của bạn!</p>
+                <a href="index.html" class="btn btn-primary">Khám phá khách sạn</a>
+            </div>
+        `;
     return;
   }
 
-  emptyState.style.display = "none";
+  let html = '<div class="row">';
 
-  const bookingsHtml = bookings
-    .map((booking) => {
-      const statusClass = getStatusClass(booking.trangThai);
-      const statusText = getStatusText(booking.trangThai);
-      const canEdit = booking.trangThai === "Pending";
-      const canCancel = booking.trangThai === "Pending" || booking.trangThai === "Confirmed";
+  userBookings.forEach((booking) => {
+    const paymentStatus = getPaymentStatus(booking.totalPaid || 0, booking.tongTien);
+    const canPay = booking.trangThai === "Pending" || (booking.trangThai === "Confirmed" && (booking.totalPaid || 0) < booking.tongTien);
 
-      return `
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h5 class="card-title">
-                                ${booking.tenKhachSan}
-                                <span class="badge ${statusClass} ms-2">${statusText}</span>
-                            </h5>
-                            <h6 class="card-subtitle mb-2 text-muted">${booking.tenLoaiPhong}</h6>
-                            <p class="card-text">
-                                <i class="bi bi-geo-alt"></i> ${booking.diaChiKhachSan}<br>
-                                <i class="bi bi-calendar"></i> ${formatDate(booking.ngayNhanPhong)} - ${formatDate(booking.ngayTraPhong)}<br>
-                                <i class="bi bi-currency-dollar"></i> ${formatCurrency(booking.tongTien)}
-                            </p>
+    html += `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title text-primary">#${booking.maDatPhong}</h6>
+                            <span class="badge ${getStatusClass(booking.trangThai)}">${getStatusText(booking.trangThai)}</span>
                         </div>
-                        <div class="col-md-4 text-end">
-                            <p class="text-muted small">
-                                Mã đặt phòng: #${booking.maDatPhong}<br>
-                                Đặt ngày: ${formatDate(booking.ngayDat)}
-                            </p>
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-outline-primary btn-sm" onclick="viewBookingDetail(${booking.maDatPhong})">
-                                    <i class="bi bi-eye"></i> Chi tiết
-                                </button>
-                                ${
-                                  canEdit
-                                    ? `<button class="btn btn-outline-warning btn-sm" onclick="editBooking(${booking.maDatPhong})">
-                                        <i class="bi bi-pencil"></i> Sửa
-                                    </button>`
-                                    : ""
-                                }
-                                ${
-                                  canCancel
-                                    ? `<button class="btn btn-outline-danger btn-sm" onclick="cancelBooking(${booking.maDatPhong})">
-                                        <i class="bi bi-x-circle"></i> Hủy
-                                    </button>`
-                                    : ""
-                                }
+                        
+                        <h6 class="mb-2">${booking.tenKhachSan}</h6>
+                        <p class="text-muted small mb-2">
+                            <i class="bi bi-geo-alt"></i> ${booking.diaChiKhachSan}
+                        </p>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">Loại phòng:</small>
+                            <div>${booking.tenLoaiPhong}</div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <small class="text-muted">Nhận phòng:</small>
+                                <div class="small">${formatDate(booking.ngayNhanPhong)}</div>
                             </div>
+                            <div class="col-6">
+                                <small class="text-muted">Trả phòng:</small>
+                                <div class="small">${formatDate(booking.ngayTraPhong)}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Tổng tiền:</small>
+                                <strong>${formatCurrency(booking.tongTien)}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Đã thanh toán:</small>
+                                <span class="${paymentStatus.class}">${formatCurrency(booking.totalPaid || 0)}</span>
+                            </div>
+                            ${
+                              (booking.totalPaid || 0) < booking.tongTien
+                                ? `
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Còn lại:</small>
+                                    <span class="text-warning">${formatCurrency(booking.tongTien - (booking.totalPaid || 0))}</span>
+                                </div>
+                            `
+                                : ""
+                            }
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="${paymentStatus.class}">
+                                <i class="bi bi-credit-card"></i> ${paymentStatus.text}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-outline-primary btn-sm" onclick="showBookingDetail(${booking.maDatPhong})">
+                                <i class="bi bi-eye"></i> Chi tiết
+                            </button>
+                            
+                            ${
+                              canPay
+                                ? `
+                                <button class="btn btn-success btn-sm" onclick="showPaymentModal(${booking.maDatPhong}, ${
+                                    booking.tongTien - (booking.totalPaid || 0)
+                                  })">
+                                    <i class="bi bi-credit-card"></i> Thanh toán
+                                </button>
+                            `
+                                : ""
+                            }
+                            
+                            ${
+                              booking.trangThai === "Pending"
+                                ? `
+                                <button class="btn btn-outline-danger btn-sm" onclick="cancelBooking(${booking.maDatPhong})">
+                                    <i class="bi bi-x-circle"></i> Hủy
+                                </button>
+                            `
+                                : ""
+                            }
                         </div>
                     </div>
                 </div>
             </div>
         `;
-    })
-    .join("");
+  });
 
-  bookingsList.innerHTML = bookingsHtml;
+  html += "</div>";
+  container.innerHTML = html;
 }
 
-function filterBookings() {
-  const statusFilter = document.getElementById("statusFilter").value;
-  const dateFilter = document.getElementById("dateFilter").value;
-
-  let filteredBookings = [...currentBookings];
-
-  if (statusFilter) {
-    filteredBookings = filteredBookings.filter((booking) => booking.trangThai === statusFilter);
-  }
-
-  if (dateFilter) {
-    filteredBookings = filteredBookings.filter((booking) => booking.ngayNhanPhong.startsWith(dateFilter));
-  }
-
-  displayBookings(filteredBookings);
-}
-
-async function viewBookingDetail(bookingId) {
+async function showBookingDetail(bookingId) {
   try {
     const response = await apiCall(`/api/bookings/${bookingId}`, "GET");
 
     if (response.success) {
       const booking = response.data;
       currentBookingId = bookingId;
+
+      // Load payments for this booking
+      const paymentsResponse = await apiCall(`/api/payments/booking/${bookingId}`, "GET");
+      const payments = paymentsResponse.success ? paymentsResponse.data : [];
+
+      const paymentStatus = getPaymentStatus(booking.totalPaid || 0, booking.tongTien);
 
       const detailHtml = `
                 <div class="row">
@@ -168,6 +191,58 @@ async function viewBookingDetail(bookingId) {
       )}</span></p>
                     </div>
                 </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Thông tin thanh toán</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tổng tiền:</span>
+                            <strong>${formatCurrency(booking.tongTien)}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Đã thanh toán:</span>
+                            <span class="${paymentStatus.class}">${formatCurrency(booking.totalPaid || 0)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Còn lại:</span>
+                            <span class="text-warning">${formatCurrency(booking.tongTien - (booking.totalPaid || 0))}</span>
+                        </div>
+                        
+                        ${
+                          payments.length > 0
+                            ? `
+                            <h6>Lịch sử thanh toán</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Ngày</th>
+                                            <th>Số tiền</th>
+                                            <th>Phương thức</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${payments
+                                          .map(
+                                            (payment) => `
+                                            <tr>
+                                                <td>${formatDateTime(payment.ngayThanhToan)}</td>
+                                                <td>${formatCurrency(payment.soTien)}</td>
+                                                <td>${getPaymentMethodDisplay(payment.phuongThuc)}</td>
+                                            </tr>
+                                        `
+                                          )
+                                          .join("")}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `
+                            : '<p class="text-muted">Chưa có thanh toán nào</p>'
+                        }
+                    </div>
+                </div>
             `;
 
       document.getElementById("bookingDetailContent").innerHTML = detailHtml;
@@ -175,11 +250,27 @@ async function viewBookingDetail(bookingId) {
       // Show/hide action buttons
       const canEdit = booking.trangThai === "Pending";
       const canCancel = booking.trangThai === "Pending" || booking.trangThai === "Confirmed";
+      const canPay = booking.trangThai === "Pending" || (booking.trangThai === "Confirmed" && (booking.totalPaid || 0) < booking.tongTien);
 
       document.getElementById("editBookingBtn").style.display = canEdit ? "inline-block" : "none";
       document.getElementById("cancelBookingBtn").style.display = canCancel ? "inline-block" : "none";
 
-      const modal = new bootstrap.Modal(document.getElementById("bookingDetailModal"));
+      // Add payment button if applicable
+      const payBtn = document.getElementById("payBookingBtn");
+      if (payBtn) {
+        payBtn.style.display = canPay ? "inline-block" : "none";
+      } else if (canPay) {
+        // Create payment button if it doesn't exist
+        const modalFooter = document.querySelector("#bookingModal .modal-footer");
+        const payButton = document.createElement("button");
+        payButton.id = "payBookingBtn";
+        payButton.className = "btn btn-success";
+        payButton.innerHTML = '<i class="bi bi-credit-card"></i> Thanh toán';
+        payButton.onclick = () => showPaymentModal(booking.maDatPhong, booking.tongTien - (booking.totalPaid || 0));
+        modalFooter.insertBefore(payButton, modalFooter.firstChild);
+      }
+
+      const modal = new bootstrap.Modal(document.getElementById("bookingModal"));
       modal.show();
     } else {
       showAlert(response.message || "Lỗi tải chi tiết đặt phòng", "danger");
@@ -190,163 +281,123 @@ async function viewBookingDetail(bookingId) {
   }
 }
 
-function editBooking() {
-  const booking = currentBookings.find((b) => b.maDatPhong === currentBookingId);
-  if (!booking) return;
+function showPaymentModal(bookingId, remainingAmount) {
+  const modalHtml = `
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-credit-card"></i> Thanh toán đặt phòng #${bookingId}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <p>Số tiền còn lại cần thanh toán: <strong class="text-danger">${formatCurrency(remainingAmount)}</strong></p>
+            </div>
+            
+            <div class="mb-3">
+              <label for="paymentAmount" class="form-label">Số tiền thanh toán (VNĐ)</label>
+              <input type="number" class="form-control" id="paymentAmount" 
+                     max="${remainingAmount}" min="1" 
+                     value="${remainingAmount}"
+                     placeholder="Nhập số tiền">
+              <div class="form-text">Tối đa: ${formatCurrency(remainingAmount)}</div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="paymentMethod" class="form-label">Phương thức thanh toán</label>
+              <select class="form-select" id="paymentMethod">
+                <option value="Cash">Tiền mặt</option>
+                <option value="Credit Card">Thẻ tín dụng</option>
+                <option value="Bank Transfer">Chuyển khoản ngân hàng</option>
+                <option value="E-Wallet">Ví điện tử</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-success" onclick="processPaymentFromModal(${bookingId})">
+              <i class="bi bi-check-circle"></i> Xác nhận thanh toán
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 
-  document.getElementById("editCheckInDate").value = booking.ngayNhanPhong.split("T")[0];
-  document.getElementById("editCheckOutDate").value = booking.ngayTraPhong.split("T")[0];
-
-  // Set minimum dates
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("editCheckInDate").min = today;
-  document.getElementById("editCheckOutDate").min = today;
-
-  bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal")).hide();
-
-  const editModal = new bootstrap.Modal(document.getElementById("editBookingModal"));
-  editModal.show();
-}
-
-async function saveBookingChanges() {
-  const checkInDate = document.getElementById("editCheckInDate").value;
-  const checkOutDate = document.getElementById("editCheckOutDate").value;
-
-  if (!checkInDate || !checkOutDate) {
-    showAlert("Vui lòng chọn đầy đủ ngày nhận và trả phòng", "warning");
-    return;
+  // Remove existing payment modal if any
+  const existingModal = document.getElementById("paymentModal");
+  if (existingModal) {
+    existingModal.remove();
   }
 
-  if (new Date(checkOutDate) <= new Date(checkInDate)) {
-    showAlert("Ngày trả phòng phải sau ngày nhận phòng", "warning");
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+  const modal = new bootstrap.Modal(document.getElementById("paymentModal"));
+  modal.show();
+}
+
+async function processPaymentFromModal(bookingId) {
+  const paymentAmount = parseFloat(document.getElementById("paymentAmount").value);
+  const paymentMethod = document.getElementById("paymentMethod").value;
+
+  if (!paymentAmount || paymentAmount <= 0) {
+    showAlert("Vui lòng nhập số tiền thanh toán hợp lệ", "warning");
     return;
   }
 
   try {
-    const updateData = {
-      ngayNhanPhong: checkInDate,
-      ngayTraPhong: checkOutDate,
+    const paymentData = {
+      maDatPhong: bookingId,
+      soTien: paymentAmount,
+      phuongThuc: paymentMethod,
     };
 
-    const response = await apiCall(`/api/bookings/${currentBookingId}`, "PUT", updateData);
+    const response = await apiCall("/api/payments/user-payment", "POST", paymentData);
 
     if (response.success) {
-      showAlert("Cập nhật đặt phòng thành công", "success");
-      bootstrap.Modal.getInstance(document.getElementById("editBookingModal")).hide();
+      showAlert("Thanh toán thành công! Admin sẽ xác nhận đặt phòng sau khi kiểm tra.", "success");
 
-      // Force reload bookings to get fresh data
-      await loadMyBookings();
+      // Close payment modal
+      const paymentModal = bootstrap.Modal.getInstance(document.getElementById("paymentModal"));
+      paymentModal.hide();
+
+      // Close booking detail modal if open
+      const bookingModal = bootstrap.Modal.getInstance(document.getElementById("bookingModal"));
+      if (bookingModal) {
+        bookingModal.hide();
+      }
+
+      // Reload bookings
+      loadUserBookings();
     } else {
-      showAlert(response.message || "Lỗi cập nhật đặt phòng", "danger");
+      showAlert(response.message || "Không thể xử lý thanh toán", "danger");
     }
   } catch (error) {
-    console.error("Error updating booking:", error);
-    showAlert("Lỗi cập nhật đặt phòng", "danger");
+    console.error("Error processing payment:", error);
+    showAlert("Có lỗi xảy ra khi xử lý thanh toán", "danger");
   }
 }
 
-async function cancelBooking(bookingId = null) {
-  const id = bookingId || currentBookingId;
-
+async function cancelBooking(bookingId) {
   if (!confirm("Bạn có chắc chắn muốn hủy đặt phòng này?")) {
     return;
   }
 
   try {
-    const response = await apiCall(`/api/bookings/${id}`, "DELETE");
+    const response = await apiCall(`/api/bookings/${bookingId}/status`, "PATCH", "Cancelled", {
+      "Content-Type": "application/json",
+    });
 
     if (response.success) {
-      showAlert("Hủy đặt phòng thành công", "success");
-
-      // Close modals if open
-      const detailModal = bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal"));
-      if (detailModal) detailModal.hide();
-
-      // Force reload bookings to get fresh data
-      await loadMyBookings();
+      showAlert("Đã hủy đặt phòng thành công", "success");
+      loadUserBookings();
     } else {
-      showAlert(response.message || "Lỗi hủy đặt phòng", "danger");
+      showAlert(response.message || "Không thể hủy đặt phòng", "danger");
     }
   } catch (error) {
     console.error("Error cancelling booking:", error);
-    showAlert("Lỗi hủy đặt phòng", "danger");
+    showAlert("Có lỗi xảy ra khi hủy đặt phòng", "danger");
   }
-}
-
-function calculateNights(checkIn, checkOut) {
-  const checkInDate = new Date(checkIn);
-  const checkOutDate = new Date(checkOut);
-  const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
-  return Math.ceil(timeDiff / (1000 * 3600 * 24));
-}
-
-function getStatusClass(status) {
-  switch (status) {
-    case "Pending":
-      return "bg-warning";
-    case "Confirmed":
-      return "bg-success";
-    case "Cancelled":
-      return "bg-danger";
-    case "Completed":
-      return "bg-info";
-    default:
-      return "bg-secondary";
-  }
-}
-
-function getStatusText(status) {
-  switch (status) {
-    case "Pending":
-      return "Chờ xác nhận";
-    case "Confirmed":
-      return "Đã xác nhận";
-    case "Cancelled":
-      return "Đã hủy";
-    case "Completed":
-      return "Hoàn thành";
-    default:
-      return status;
-  }
-}
-
-function showAlert(message, type = "danger") {
-  const alertDiv = document.getElementById("alertMessage");
-  alertDiv.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-
-  setTimeout(() => {
-    alertDiv.innerHTML = "";
-  }, 5000);
-}
-
-// Utility functions
-function formatDate(dateString) {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("vi-VN");
-}
-
-function formatDateTime(dateString) {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleString("vi-VN");
-}
-
-function formatCurrency(amount) {
-  if (typeof amount !== "number") {
-    amount = parseFloat(amount) || 0;
-  }
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(amount);
-}
-
-function isAuthenticated() {
-  return localStorage.getItem("token") !== null;
 }
