@@ -11,7 +11,6 @@ namespace HotelBooking.API.DTOs
         public string? BinhLuan { get; set; }
         public DateTime NgayTao { get; set; }
         
-        // User and Hotel info
         public string HoTenNguoiDung { get; set; } = string.Empty;
         public string TenKhachSan { get; set; } = string.Empty;
     }

@@ -5,7 +5,6 @@ let itemsPerPage = 10;
 let currentPaymentId = null;
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Check admin authentication
   if (!isAuthenticated() || !isAdmin()) {
     window.location.href = "../login.html";
     return;
@@ -14,7 +13,6 @@ document.addEventListener("DOMContentLoaded", function () {
   loadPayments();
   loadBookingsForSelect();
 
-  // Event listeners
   document.getElementById("searchInput").addEventListener("input", debounce(filterPayments, 300));
   document.getElementById("paymentMethodFilter").addEventListener("change", filterPayments);
   document.getElementById("dateFromFilter").addEventListener("change", filterPayments);
@@ -80,7 +78,6 @@ function displayPayments(payments) {
     return;
   }
 
-  // Pagination
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedPayments = payments.slice(startIndex, endIndex);
@@ -120,12 +117,10 @@ function updateStatistics(payments) {
   const totalRevenue = payments.reduce((sum, payment) => sum + payment.soTien, 0);
   const totalTransactions = payments.length;
 
-  // Today's revenue
   const today = new Date().toISOString().split("T")[0];
   const todayPayments = payments.filter((payment) => payment.ngayThanhToan.startsWith(today));
   const todayRevenue = todayPayments.reduce((sum, payment) => sum + payment.soTien, 0);
 
-  // This month's revenue
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   const monthPayments = payments.filter((payment) => {
@@ -169,7 +164,7 @@ function filterPayments() {
     filteredPayments = filteredPayments.filter((payment) => payment.ngayThanhToan <= dateToFilter + "T23:59:59");
   }
 
-  currentPage = 1; // Reset to first page when filtering
+  currentPage = 1;
   displayPayments(filteredPayments);
   updatePagination(filteredPayments.length);
   updateStatistics(filteredPayments);
@@ -211,7 +206,6 @@ async function addPayment() {
     if (response.success) {
       showAlert("Thêm thanh toán thành công", "success");
 
-      // Close modal and reset form
       const modal = bootstrap.Modal.getInstance(document.getElementById("addPaymentModal"));
       modal.hide();
       document.getElementById("addPaymentForm").reset();
@@ -308,7 +302,6 @@ async function refundPayment(paymentId = null) {
     if (response.success) {
       showAlert("Hoàn tiền thành công", "success");
 
-      // Close modal if open
       const modal = bootstrap.Modal.getInstance(document.getElementById("paymentDetailModal"));
       if (modal) modal.hide();
 
@@ -369,14 +362,12 @@ function updatePagination(totalItems) {
 
   let paginationHtml = "";
 
-  // Previous button
   paginationHtml += `
         <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
         </li>
     `;
 
-  // Page numbers
   for (let i = 1; i <= totalPages; i++) {
     if (i === currentPage || i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
       paginationHtml += `
@@ -389,7 +380,6 @@ function updatePagination(totalItems) {
     }
   }
 
-  // Next button
   paginationHtml += `
         <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
@@ -450,7 +440,6 @@ function showAlert(message, type = "danger") {
   }, 5000);
 }
 
-// Set default amount when booking is selected
 document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("bookingSelect").addEventListener("change", function () {
     const selectedBookingId = this.value;

@@ -1,6 +1,3 @@
-/* Custom CSS for Hotel Booking */
-
-/* General Styles */
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
@@ -11,7 +8,6 @@ body {
   font-size: 1.5rem;
 }
 
-/* Hero Section */
 .hero-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -20,7 +16,6 @@ body {
   align-items: center;
 }
 
-/* Hotel Cards - IMPROVED NO CROP */
 .hotel-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   border: none;
@@ -37,7 +32,6 @@ body {
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* Image Container - NO CROP SOLUTION */
 .hotel-image-container {
   width: 100%;
   height: 220px;
@@ -51,16 +45,15 @@ body {
 .hotel-card .card-img-top {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* CHANGED: contain instead of cover */
+  object-fit: contain;
   object-position: center;
   transition: transform 0.3s ease;
   background: white;
 }
 
-/* Fallback for images that look better with cover */
 .hotel-card:hover .hotel-image,
 .hotel-card:hover .card-img-top {
-  transform: scale(1.02); /* Reduced scale for contain */
+  transform: scale(1.02);
 }
 
 .card-body {
@@ -91,12 +84,10 @@ body {
   flex-grow: 1;
 }
 
-/* Star Rating */
 .text-warning {
   color: #ffc107 !important;
 }
 
-/* Buttons */
 .btn-primary {
   background: linear-gradient(45deg, #667eea, #764ba2);
   border: none;
@@ -112,7 +103,6 @@ body {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-/* Search Section */
 .search-section {
   background-color: #f8f9fa;
   border-radius: 10px;
@@ -120,13 +110,11 @@ body {
   margin-bottom: 2rem;
 }
 
-/* Loading Indicator */
 .spinner-border {
   width: 3rem;
   height: 3rem;
 }
 
-/* Form Controls */
 .form-control {
   border-radius: 8px;
   border: 1px solid #dee2e6;
@@ -138,14 +126,12 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
-/* Badges */
 .badge {
   font-size: 0.8rem;
   padding: 0.5rem 0.75rem;
   border-radius: 20px;
 }
 
-/* Alert Styles */
 .alert {
   border-radius: 10px;
   border: none;
@@ -166,12 +152,10 @@ body {
   color: #2e7d32;
 }
 
-/* Footer */
 footer {
   margin-top: auto;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .hero-section {
     min-height: 300px;
@@ -210,7 +194,6 @@ footer {
   }
 }
 
-/* Login/Register Forms */
 .auth-card {
   max-width: 400px;
   margin: 0 auto;
@@ -230,7 +213,6 @@ footer {
   padding: 2rem;
 }
 
-/* Navigation Improvements */
 .navbar-nav .nav-link {
   transition: color 0.3s ease;
   font-weight: 500;
@@ -246,7 +228,6 @@ footer {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* Hotel Details Specific Styles */
 .hotel-detail-image {
   height: 400px;
   object-fit: contain;
@@ -274,9 +255,6 @@ footer {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* ADMIN STYLES - IMPROVED */
-
-/* Admin Navigation */
 .navbar-dark {
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
 }
@@ -304,7 +282,6 @@ footer {
   width: 16px;
 }
 
-/* Admin Cards - IMPROVED */
 .hotel-admin-card {
   border: none;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
@@ -319,7 +296,6 @@ footer {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
-/* Admin Card Image - NO CROP */
 .hotel-admin-card .card-img-top {
   height: 200px;
   object-fit: contain;
@@ -355,7 +331,6 @@ footer {
   margin-top: auto;
 }
 
-/* Admin Action Buttons */
 .btn-outline-info:hover {
   background-color: #17a2b8;
   border-color: #17a2b8;
@@ -372,7 +347,6 @@ footer {
   border-color: #dc3545;
 }
 
-/* Statistics Cards */
 .stat-card {
   background: white;
   border-radius: 12px;
@@ -398,7 +372,6 @@ footer {
   font-weight: 500;
 }
 
-/* Tables */
 .table-responsive {
   border-radius: 12px;
   overflow: hidden;
@@ -430,7 +403,6 @@ footer {
   vertical-align: middle;
 }
 
-/* Modal Improvements */
 .modal-content {
   border-radius: 15px;
   border: none;
@@ -457,7 +429,6 @@ footer {
   border-top: 1px solid #e9ecef;
 }
 
-/* Image Upload Preview */
 #imagePreview,
 #currentImages {
   display: flex;
@@ -507,7 +478,6 @@ footer {
   transform: scale(1.1);
 }
 
-/* View Toggle Buttons */
 .btn-group .btn {
   padding: 0.6rem 1.2rem;
   font-weight: 500;
@@ -518,7 +488,6 @@ footer {
   border-color: #667eea;
 }
 
-/* Hotel Details Modal in Admin */
 #hotelDetailsModal .modal-dialog {
   max-width: 1000px;
 }
@@ -533,7 +502,6 @@ footer {
   transform: scale(1.02);
 }
 
-/* Form Improvements */
 .form-label {
   font-weight: 600;
   color: #495057;
@@ -554,7 +522,6 @@ footer {
   box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
-/* Responsive Admin */
 @media (max-width: 768px) {
   .hotel-admin-card .card-img-top {
     height: 150px;
@@ -579,7 +546,6 @@ footer {
   }
 }
 
-/* Utility Classes */
 .text-gradient {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
@@ -599,7 +565,6 @@ footer {
   border-radius: 15px;
 }
 
-/* Animation Classes */
 .fade-in {
   animation: fadeIn 0.6s ease-in-out;
 }
@@ -630,7 +595,6 @@ footer {
   }
 }
 
-/* Page Header */
 .page-header {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   padding: 2rem 0;
@@ -644,7 +608,6 @@ footer {
   margin-bottom: 0;
 }
 
-/* Modern Header Styles */
 .navbar-modern {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -700,7 +663,6 @@ footer {
   margin-right: 8px;
 }
 
-/* Admin badge for Quản lý button */
 .admin-badge {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -714,7 +676,6 @@ footer {
   color: white !important;
 }
 
-/* Admin Header - Same style as public pages */
 .navbar-admin {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -770,7 +731,6 @@ footer {
   margin-right: 8px;
 }
 
-/* Admin badge styling */
 .admin-nav-badge {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -785,7 +745,6 @@ footer {
   color: white !important;
 }
 
-/* Admin Header Styles */
 .navbar-admin {
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
@@ -851,7 +810,6 @@ footer {
   margin-right: 8px;
 }
 
-/* Admin user badge */
 .admin-user-badge {
   background: rgba(52, 152, 219, 0.2);
   border: 1px solid rgba(52, 152, 219, 0.3);

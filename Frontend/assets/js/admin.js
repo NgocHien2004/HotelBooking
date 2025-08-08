@@ -1,36 +1,26 @@
-// Admin.js - Admin panel functions
-
-// Load dashboard data
 async function loadDashboardData() {
   try {
-    // Get total hotels
     const hotelsResponse = await fetch(`${API_URL}/hotels`, {
       headers: getAuthHeaders(),
     });
     const hotelsData = await hotelsResponse.json();
 
-    // Handle response format
     const hotels = hotelsData.success && hotelsData.data ? hotelsData.data : hotelsData;
 
     document.getElementById("totalHotels").textContent = hotels.length;
 
-    // Calculate available rooms (mock data for now)
     const availableRooms = hotels.reduce((sum, hotel) => sum + 10, 0);
     document.getElementById("availableRooms").textContent = availableRooms;
 
-    // Get today's bookings (mock data)
     document.getElementById("todayBookings").textContent = Math.floor(Math.random() * 20) + 5;
 
-    // Get total users (mock data)
     document.getElementById("totalUsers").textContent = Math.floor(Math.random() * 100) + 50;
 
-    // Load recent hotels
     const recentHotels = hotels.slice(-5).reverse();
     const tbody = document.getElementById("recentHotels");
     tbody.innerHTML = "";
 
     recentHotels.forEach((hotel) => {
-      // Map Vietnamese property names to English
       const hotelData = {
         id: hotel.maKhachSan || hotel.id,
         name: hotel.tenKhachSan || hotel.name,
@@ -58,12 +48,10 @@ async function loadDashboardData() {
   }
 }
 
-// Add new hotel
 if (document.getElementById("addHotelForm")) {
   document.getElementById("addHotelForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Create object with Vietnamese property names
     const hotelData = {
       tenKhachSan: document.getElementById("name").value,
       thanhPho: document.getElementById("city").value,
@@ -74,7 +62,6 @@ if (document.getElementById("addHotelForm")) {
     };
 
     try {
-      // First, create the hotel
       const response = await fetch(`${API_URL}/hotels`, {
         method: "POST",
         headers: {
@@ -89,8 +76,6 @@ if (document.getElementById("addHotelForm")) {
         const hotelId = result.data.maKhachSan || result.data.id;
 
         showAlert("Thêm khách sạn thành công!", "success");
-
-        // Handle images if any
         const images = document.getElementById("images").files;
         if (images.length > 0) {
           await uploadHotelImages(hotelId, images);
@@ -110,21 +95,17 @@ if (document.getElementById("addHotelForm")) {
   });
 }
 
-// Function to upload hotel images - SỬA ĐỔI CHÍNH TẠI ĐÂY
 async function uploadHotelImages(hotelId, images) {
   try {
     const formData = new FormData();
 
-    // Add all images to FormData
     for (let i = 0; i < images.length; i++) {
       formData.append("images", images[i]);
     }
 
-    // SỬA: Endpoint đúng theo backend
     const response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
       method: "POST",
       headers: {
-        // Chỉ thêm Authorization, không thêm Content-Type cho FormData
         Authorization: localStorage.getItem("token") ? `Bearer ${localStorage.getItem("token")}` : "",
       },
       body: formData,
@@ -135,7 +116,6 @@ async function uploadHotelImages(hotelId, images) {
       console.log("Upload result:", result);
       showAlert(`Đã upload ${result.count} ảnh thành công!`, "success");
 
-      // QUAN TRỌNG: Reload hotels để hiển thị ảnh mới
       if (typeof loadHotels === "function") {
         await loadHotels();
       }
@@ -150,7 +130,6 @@ async function uploadHotelImages(hotelId, images) {
   }
 }
 
-// Edit hotel
 async function editHotel(id) {
   try {
     const response = await fetch(`${API_URL}/hotels/${id}`, {
@@ -158,10 +137,8 @@ async function editHotel(id) {
     });
     const data = await response.json();
 
-    // Handle response format
     const hotel = data.success && data.data ? data.data : data;
 
-    // Map property names
     const hotelData = {
       id: hotel.maKhachSan || hotel.id,
       name: hotel.tenKhachSan || hotel.name,
@@ -173,7 +150,6 @@ async function editHotel(id) {
       images: hotel.hinhAnhs || hotel.images || [],
     };
 
-    // Fill form with hotel data
     document.getElementById("editHotelId").value = hotelData.id;
     document.getElementById("editName").value = hotelData.name;
     document.getElementById("editCity").value = hotelData.city;
@@ -182,7 +158,6 @@ async function editHotel(id) {
     document.getElementById("editDescription").value = hotelData.description;
     document.getElementById("editAmenities").value = hotelData.amenities;
 
-    // Show current images
     const currentImagesDiv = document.getElementById("currentImages");
     if (currentImagesDiv) {
       currentImagesDiv.innerHTML = "";
@@ -210,7 +185,6 @@ async function editHotel(id) {
       }
     }
 
-    // Show modal
     const modal = new bootstrap.Modal(document.getElementById("editHotelModal"));
     modal.show();
   } catch (error) {
@@ -219,11 +193,9 @@ async function editHotel(id) {
   }
 }
 
-// Update hotel
 async function updateHotel() {
   const id = document.getElementById("editHotelId").value;
 
-  // Create object with Vietnamese property names
   const hotelData = {
     tenKhachSan: document.getElementById("editName").value,
     thanhPho: document.getElementById("editCity").value,
@@ -247,7 +219,6 @@ async function updateHotel() {
       showAlert("Cập nhật khách sạn thành công!", "success");
       bootstrap.Modal.getInstance(document.getElementById("editHotelModal")).hide();
 
-      // Reload hotels if function exists
       if (typeof loadAdminHotels === "function") {
         loadAdminHotels();
       }
@@ -261,7 +232,6 @@ async function updateHotel() {
   }
 }
 
-// Delete hotel
 async function deleteHotel(id) {
   if (!confirm("Bạn có chắc chắn muốn xóa khách sạn này?")) {
     return;
@@ -276,7 +246,6 @@ async function deleteHotel(id) {
     if (response.ok) {
       showAlert("Xóa khách sạn thành công!", "success");
 
-      // Reload hotels if function exists
       if (typeof loadAdminHotels === "function") {
         loadAdminHotels();
       }
@@ -290,7 +259,6 @@ async function deleteHotel(id) {
   }
 }
 
-// Remove image from hotel
 async function removeImage(hotelId, imagePath) {
   if (!confirm("Bạn có chắc chắn muốn xóa hình ảnh này?")) {
     return;
@@ -308,7 +276,7 @@ async function removeImage(hotelId, imagePath) {
 
     if (response.ok) {
       showAlert("Xóa hình ảnh thành công!", "success");
-      editHotel(hotelId); // Reload the edit modal
+      editHotel(hotelId);
     } else {
       showAlert("Có lỗi xảy ra!", "danger");
     }

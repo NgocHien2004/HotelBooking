@@ -4,7 +4,6 @@ let itemsPerPage = 10;
 let currentBookingId = null;
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Check admin authentication
   if (!isAuthenticated() || !isAdmin()) {
     window.location.href = "../login.html";
     return;
@@ -12,7 +11,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadBookings();
 
-  // Event listeners
   document.getElementById("searchInput").addEventListener("input", debounce(filterBookings, 300));
   document.getElementById("statusFilter").addEventListener("change", filterBookings);
   document.getElementById("dateFilter").addEventListener("change", filterBookings);
@@ -50,7 +48,6 @@ function displayBookings(bookings) {
     return;
   }
 
-  // Pagination
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedBookings = bookings.slice(startIndex, endIndex);
@@ -129,7 +126,7 @@ function filterBookings() {
     filteredBookings = filteredBookings.filter((booking) => booking.ngayNhanPhong.startsWith(dateFilter));
   }
 
-  currentPage = 1; // Reset to first page when filtering
+  currentPage = 1;
   displayBookings(filteredBookings);
   updatePagination(filteredBookings.length);
 }
@@ -191,7 +188,6 @@ async function viewBookingDetail(bookingId) {
 
       document.getElementById("bookingDetails").innerHTML = detailHtml;
 
-      // Show/hide action buttons based on status
       const confirmBtn = document.getElementById("confirmBtn");
       const cancelBtn = document.getElementById("cancelBtn");
 
@@ -234,7 +230,6 @@ async function updateBookingStatus(bookingId, status) {
     if (response.success) {
       showAlert(`${getStatusText(status)} đặt phòng thành công`, "success");
 
-      // Close modal if open
       const modal = bootstrap.Modal.getInstance(document.getElementById("bookingModal"));
       if (modal) modal.hide();
 
@@ -249,7 +244,6 @@ async function updateBookingStatus(bookingId, status) {
 }
 
 function showAddPaymentModal(bookingId, remainingAmount) {
-  // This would open a modal to add payment - integrate with payment system
   window.location.href = `payments.html?booking=${bookingId}&amount=${remainingAmount}`;
 }
 
@@ -264,14 +258,12 @@ function updatePagination(totalItems) {
 
   let paginationHtml = "";
 
-  // Previous button
   paginationHtml += `
         <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
         </li>
     `;
 
-  // Page numbers
   for (let i = 1; i <= totalPages; i++) {
     if (i === currentPage || i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
       paginationHtml += `
@@ -284,7 +276,6 @@ function updatePagination(totalItems) {
     }
   }
 
-  // Next button
   paginationHtml += `
         <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
@@ -368,7 +359,6 @@ async function loadBookings() {
       displayBookings(currentBookings);
       updatePagination(currentBookings.length);
 
-      // Update page title with booking count
       document.title = `Quản lý đặt phòng (${currentBookings.length}) - Admin`;
     } else {
       showAlert(response.message || "Lỗi tải danh sách đặt phòng", "danger");
@@ -379,9 +369,7 @@ async function loadBookings() {
   }
 }
 
-// Thêm vào cuối file sau loadBookings function
 document.addEventListener("DOMContentLoaded", function () {
-  // Check admin authentication
   if (!isAuthenticated() || !isAdmin()) {
     window.location.href = "../login.html";
     return;
@@ -389,11 +377,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadBookings();
 
-  // Event listeners
   document.getElementById("searchInput").addEventListener("input", debounce(filterBookings, 300));
   document.getElementById("statusFilter").addEventListener("change", filterBookings);
   document.getElementById("dateFilter").addEventListener("change", filterBookings);
 
-  // Auto refresh every 30 seconds
   setInterval(loadBookings, 30000);
 });

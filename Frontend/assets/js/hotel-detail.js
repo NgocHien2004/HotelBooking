@@ -236,16 +236,13 @@ function initializeImageSlider(images) {
   });
 }
 
-// Load room types - SỬA ĐỔI: Sửa endpoint và error handling
 async function loadRoomTypes(hotelId) {
   try {
     console.log("Loading room types for hotel ID:", hotelId);
 
-    // Thử endpoint đầu tiên
     let response = await fetch(`${API_URL}/roomtypes/hotel/${hotelId}`);
     console.log("Room types response status:", response.status);
 
-    // Nếu endpoint đầu tiên không hoạt động, thử endpoint khác
     if (!response.ok) {
       console.log("First endpoint failed, trying alternative endpoint...");
       response = await fetch(`${API_URL}/hotels/${hotelId}/roomtypes`);
@@ -263,15 +260,14 @@ async function loadRoomTypes(hotelId) {
     } else {
       const errorText = await response.text();
       console.error("Room types error:", errorText);
-      displayRoomTypes([]); // Hiển thị empty state thay vì lỗi
+      displayRoomTypes([]);
     }
   } catch (error) {
     console.error("Error loading room types:", error);
-    displayRoomTypes([]); // Hiển thị empty state thay vì lỗi
+    displayRoomTypes([]);
   }
 }
 
-// Display room types
 function displayRoomTypes(roomTypes) {
   const container = document.getElementById("roomTypesContainer");
 
@@ -290,7 +286,6 @@ function displayRoomTypes(roomTypes) {
   container.innerHTML = roomTypes.map((roomType) => createRoomTypeCard(roomType)).join("");
 }
 
-// Create room type card
 function createRoomTypeCard(roomType) {
   const availableRooms = roomType.phongs ? roomType.phongs.filter((room) => room.trangThai === "Available").length : 0;
   const totalRooms = roomType.phongs ? roomType.phongs.length : 0;
@@ -332,16 +327,11 @@ function createRoomTypeCard(roomType) {
       `;
 }
 
-// Display price range
 function displayPriceRange() {
   const roomCards = document.querySelectorAll(".card-title");
   if (roomCards.length === 0) return;
-
-  // This will be updated after room types are loaded
-  // For now, we'll update it in the loadRoomTypes function
 }
 
-// Format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -349,7 +339,6 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
-// Book room function
 function bookRoom(roomTypeId) {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -363,14 +352,11 @@ function bookRoom(roomTypeId) {
   window.location.href = `booking.html?hotel=${currentHotelId}&roomType=${roomTypeId}`;
 }
 
-// Scroll to rooms section
 function scrollToRooms() {
   document.getElementById("roomTypesSection").scrollIntoView({
     behavior: "smooth",
   });
 }
-
-// Show alert message
 function showAlert(message, type = "danger") {
   const alertDiv = document.getElementById("alertMessage");
   if (alertDiv) {

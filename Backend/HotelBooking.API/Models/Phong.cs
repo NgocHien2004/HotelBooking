@@ -23,7 +23,6 @@ namespace HotelBooking.API.Models
         [StringLength(50)]
         public string TrangThai { get; set; } = "Available";
 
-        // Navigation properties
         [ForeignKey("MaLoaiPhong")]
         public virtual LoaiPhong LoaiPhong { get; set; } = null!;
         public virtual ICollection<DatPhong> DatPhongs { get; set; } = new List<DatPhong>();

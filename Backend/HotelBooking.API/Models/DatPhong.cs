@@ -37,7 +37,6 @@ namespace HotelBooking.API.Models
         [Column("ngay_dat")]
         public DateTime NgayDat { get; set; } = DateTime.Now;
 
-        // Navigation properties
         [ForeignKey("MaNguoiDung")]
         public virtual NguoiDung NguoiDung { get; set; } = null!;
 

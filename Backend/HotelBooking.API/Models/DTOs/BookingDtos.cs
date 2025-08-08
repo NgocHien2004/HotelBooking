@@ -12,23 +12,19 @@ namespace HotelBooking.API.DTOs
         public decimal TongTien { get; set; }
         public string TrangThai { get; set; } = string.Empty;
         public DateTime NgayDat { get; set; }
-        
-        // User info
+
         public string HoTenKhach { get; set; } = string.Empty;
         public string EmailKhach { get; set; } = string.Empty;
         public string SoDienThoaiKhach { get; set; } = string.Empty;
-        
-        // Hotel info
+
         public string TenKhachSan { get; set; } = string.Empty;
         public string DiaChiKhachSan { get; set; } = string.Empty;
-        
-        // Room info
+
         public string SoPhong { get; set; } = string.Empty;
         public string TenLoaiPhong { get; set; } = string.Empty;
         public decimal GiaMotDem { get; set; }
         public int SucChua { get; set; }
-        
-        // Calculated fields
+
         public int SoDem { get; set; }
         public decimal TotalPaid { get; set; }
         public decimal RemainingAmount { get; set; }
@@ -50,6 +46,6 @@ namespace HotelBooking.API.DTOs
     {
         public DateTime? NgayNhanPhong { get; set; }
         public DateTime? NgayTraPhong { get; set; }
-        public string? TrangThai { get; set; } // Thêm property này
+        public string? TrangThai { get; set; } 
     }
 }

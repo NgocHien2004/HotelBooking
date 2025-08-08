@@ -74,7 +74,6 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<DatPhongDto> CreateBookingAsync(int userId, CreateDatPhongDto createBookingDto)
         {
-            // Validate dates
             if (createBookingDto.NgayNhanPhong >= createBookingDto.NgayTraPhong)
             {
                 throw new ArgumentException("Ngày trả phòng phải sau ngày nhận phòng");
@@ -85,7 +84,6 @@ namespace HotelBooking.API.Services.Implementations
                 throw new ArgumentException("Ngày nhận phòng không thể là ngày quá khứ");
             }
 
-            // Check room availability
             var isAvailable = await _roomService.IsRoomAvailableAsync(
                 createBookingDto.MaPhong,
                 createBookingDto.NgayNhanPhong,
@@ -96,7 +94,6 @@ namespace HotelBooking.API.Services.Implementations
                 throw new InvalidOperationException("Phòng không có sẵn trong thời gian này");
             }
 
-            // Calculate total
             var total = await CalculateBookingTotalAsync(
                 createBookingDto.MaPhong,
                 createBookingDto.NgayNhanPhong,
@@ -123,7 +120,6 @@ namespace HotelBooking.API.Services.Implementations
                 return null;
             }
 
-            // Validate dates if they are provided
             if (updateBookingDto.NgayNhanPhong.HasValue && updateBookingDto.NgayTraPhong.HasValue)
             {
                 if (updateBookingDto.NgayNhanPhong.Value >= updateBookingDto.NgayTraPhong.Value)
@@ -132,33 +128,29 @@ namespace HotelBooking.API.Services.Implementations
                 }
             }
 
-            // Check if dates are changing and validate availability
             if ((updateBookingDto.NgayNhanPhong.HasValue && existingBooking.NgayNhanPhong != updateBookingDto.NgayNhanPhong.Value) ||
                 (updateBookingDto.NgayTraPhong.HasValue && existingBooking.NgayTraPhong != updateBookingDto.NgayTraPhong.Value))
             {
                 var checkInDate = updateBookingDto.NgayNhanPhong ?? existingBooking.NgayNhanPhong;
                 var checkOutDate = updateBookingDto.NgayTraPhong ?? existingBooking.NgayTraPhong;
 
-                // Sử dụng overload mới với excludeBookingId
                 var isAvailable = await _roomService.IsRoomAvailableAsync(
                     existingBooking.MaPhong,
                     checkInDate,
                     checkOutDate,
-                    id); // Loại trừ booking hiện tại khi kiểm tra
+                    id); 
 
                 if (!isAvailable)
                 {
                     throw new InvalidOperationException("Phòng không có sẵn trong thời gian mới");
                 }
 
-                // Recalculate total
                 existingBooking.TongTien = await CalculateBookingTotalAsync(
                     existingBooking.MaPhong,
                     checkInDate,
                     checkOutDate);
             }
 
-            // Update properties if provided
             if (updateBookingDto.NgayNhanPhong.HasValue)
             {
                 existingBooking.NgayNhanPhong = updateBookingDto.NgayNhanPhong.Value;
@@ -230,7 +222,6 @@ namespace HotelBooking.API.Services.Implementations
                 return false;
             }
 
-            // Can cancel if booking is pending or confirmed and check-in is at least 24 hours away
             return (booking.TrangThai == "Pending" || booking.TrangThai == "Confirmed") &&
                    booking.NgayNhanPhong > DateTime.Now.AddDays(1);
         }

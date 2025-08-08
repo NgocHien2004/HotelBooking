@@ -17,7 +17,6 @@ namespace HotelBooking.API.Controllers
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        // GET: api/hotels
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetHotels()
@@ -60,7 +59,6 @@ namespace HotelBooking.API.Controllers
                 
                 reader.Close();
 
-                // Load images for each hotel
                 var hotelsList = new List<object>();
                 foreach (var hotel in hotels)
                 {
@@ -90,7 +88,6 @@ namespace HotelBooking.API.Controllers
             }
         }
 
-        // GET: api/hotels/{id}
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetHotelById(int id)
@@ -129,10 +126,8 @@ namespace HotelBooking.API.Controllers
                 
                 reader.Close();
 
-                // Load images
                 var images = await GetHotelImages(id, connection);
-                
-                // Load room types
+
                 var roomTypesQuery = @"
                     SELECT lp.ma_loai_phong, lp.ten_loai_phong, lp.gia_mot_dem, 
                            lp.suc_chua, lp.mo_ta
@@ -177,7 +172,6 @@ namespace HotelBooking.API.Controllers
             }
         }
 
-        // POST: api/hotels
         [HttpPost]
         public async Task<IActionResult> CreateHotel([FromBody] CreateHotelRequest request)
         {
@@ -213,7 +207,6 @@ namespace HotelBooking.API.Controllers
             }
         }
 
-        // PUT: api/hotels/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateHotel(int id, [FromBody] UpdateHotelRequest request)
         {
@@ -256,7 +249,6 @@ namespace HotelBooking.API.Controllers
             }
         }
 
-        // DELETE: api/hotels/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHotel(int id)
         {
@@ -265,24 +257,20 @@ namespace HotelBooking.API.Controllers
                 using var connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                // Start transaction
                 using var transaction = connection.BeginTransaction();
 
                 try
                 {
-                    // Delete hotel images first
                     var deleteImagesQuery = "DELETE FROM HinhAnhKhachSan WHERE ma_khach_san = @HotelId";
                     using var deleteImagesCmd = new SqlCommand(deleteImagesQuery, connection, transaction);
                     deleteImagesCmd.Parameters.AddWithValue("@HotelId", id);
                     await deleteImagesCmd.ExecuteNonQueryAsync();
 
-                    // Delete room types
                     var deleteRoomTypesQuery = "DELETE FROM LoaiPhong WHERE ma_khach_san = @HotelId";
                     using var deleteRoomTypesCmd = new SqlCommand(deleteRoomTypesQuery, connection, transaction);
                     deleteRoomTypesCmd.Parameters.AddWithValue("@HotelId", id);
                     await deleteRoomTypesCmd.ExecuteNonQueryAsync();
 
-                    // Delete hotel
                     var deleteHotelQuery = "DELETE FROM KhachSan WHERE ma_khach_san = @HotelId";
                     using var deleteHotelCmd = new SqlCommand(deleteHotelQuery, connection, transaction);
                     deleteHotelCmd.Parameters.AddWithValue("@HotelId", id);
@@ -311,7 +299,6 @@ namespace HotelBooking.API.Controllers
             }
         }
 
-        // Helper method to get hotel images
         private async Task<List<object>> GetHotelImages(int hotelId, SqlConnection connection)
         {
             var images = new List<object>();
@@ -339,7 +326,6 @@ namespace HotelBooking.API.Controllers
         }
     }
 
-    // Request models
     public class CreateHotelRequest
     {
         public string TenKhachSan { get; set; }

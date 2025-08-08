@@ -22,7 +22,6 @@ namespace HotelBooking.API.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure precision for decimal properties
             modelBuilder.Entity<LoaiPhong>()
                 .Property(e => e.GiaMotDem)
                 .HasPrecision(10, 2);
@@ -39,12 +38,10 @@ namespace HotelBooking.API.Data
                 .Property(e => e.DanhGiaTrungBinh)
                 .HasPrecision(2, 1);
 
-            // Configure unique constraint for email
             modelBuilder.Entity<NguoiDung>()
                 .HasIndex(e => e.Email)
                 .IsUnique();
 
-            // Configure relationships
             modelBuilder.Entity<LoaiPhong>()
                 .HasOne(e => e.KhachSan)
                 .WithMany(e => e.LoaiPhongs)

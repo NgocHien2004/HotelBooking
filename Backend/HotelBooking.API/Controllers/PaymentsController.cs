@@ -49,7 +49,6 @@ namespace HotelBooking.API.Controllers
                     return NotFound(new { success = false, message = "Không tìm thấy thông tin thanh toán" });
                 }
 
-                // Check if user can access this payment
                 var currentUserId = GetCurrentUserId();
                 var currentUserRole = GetCurrentUserRole();
 
@@ -73,7 +72,6 @@ namespace HotelBooking.API.Controllers
         {
             try
             {
-                // Check if user can access this booking's payments
                 var currentUserId = GetCurrentUserId();
                 var currentUserRole = GetCurrentUserRole();
 
@@ -123,7 +121,6 @@ namespace HotelBooking.API.Controllers
             }
         }
 
-        // THÊM MỚI: Cho phép user tự tạo payment
         [HttpPost("user-payment")]
         public async Task<ActionResult<ThanhToanDto>> CreateUserPayment(CreateThanhToanDto createPaymentDto)
         {
@@ -135,8 +132,7 @@ namespace HotelBooking.API.Controllers
                 }
 
                 var currentUserId = GetCurrentUserId();
-                
-                // Verify booking exists and belongs to user
+
                 var booking = await _bookingService.GetBookingByIdAsync(createPaymentDto.MaDatPhong);
                 if (booking == null)
                 {
@@ -148,7 +144,6 @@ namespace HotelBooking.API.Controllers
                     return Forbid();
                 }
 
-                // Verify payment amount doesn't exceed remaining amount
                 var existingPayments = await _paymentService.GetPaymentsByBookingAsync(createPaymentDto.MaDatPhong);
                 var totalPaid = existingPayments.Sum(p => p.SoTien);
                 var remainingAmount = booking.TongTien - totalPaid;
@@ -186,7 +181,6 @@ namespace HotelBooking.API.Controllers
                     return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
                 }
 
-                // Verify booking exists
                 var booking = await _bookingService.GetBookingByIdAsync(createPaymentDto.MaDatPhong);
                 if (booking == null)
                 {
@@ -205,7 +199,6 @@ namespace HotelBooking.API.Controllers
             }
         }
 
-        // THÊM MỚI: Admin mark booking as paid
         [HttpPost("mark-paid/{bookingId}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> MarkBookingAsPaid(int bookingId)
@@ -218,7 +211,6 @@ namespace HotelBooking.API.Controllers
                     return NotFound(new { success = false, message = "Không tìm thấy đặt phòng" });
                 }
 
-                // Update booking status to Paid
                 var updatedBooking = await _bookingService.UpdateBookingStatusAsync(bookingId, "Paid");
                 if (updatedBooking == null)
                 {

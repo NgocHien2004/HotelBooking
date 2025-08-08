@@ -1,7 +1,5 @@
-// API Base URL - Sửa port cho đúng với backend
 const API_URL = "http://localhost:5233/api";
 
-// Load featured hotels on homepage
 async function loadFeaturedHotels() {
   try {
     const response = await fetch(`${API_URL}/hotels?limit=3`);
@@ -20,7 +18,6 @@ async function loadFeaturedHotels() {
   }
 }
 
-// Create hotel card HTML
 function createHotelCard(hotel) {
   const amenities = hotel.amenities ? hotel.amenities.split(",").slice(0, 3) : [];
   const imageUrl =
@@ -49,7 +46,6 @@ function createHotelCard(hotel) {
     `;
 }
 
-// Format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -57,7 +53,6 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
-// Show alert message
 function showAlert(message, type = "danger") {
   const alertDiv = document.getElementById("alertMessage");
   if (alertDiv) {
@@ -68,16 +63,13 @@ function showAlert(message, type = "danger") {
             </div>
         `;
 
-    // Auto dismiss after 5 seconds
     setTimeout(() => {
       alertDiv.innerHTML = "";
     }, 5000);
   }
 }
 
-// Initialize on page load
 document.addEventListener("DOMContentLoaded", function () {
-  // Load featured hotels if on homepage
   if (document.getElementById("featuredHotels")) {
     loadFeaturedHotels();
   }

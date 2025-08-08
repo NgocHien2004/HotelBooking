@@ -48,7 +48,6 @@ namespace HotelBooking.API.DTOs
         public DateTime NgayTao { get; set; }
     }
 
-    // NEW: DTO for updating user info including password
     public class UpdateUserDto
     {
         [Required]
@@ -67,7 +66,6 @@ namespace HotelBooking.API.DTOs
         [StringLength(50)]
         public string VaiTro { get; set; } = string.Empty;
 
-        // Optional password field for admin updates
         [StringLength(255, MinimumLength = 6)]
         public string? MatKhau { get; set; }
     }

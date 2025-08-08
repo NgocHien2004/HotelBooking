@@ -1,15 +1,12 @@
-// Admin Users Management
 let allUsers = [];
 let currentPage = 1;
 const itemsPerPage = 10;
 
-// Load users when page loads
 document.addEventListener("DOMContentLoaded", function () {
   checkAdminAccess();
   loadUsers();
 });
 
-// Load all users
 async function loadUsers() {
   try {
     const response = await fetch(`${API_URL}/users`, {
@@ -29,12 +26,10 @@ async function loadUsers() {
   }
 }
 
-// Display users with pagination
 function displayUsers() {
   const searchTerm = document.getElementById("searchInput").value.toLowerCase();
   const roleFilter = document.getElementById("roleFilter").value;
 
-  // Filter users
   let filteredUsers = allUsers.filter((user) => {
     const matchSearch =
       (user.hoTen || "").toLowerCase().includes(searchTerm) ||
@@ -45,13 +40,11 @@ function displayUsers() {
     return matchSearch && matchRole;
   });
 
-  // Pagination
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const usersToDisplay = filteredUsers.slice(startIndex, endIndex);
 
-  // Display users
   const tbody = document.getElementById("usersTableBody");
   tbody.innerHTML = "";
 
@@ -90,25 +83,21 @@ function displayUsers() {
         `;
   });
 
-  // Update pagination
   updatePagination(totalPages);
 }
 
-// Update pagination
 function updatePagination(totalPages) {
   const pagination = document.getElementById("pagination");
   pagination.innerHTML = "";
 
   if (totalPages <= 1) return;
 
-  // Previous button
   pagination.innerHTML += `
         <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Trước</a>
         </li>
     `;
 
-  // Page numbers
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
       pagination.innerHTML += `
@@ -119,7 +108,6 @@ function updatePagination(totalPages) {
     }
   }
 
-  // Next button
   pagination.innerHTML += `
         <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Sau</a>
@@ -127,13 +115,11 @@ function updatePagination(totalPages) {
     `;
 }
 
-// Change page
 function changePage(page) {
   currentPage = page;
   displayUsers();
 }
 
-// Add new user
 async function addUser() {
   const userData = {
     hoTen: document.getElementById("addFullName").value,
@@ -169,12 +155,10 @@ async function addUser() {
   }
 }
 
-// Edit user
 async function editUser(userId) {
   const user = allUsers.find((u) => u.maNguoiDung === userId);
   if (!user) return;
 
-  // Fill form with user data
   document.getElementById("editUserId").value = user.maNguoiDung;
   document.getElementById("editFullName").value = user.hoTen;
   document.getElementById("editEmail").value = user.email;
@@ -182,12 +166,9 @@ async function editUser(userId) {
   document.getElementById("editRole").value = user.vaiTro;
   document.getElementById("editPassword").value = "";
 
-  // Show modal
   const modal = new bootstrap.Modal(document.getElementById("editUserModal"));
   modal.show();
 }
-
-// Update user
 async function updateUser() {
   const userId = document.getElementById("editUserId").value;
   const userData = {
@@ -226,7 +207,6 @@ async function updateUser() {
   }
 }
 
-// Delete user
 async function deleteUser(userId) {
   if (!confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
     return;
@@ -251,7 +231,6 @@ async function deleteUser(userId) {
   }
 }
 
-// Event listeners
 document.getElementById("searchInput").addEventListener("input", () => {
   currentPage = 1;
   displayUsers();

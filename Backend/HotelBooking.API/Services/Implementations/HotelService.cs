@@ -28,7 +28,6 @@ namespace HotelBooking.API.Services.Implementations
 
             var hotelDtos = _mapper.Map<IEnumerable<KhachSanDto>>(hotels);
             
-            // Tính giá phòng thấp nhất cho mỗi khách sạn
             foreach (var hotelDto in hotelDtos)
             {
                 if (hotelDto.LoaiPhongs != null && hotelDto.LoaiPhongs.Any())
@@ -52,7 +51,6 @@ namespace HotelBooking.API.Services.Implementations
 
             var hotelDto = _mapper.Map<KhachSanDto>(hotel);
             
-            // Tính giá phòng thấp nhất
             if (hotelDto.LoaiPhongs != null && hotelDto.LoaiPhongs.Any())
             {
                 hotelDto.GiaPhongThapNhat = hotelDto.LoaiPhongs.Min(lp => lp.GiaMotDem);
@@ -83,7 +81,6 @@ namespace HotelBooking.API.Services.Implementations
             var hotels = await query.OrderBy(h => h.TenKhachSan).ToListAsync();
             var hotelDtos = _mapper.Map<IEnumerable<KhachSanDto>>(hotels);
             
-            // Tính giá phòng thấp nhất cho mỗi khách sạn
             foreach (var hotelDto in hotelDtos)
             {
                 if (hotelDto.LoaiPhongs != null && hotelDto.LoaiPhongs.Any())
@@ -98,10 +95,7 @@ namespace HotelBooking.API.Services.Implementations
         public async Task<KhachSanDto> CreateHotelAsync(CreateKhachSanDto createHotelDto)
         {
             var hotel = _mapper.Map<KhachSan>(createHotelDto);
-            
-            // Thêm tiện nghi nếu có (lưu vào một field khác nếu cần)
-            // Tùy thuộc vào cách bạn muốn lưu tiện nghi trong database
-            
+             
             _context.KhachSans.Add(hotel);
             await _context.SaveChangesAsync();
 

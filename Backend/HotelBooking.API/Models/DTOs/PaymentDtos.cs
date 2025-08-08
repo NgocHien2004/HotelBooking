@@ -10,7 +10,6 @@ namespace HotelBooking.API.DTOs
         public string? PhuongThuc { get; set; }
         public DateTime NgayThanhToan { get; set; }
         
-        // Booking info
         public string HoTenKhach { get; set; } = string.Empty;
         public string TenKhachSan { get; set; } = string.Empty;
         public string SoPhong { get; set; } = string.Empty;

@@ -1,36 +1,26 @@
-// Admin Hotels Management
 let allHotels = [];
-let currentView = "grid"; // chỉ còn grid view
+let currentView = "grid";
 let currentHotelId = null;
 
-// Initialize page
 document.addEventListener("DOMContentLoaded", function () {
   console.log("DOM loaded, initializing admin hotels page...");
   loadHotels();
   setupEventListeners();
 });
 
-// Setup event listeners
 function setupEventListeners() {
-  // Chỉ còn grid view - loại bỏ table view
   document.getElementById("gridViewBtn").addEventListener("click", () => switchView("grid"));
-
-  // Ẩn nút table view
   const tableViewBtn = document.getElementById("tableViewBtn");
   if (tableViewBtn) {
     tableViewBtn.style.display = "none";
   }
 
-  // Search
   document.getElementById("searchInput").addEventListener("input", filterHotels);
 
-  // Setup form handlers
   setupFormHandlers();
 }
 
-// Setup form handlers
 function setupFormHandlers() {
-  // Edit hotel form
   const editHotelForm = document.getElementById("editHotelForm");
   if (editHotelForm) {
     editHotelForm.addEventListener("submit", function (e) {
@@ -39,7 +29,6 @@ function setupFormHandlers() {
     });
   }
 
-  // Add room type form
   const addRoomTypeForm = document.getElementById("addRoomTypeForm");
   if (addRoomTypeForm) {
     addRoomTypeForm.addEventListener("submit", function (e) {
@@ -48,7 +37,6 @@ function setupFormHandlers() {
     });
   }
 
-  // Edit room type form
   const editRoomTypeForm = document.getElementById("editRoomTypeForm");
   if (editRoomTypeForm) {
     editRoomTypeForm.addEventListener("submit", function (e) {
@@ -58,13 +46,11 @@ function setupFormHandlers() {
   }
 }
 
-// Switch view (chỉ còn grid)
 function switchView(view) {
   currentView = "grid";
   document.getElementById("gridViewBtn").classList.add("active");
   document.getElementById("hotelsGridView").style.display = "flex";
 
-  // Ẩn table view
   const tableView = document.getElementById("hotelsTableView");
   if (tableView) {
     tableView.style.display = "none";
@@ -73,13 +59,11 @@ function switchView(view) {
   displayHotels();
 }
 
-// Load hotels with improved error handling and debug
 async function loadHotels() {
   console.log("Loading hotels...");
   console.log("API_URL:", API_URL);
 
   try {
-    // Check if API_URL is defined
     if (!API_URL) {
       console.error("API_URL is not defined!");
       showAlert("Lỗi cấu hình: API_URL không được định nghĩa", "danger");
@@ -109,7 +93,6 @@ async function loadHotels() {
     const data = await response.json();
     console.log("Raw response data:", data);
 
-    // Handle different response formats
     if (data.success && data.data) {
       allHotels = data.data;
       console.log("Hotels from data.data:", allHotels);
@@ -129,7 +112,6 @@ async function loadHotels() {
     console.error("Error loading hotels:", error);
     showAlert(`Không thể tải danh sách khách sạn: ${error.message}`, "danger");
 
-    // Show empty state
     const container = document.getElementById("hotelsGridView");
     container.innerHTML = `
       <div class="col-12 text-center">
@@ -143,7 +125,6 @@ async function loadHotels() {
   }
 }
 
-// Display hotels - chỉ grid view
 function displayHotels() {
   console.log("Displaying hotels in grid view");
   console.log("Hotels to display:", allHotels.length);
@@ -163,7 +144,6 @@ function displayHotels() {
   displayGridView(filteredHotels);
 }
 
-// Display hotels in grid view
 function displayGridView(hotels) {
   const container = document.getElementById("hotelsGridView");
 
@@ -195,7 +175,6 @@ function displayGridView(hotels) {
   });
 }
 
-// Map hotel data to consistent format
 function mapHotelData(hotel) {
   return {
     id: hotel.maKhachSan || hotel.id,
@@ -212,17 +191,14 @@ function mapHotelData(hotel) {
   };
 }
 
-// Create hotel card for grid view với đầy đủ chức năng CRUD - SỬA ĐỔI QUAN TRỌNG
 function createHotelCard(hotel) {
   let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
 
-  // Xử lý ảnh thật từ database - QUAN TRỌNG
   if (hotel.images && hotel.images.length > 0) {
     const firstImage = hotel.images[0];
     imageUrl = getImageUrl(firstImage);
   }
 
-  // Truncate name và address cho giao diện gọn
   const truncatedName = hotel.name.length > 30 ? hotel.name.substring(0, 30) + "..." : hotel.name;
   const truncatedAddress = hotel.address.length > 50 ? hotel.address.substring(0, 50) + "..." : hotel.address;
 
@@ -313,20 +289,18 @@ function createHotelCard(hotel) {
   `;
 }
 
-// Filter hotels based on search input
 function filterHotels() {
   displayHotels();
 }
 
-// Get image URL helper - SỬA ĐỔI: Cải thiện xử lý ảnh
 function getImageUrl(image) {
   const baseUrl = "http://localhost:5233";
   const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
 
-  console.log("Processing image:", image); // Debug
+  console.log("Processing image:", image);
 
   if (!image) {
-    console.log("No image provided, using placeholder"); // Debug
+    console.log("No image provided, using placeholder");
     return placeholderUrl;
   }
 
@@ -335,28 +309,25 @@ function getImageUrl(image) {
       return placeholderUrl;
     }
 
-    // Nếu đã là URL đầy đủ thì dùng trực tiếp
     if (image.startsWith("http")) {
-      console.log("Full URL detected:", image); // Debug
+      console.log("Full URL detected:", image);
       return image;
     }
 
-    // Nếu bắt đầu bằng /uploads thì thêm API_URL
     if (image.startsWith("/uploads")) {
       const url = `${baseUrl}${image}`;
-      console.log("Uploads path detected, generated:", url); // Debug
+      console.log("Uploads path detected, generated:", url);
       return url;
     }
 
-    // Nếu chỉ có tên file
     const url = `${baseUrl}/uploads/hotels/${image}`;
-    console.log("Filename only, generated:", url); // Debug
+    console.log("Filename only, generated:", url);
     return url;
   }
 
   if (image && image.duongDanAnh) {
     const imagePath = image.duongDanAnh;
-    console.log("Object with duongDanAnh:", imagePath); // Debug
+    console.log("Object with duongDanAnh:", imagePath);
 
     if (!imagePath || !imagePath.trim()) {
       return placeholderUrl;
@@ -373,12 +344,10 @@ function getImageUrl(image) {
     return `${baseUrl}/uploads/hotels/${imagePath}`;
   }
 
-  // Fallback to placeholder
-  console.log("Fallback to placeholder"); // Debug
+  console.log("Fallback to placeholder");
   return placeholderUrl;
 }
 
-// View hotel details with room types
 async function viewHotelDetails(hotelId) {
   console.log("Viewing hotel details for ID:", hotelId);
   currentHotelId = hotelId;
@@ -396,7 +365,6 @@ async function viewHotelDetails(hotelId) {
     const hotel = data.success && data.data ? data.data : data;
     const hotelData = mapHotelData(hotel);
 
-    // Load room types for this hotel
     const roomTypesResponse = await fetch(`${API_URL}/roomtypes/hotel/${hotelId}`, {
       headers: getAuthHeaders(),
     });
@@ -414,13 +382,11 @@ async function viewHotelDetails(hotelId) {
   }
 }
 
-// Show hotel details modal with room types
 function showHotelDetailsModal(hotel, roomTypes) {
   const modal = new bootstrap.Modal(document.getElementById("hotelDetailsModal"));
 
   document.getElementById("hotelDetailsTitle").textContent = hotel.name;
 
-  // Create room types section
   let roomTypesHtml = "";
   if (roomTypes && roomTypes.length > 0) {
     roomTypesHtml = `
@@ -477,7 +443,6 @@ function showHotelDetailsModal(hotel, roomTypes) {
     `;
   }
 
-  // Create images section - SỬA ĐỔI: Hiển thị ảnh thật
   let imagesHtml = "";
   if (hotel.images && hotel.images.length > 0) {
     imagesHtml = `
@@ -550,7 +515,6 @@ function showHotelDetailsModal(hotel, roomTypes) {
   modal.show();
 }
 
-// Edit hotel
 async function editHotel(hotelId) {
   console.log("Editing hotel ID:", hotelId);
 
@@ -567,7 +531,6 @@ async function editHotel(hotelId) {
     const hotel = data.success && data.data ? data.data : data;
     const hotelData = mapHotelData(hotel);
 
-    // Fill form with hotel data
     document.getElementById("editHotelId").value = hotelData.id;
     document.getElementById("editName").value = hotelData.name;
     document.getElementById("editCity").value = hotelData.city;
@@ -576,7 +539,6 @@ async function editHotel(hotelId) {
     document.getElementById("editDescription").value = hotelData.description;
     document.getElementById("editAmenities").value = hotelData.amenities;
 
-    // Show modal
     const modal = new bootstrap.Modal(document.getElementById("editHotelModal"));
     modal.show();
   } catch (error) {
@@ -585,7 +547,6 @@ async function editHotel(hotelId) {
   }
 }
 
-// Update hotel
 async function updateHotel() {
   const id = document.getElementById("editHotelId").value;
 
@@ -611,7 +572,7 @@ async function updateHotel() {
     if (response.ok) {
       showAlert("Cập nhật khách sạn thành công!", "success");
       bootstrap.Modal.getInstance(document.getElementById("editHotelModal")).hide();
-      loadHotels(); // Reload hotels
+      loadHotels();
     } else {
       const data = await response.json();
       showAlert(data.message || "Có lỗi xảy ra!", "danger");
@@ -622,7 +583,6 @@ async function updateHotel() {
   }
 }
 
-// Delete hotel
 async function deleteHotel(hotelId) {
   if (!confirm("Bạn có chắc chắn muốn xóa khách sạn này? Tất cả loại phòng và đặt phòng liên quan cũng sẽ bị xóa.")) {
     return;
@@ -636,7 +596,7 @@ async function deleteHotel(hotelId) {
 
     if (response.ok) {
       showAlert("Xóa khách sạn thành công!", "success");
-      loadHotels(); // Reload hotels list
+      loadHotels();
     } else {
       const data = await response.json();
       showAlert(data.message || "Có lỗi xảy ra khi xóa khách sạn!", "danger");
@@ -647,7 +607,6 @@ async function deleteHotel(hotelId) {
   }
 }
 
-// Show add room type modal
 function showAddRoomTypeModal(hotelId) {
   document.getElementById("roomTypeHotelId").value = hotelId;
   document.getElementById("addRoomTypeForm").reset();
@@ -656,7 +615,6 @@ function showAddRoomTypeModal(hotelId) {
   modal.show();
 }
 
-// Add room type
 async function addRoomType() {
   const hotelId = document.getElementById("roomTypeHotelId").value;
   const roomTypeData = {
@@ -680,8 +638,8 @@ async function addRoomType() {
     if (response.ok) {
       showAlert("Thêm loại phòng thành công!", "success");
       bootstrap.Modal.getInstance(document.getElementById("addRoomTypeModal")).hide();
-      viewHotelDetails(hotelId); // Reload hotel details
-      loadHotels(); // Reload hotels to update prices
+      viewHotelDetails(hotelId);
+      loadHotels();
     } else {
       const data = await response.json();
       showAlert(data.message || "Có lỗi xảy ra!", "danger");
@@ -692,7 +650,6 @@ async function addRoomType() {
   }
 }
 
-// Edit room type
 async function editRoomType(roomTypeId) {
   try {
     const response = await fetch(`${API_URL}/roomtypes/${roomTypeId}`, {
@@ -706,14 +663,12 @@ async function editRoomType(roomTypeId) {
     const data = await response.json();
     const roomType = data.success && data.data ? data.data : data;
 
-    // Fill form
     document.getElementById("editRoomTypeId").value = roomType.maLoaiPhong;
     document.getElementById("editRoomTypeName").value = roomType.tenLoaiPhong;
     document.getElementById("editRoomTypePrice").value = roomType.giaMotDem;
     document.getElementById("editRoomTypeCapacity").value = roomType.sucChua;
     document.getElementById("editRoomTypeDescription").value = roomType.moTa || "";
 
-    // Show modal
     const modal = new bootstrap.Modal(document.getElementById("editRoomTypeModal"));
     modal.show();
   } catch (error) {
@@ -722,7 +677,6 @@ async function editRoomType(roomTypeId) {
   }
 }
 
-// Update room type
 async function updateRoomType() {
   const roomTypeId = document.getElementById("editRoomTypeId").value;
   const roomTypeData = {
@@ -745,8 +699,8 @@ async function updateRoomType() {
     if (response.ok) {
       showAlert("Cập nhật loại phòng thành công!", "success");
       bootstrap.Modal.getInstance(document.getElementById("editRoomTypeModal")).hide();
-      viewHotelDetails(currentHotelId); // Reload hotel details
-      loadHotels(); // Reload hotels to update prices
+      viewHotelDetails(currentHotelId);
+      loadHotels();
     } else {
       const data = await response.json();
       showAlert(data.message || "Có lỗi xảy ra!", "danger");
@@ -757,7 +711,6 @@ async function updateRoomType() {
   }
 }
 
-// Delete room type
 async function deleteRoomType(roomTypeId) {
   console.log("Attempting to delete room type ID:", roomTypeId);
 
@@ -783,7 +736,6 @@ async function deleteRoomType(roomTypeId) {
       console.log("Delete success data:", data);
       showAlert("Xóa loại phòng thành công!", "success");
 
-      // Reload hotel details and hotels list
       if (currentHotelId) {
         viewHotelDetails(currentHotelId);
       }
@@ -814,7 +766,6 @@ function showAddHotelModal() {
   modal.show();
 }
 
-// Add hotel function - THÊM HÀM NÀY
 async function addHotel() {
   const hotelData = {
     tenKhachSan: document.getElementById("hotelName").value,
@@ -838,7 +789,7 @@ async function addHotel() {
     if (response.ok) {
       showAlert("Thêm khách sạn thành công!", "success");
       bootstrap.Modal.getInstance(document.getElementById("addHotelModal")).hide();
-      loadHotels(); // Reload hotels list
+      loadHotels();
     } else {
       const data = await response.json();
       showAlert(data.message || "Có lỗi xảy ra!", "danger");
@@ -849,12 +800,10 @@ async function addHotel() {
   }
 }
 
-// Form event listeners - THÊM PHẦN NÀY
 document.addEventListener("DOMContentLoaded", function () {
   checkAdminAccess();
   loadHotels();
 
-  // Add hotel form
   const addHotelForm = document.getElementById("addHotelForm");
   if (addHotelForm) {
     addHotelForm.addEventListener("submit", async (e) => {
@@ -863,7 +812,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Edit hotel form
   const editHotelForm = document.getElementById("editHotelForm");
   if (editHotelForm) {
     editHotelForm.addEventListener("submit", async (e) => {
@@ -872,7 +820,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Add room type form
   const addRoomTypeForm = document.getElementById("addRoomTypeForm");
   if (addRoomTypeForm) {
     addRoomTypeForm.addEventListener("submit", async (e) => {
@@ -881,7 +828,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Edit room type form
   const editRoomTypeForm = document.getElementById("editRoomTypeForm");
   if (editRoomTypeForm) {
     editRoomTypeForm.addEventListener("submit", async (e) => {

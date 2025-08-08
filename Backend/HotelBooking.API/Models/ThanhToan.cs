@@ -25,7 +25,6 @@ namespace HotelBooking.API.Models
         [Column("ngay_thanh_toan")]
         public DateTime NgayThanhToan { get; set; } = DateTime.Now;
 
-        // Navigation properties
         [ForeignKey("MaDatPhong")]
         public virtual DatPhong DatPhong { get; set; } = null!;
     }

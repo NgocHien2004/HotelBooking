@@ -1,4 +1,3 @@
-// Booking functionality
 let currentHotelId = null;
 let currentRoomTypeId = null;
 let currentRoomId = null;
@@ -6,13 +5,11 @@ let currentRoomType = null;
 let currentHotel = null;
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Check authentication
   if (!isAuthenticated()) {
     window.location.href = "login.html";
     return;
   }
 
-  // Get URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   currentHotelId = urlParams.get("hotel");
   currentRoomTypeId = urlParams.get("roomType");
@@ -26,13 +23,10 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  // Set minimum dates
   setMinimumDates();
 
-  // Load booking data
   loadBookingData();
 
-  // Event listeners
   document.getElementById("checkInDate").addEventListener("change", calculateTotal);
   document.getElementById("checkOutDate").addEventListener("change", calculateTotal);
   document.getElementById("bookingForm").addEventListener("submit", submitBooking);
@@ -47,7 +41,6 @@ function setMinimumDates() {
   document.getElementById("checkInDate").min = today;
   document.getElementById("checkOutDate").min = tomorrowStr;
 
-  // Set default dates
   document.getElementById("checkInDate").value = today;
   document.getElementById("checkOutDate").value = tomorrowStr;
 }
@@ -56,7 +49,6 @@ async function loadBookingData() {
   try {
     console.log("Loading booking data...");
 
-    // Load hotel data
     console.log("Loading hotel:", currentHotelId);
     const hotelResponse = await apiCall(`/api/hotels/${currentHotelId}`, "GET");
     console.log("Hotel response:", hotelResponse);
@@ -68,7 +60,6 @@ async function loadBookingData() {
       throw new Error("Failed to load hotel data");
     }
 
-    // Load room type data
     console.log("Loading room type:", currentRoomTypeId);
     const roomTypeResponse = await apiCall(`/api/roomtypes/${currentRoomTypeId}`, "GET");
     console.log("Room type response:", roomTypeResponse);
@@ -76,7 +67,7 @@ async function loadBookingData() {
     if (roomTypeResponse.success) {
       currentRoomType = roomTypeResponse.data;
       displayRoomTypeInfo();
-      calculateTotal(); // Calculate initial total
+      calculateTotal();
     } else {
       throw new Error("Failed to load room type data");
     }
@@ -90,11 +81,9 @@ async function loadBookingData() {
 function displayHotelInfo() {
   if (!currentHotel) return;
 
-  // Display hotel information
   document.getElementById("hotelName").textContent = currentHotel.tenKhachSan;
   document.getElementById("hotelAddress").textContent = currentHotel.diaChi;
 
-  // Display hotel images if available
   if (currentHotel.hinhAnhs && currentHotel.hinhAnhs.length > 0) {
     const hotelImage = document.getElementById("hotelImage");
     if (hotelImage) {
@@ -107,7 +96,6 @@ function displayHotelInfo() {
 function displayRoomTypeInfo() {
   if (!currentRoomType) return;
 
-  // Display room type information
   document.getElementById("roomTypeName").textContent = currentRoomType.tenLoaiPhong;
   document.getElementById("roomPrice").textContent = formatCurrency(currentRoomType.giaMotDem);
   document.getElementById("roomCapacity").textContent = `${currentRoomType.sucChua} người`;
@@ -161,14 +149,12 @@ async function submitBooking(event) {
     return;
   }
 
-  // Disable submit button to prevent double submission
   const submitBtn = document.querySelector('button[type="submit"]');
   const originalText = submitBtn.textContent;
   submitBtn.disabled = true;
   submitBtn.textContent = "Đang xử lý...";
 
   try {
-    // If no specific room selected, find available room
     let roomId = currentRoomId;
     if (!roomId) {
       console.log("Finding available room...");
@@ -179,7 +165,6 @@ async function submitBooking(event) {
       }
     }
 
-    // Create booking data
     const bookingData = {
       maPhong: parseInt(roomId),
       ngayNhanPhong: checkInDate,
@@ -188,22 +173,18 @@ async function submitBooking(event) {
 
     console.log("Sending booking data:", bookingData);
 
-    // Call API to create booking
     const response = await apiCall("/api/bookings", "POST", bookingData);
     console.log("Booking response:", response);
 
     if (response.success) {
-      // Show success modal with booking code
       document.getElementById("bookingCode").textContent = `#${response.data.maDatPhong}`;
 
-      // Set flag to indicate new booking was created
       localStorage.setItem("newBookingCreated", "true");
       localStorage.setItem("lastBookingId", response.data.maDatPhong);
 
       const successModal = new bootstrap.Modal(document.getElementById("successModal"));
       successModal.show();
 
-      // Optional: Auto redirect to my-bookings after 3 seconds
       setTimeout(() => {
         window.location.href = "my-bookings.html";
       }, 3000);
@@ -214,7 +195,6 @@ async function submitBooking(event) {
     console.error("Error creating booking:", error);
     showAlert("Có lỗi xảy ra khi đặt phòng: " + error.message, "danger");
   } finally {
-    // Re-enable submit button
     submitBtn.disabled = false;
     submitBtn.textContent = originalText;
   }
@@ -231,7 +211,6 @@ async function findAvailableRoom() {
       ngayTraPhong: checkOutDate,
     });
 
-    // Get available rooms for this room type
     const response = await apiCall(
       `/api/rooms/available?maLoaiPhong=${currentRoomTypeId}&ngayNhanPhong=${checkInDate}&ngayTraPhong=${checkOutDate}`,
       "GET"
@@ -250,7 +229,6 @@ async function findAvailableRoom() {
   }
 }
 
-// Utility function to format currency
 function formatCurrency(amount) {
   if (typeof amount !== "number") {
     amount = parseFloat(amount) || 0;
@@ -261,12 +239,10 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
-// Check if user is authenticated
 function isAuthenticated() {
   return localStorage.getItem("token") !== null;
 }
 
-// Show alert message
 function showAlert(message, type = "info") {
   const alertContainer = document.getElementById("alertContainer") || document.body;
   const alertElement = document.createElement("div");
@@ -278,7 +254,6 @@ function showAlert(message, type = "info") {
 
   alertContainer.insertBefore(alertElement, alertContainer.firstChild);
 
-  // Auto-hide after 5 seconds
   setTimeout(() => {
     if (alertElement.parentNode) {
       alertElement.remove();

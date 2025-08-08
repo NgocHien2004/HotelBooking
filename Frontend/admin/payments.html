@@ -9,7 +9,6 @@
     <link href="../assets/css/style.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <div class="container-fluid">
         <a class="navbar-brand" href="../index.html"> <i class="bi bi-building"></i> Hotel Booking Admin </a>
@@ -44,10 +43,8 @@
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPaymentModal"><i class="bi bi-plus"></i> Thêm thanh toán</button>
       </div>
 
-      <!-- Alert Message -->
       <div id="alertMessage"></div>
 
-      <!-- Payment Statistics -->
       <div class="row mb-4">
         <div class="col-md-3">
           <div class="card bg-success text-white">
@@ -103,7 +100,6 @@
         </div>
       </div>
 
-      <!-- Filters -->
       <div class="row mb-3">
         <div class="col-md-3">
           <input type="text" class="form-control" id="searchInput" placeholder="Tìm theo mã đặt phòng, khách hàng..." />
@@ -128,7 +124,6 @@
         </div>
       </div>
 
-      <!-- Payments Table -->
       <div class="table-responsive">
         <table class="table table-striped table-hover">
           <thead>
@@ -143,19 +138,15 @@
               <th>Thao tác</th>
             </tr>
           </thead>
-          <tbody id="paymentsTableBody">
-            <!-- Payments will be loaded here -->
-          </tbody>
+          <tbody id="paymentsTableBody"></tbody>
         </table>
       </div>
 
-      <!-- Pagination -->
       <nav aria-label="Page navigation" class="mt-4">
         <ul class="pagination justify-content-center" id="pagination"></ul>
       </nav>
     </div>
 
-    <!-- Add Payment Modal -->
     <div class="modal fade" id="addPaymentModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -195,7 +186,6 @@
       </div>
     </div>
 
-    <!-- Payment Detail Modal -->
     <div class="modal fade" id="paymentDetailModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -203,9 +193,7 @@
             <h5 class="modal-title">Chi tiết thanh toán</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body" id="paymentDetailContent">
-            <!-- Payment details will be loaded here -->
-          </div>
+          <div class="modal-body" id="paymentDetailContent"></div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             <button type="button" class="btn btn-warning" id="refundBtn" onclick="refundPayment()">

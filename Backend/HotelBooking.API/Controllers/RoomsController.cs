@@ -88,7 +88,6 @@ namespace HotelBooking.API.Services.Implementations
                     return false;
                 }
 
-                // Delete all bookings for rooms of this type first
                 var roomsToDelete = await _context.Phongs
                     .Where(r => r.MaLoaiPhong == id)
                     .Select(r => r.MaPhong)
@@ -105,7 +104,6 @@ namespace HotelBooking.API.Services.Implementations
                         _context.DatPhongs.RemoveRange(bookingsToDelete);
                     }
                     
-                    // Then delete all rooms of this type
                     var rooms = await _context.Phongs
                         .Where(r => r.MaLoaiPhong == id)
                         .ToListAsync();
@@ -113,7 +111,6 @@ namespace HotelBooking.API.Services.Implementations
                     _context.Phongs.RemoveRange(rooms);
                 }
                 
-                // Finally delete the room type
                 _context.LoaiPhongs.Remove(roomType);
                 
                 await _context.SaveChangesAsync();
@@ -209,7 +206,6 @@ namespace HotelBooking.API.Services.Implementations
                     return false;
                 }
 
-                // Delete all bookings for this room first
                 var bookingsToDelete = await _context.DatPhongs
                     .Where(b => b.MaPhong == id)
                     .ToListAsync();
@@ -219,7 +215,6 @@ namespace HotelBooking.API.Services.Implementations
                     _context.DatPhongs.RemoveRange(bookingsToDelete);
                 }
 
-                // Then delete the room
                 _context.Phongs.Remove(room);
                 
                 await _context.SaveChangesAsync();
@@ -256,7 +251,6 @@ namespace HotelBooking.API.Services.Implementations
                 query = query.Where(r => r.MaLoaiPhong == availabilityDto.MaLoaiPhong.Value);
             }
 
-            // Check for overlapping bookings
             var unavailableRoomIds = await _context.DatPhongs
                 .Where(b => b.TrangThai != "Cancelled" &&
                            ((b.NgayNhanPhong <= availabilityDto.NgayTraPhong && b.NgayTraPhong >= availabilityDto.NgayNhanPhong)))
@@ -285,7 +279,6 @@ namespace HotelBooking.API.Services.Implementations
             var query = _context.DatPhongs
                 .Where(b => b.MaPhong == roomId && b.TrangThai != "Cancelled");
 
-            // Loại trừ booking hiện tại khi update
             if (excludeBookingId.HasValue)
             {
                 query = query.Where(b => b.MaDatPhong != excludeBookingId.Value);

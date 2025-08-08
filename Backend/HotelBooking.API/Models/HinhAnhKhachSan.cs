@@ -23,7 +23,6 @@ namespace HotelBooking.API.Models
         [StringLength(255)]
         public string? MoTa { get; set; }
 
-        // Navigation properties
         [ForeignKey("MaKhachSan")]
         public virtual KhachSan KhachSan { get; set; } = null!;
     }

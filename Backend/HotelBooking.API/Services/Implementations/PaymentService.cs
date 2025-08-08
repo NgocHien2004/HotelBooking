@@ -58,7 +58,6 @@ namespace HotelBooking.API.Services.Implementations
             _context.ThanhToans.Add(payment);
             await _context.SaveChangesAsync();
 
-            // Update booking status if fully paid
             var booking = await _context.DatPhongs.FindAsync(payment.MaDatPhong);
             if (booking != null)
             {
@@ -79,15 +78,9 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<bool> ProcessPaymentAsync(int paymentId)
         {
-            // Implement payment processing logic here
-            // This is where you would integrate with payment gateway
-            
-            // For now, just mark as processed
             var payment = await _context.ThanhToans.FindAsync(paymentId);
             if (payment == null) return false;
 
-            // Process payment...
-            // await ProcessWithPaymentGateway(payment);
 
             return true;
         }
@@ -97,11 +90,10 @@ namespace HotelBooking.API.Services.Implementations
             var payment = await _context.ThanhToans.FindAsync(paymentId);
             if (payment == null) return false;
 
-            // Create refund record
             var refund = new ThanhToan
             {
                 MaDatPhong = payment.MaDatPhong,
-                SoTien = -payment.SoTien, // Negative amount for refund
+                SoTien = -payment.SoTien, 
                 PhuongThuc = payment.PhuongThuc,
                 NgayThanhToan = DateTime.Now
             };

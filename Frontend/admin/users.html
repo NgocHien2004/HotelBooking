@@ -9,7 +9,6 @@
     <link href="../assets/css/admin.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Admin Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
         <a class="navbar-brand" href="dashboard.html">Admin Panel</a>
@@ -51,10 +50,8 @@
         </button>
       </div>
 
-      <!-- Alert Message -->
       <div id="alertMessage"></div>
 
-      <!-- Search -->
       <div class="row mb-3">
         <div class="col-md-4">
           <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm theo tên, email..." />
@@ -68,7 +65,6 @@
         </div>
       </div>
 
-      <!-- Users Table -->
       <div class="table-responsive">
         <table class="table table-striped table-hover">
           <thead>
@@ -82,19 +78,15 @@
               <th>Thao tác</th>
             </tr>
           </thead>
-          <tbody id="usersTableBody">
-            <!-- Users will be loaded here -->
-          </tbody>
+          <tbody id="usersTableBody"></tbody>
         </table>
       </div>
 
-      <!-- Pagination -->
       <nav aria-label="Page navigation" class="mt-4">
         <ul class="pagination justify-content-center" id="pagination"></ul>
       </nav>
     </div>
 
-    <!-- Add User Modal -->
     <div class="modal fade" id="addUserModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -137,7 +129,6 @@
       </div>
     </div>
 
-    <!-- Edit User Modal -->
     <div class="modal fade" id="editUserModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">

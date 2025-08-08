@@ -65,14 +65,12 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<DanhGiaDto> CreateReviewAsync(int userId, CreateDanhGiaDto createReviewDto)
         {
-            // Check if user can review this hotel
             var canReview = await CanUserReviewHotelAsync(userId, createReviewDto.MaKhachSan);
             if (!canReview)
             {
                 throw new InvalidOperationException("Bạn chỉ có thể đánh giá khách sạn mà bạn đã từng đặt phòng");
             }
 
-            // Check if user already reviewed this hotel
             var existingReview = await _context.DanhGias
                 .FirstOrDefaultAsync(r => r.MaNguoiDung == userId && r.MaKhachSan == createReviewDto.MaKhachSan);
 
@@ -87,7 +85,6 @@ namespace HotelBooking.API.Services.Implementations
             _context.DanhGias.Add(review);
             await _context.SaveChangesAsync();
 
-            // Update hotel average rating
             await UpdateHotelAverageRatingAsync(createReviewDto.MaKhachSan);
 
             return await GetReviewByIdAsync(review.MaDanhGia) ?? 
@@ -107,7 +104,6 @@ namespace HotelBooking.API.Services.Implementations
             _mapper.Map(updateReviewDto, existingReview);
             await _context.SaveChangesAsync();
 
-            // Update hotel average rating
             await UpdateHotelAverageRatingAsync(existingReview.MaKhachSan);
 
             return await GetReviewByIdAsync(id);
@@ -127,7 +123,6 @@ namespace HotelBooking.API.Services.Implementations
             _context.DanhGias.Remove(review);
             await _context.SaveChangesAsync();
 
-            // Update hotel average rating
             await UpdateHotelAverageRatingAsync(hotelId);
 
             return true;
@@ -153,7 +148,6 @@ namespace HotelBooking.API.Services.Implementations
                 DanhGiaTrungBinh = reviews.Any() ? (decimal)reviews.Average(r => r.DiemDanhGia!.Value) : 0
             };
 
-            // Calculate rating distribution
             for (int i = 1; i <= 5; i++)
             {
                 summary.PhanBoSao[i] = reviews.Count(r => r.DiemDanhGia == i);
@@ -164,7 +158,6 @@ namespace HotelBooking.API.Services.Implementations
 
         public async Task<bool> CanUserReviewHotelAsync(int userId, int hotelId)
         {
-            // User can review if they have completed bookings at this hotel
             return await _context.DatPhongs
                 .AnyAsync(b => b.MaNguoiDung == userId &&
                               b.Phong.LoaiPhong.MaKhachSan == hotelId &&

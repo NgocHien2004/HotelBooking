@@ -8,12 +8,10 @@ namespace HotelBooking.API.Mappings
     {
         public MappingProfile()
         {
-            // User mappings
             CreateMap<NguoiDung, UserDto>();
             CreateMap<RegisterDto, NguoiDung>()
                 .ForMember(dest => dest.NgayTao, opt => opt.MapFrom(src => DateTime.Now));
 
-            // Hotel mappings
             CreateMap<KhachSan, KhachSanDto>()
                 .ForMember(dest => dest.HinhAnhs, opt => opt.MapFrom(src => src.HinhAnhKhachSans))
                 .ForMember(dest => dest.LoaiPhongs, opt => opt.MapFrom(src => src.LoaiPhongs));
@@ -21,18 +19,15 @@ namespace HotelBooking.API.Mappings
                 .ForMember(dest => dest.NgayTao, opt => opt.MapFrom(src => DateTime.Now));
             CreateMap<UpdateKhachSanDto, KhachSan>();
 
-            // Hotel Image mappings
             CreateMap<HinhAnhKhachSan, HinhAnhKhachSanDto>();
             CreateMap<CreateHinhAnhKhachSanDto, HinhAnhKhachSan>();
 
-            // Room Type mappings
             CreateMap<LoaiPhong, LoaiPhongDto>()
                 .ForMember(dest => dest.TenKhachSan, opt => opt.MapFrom(src => src.KhachSan.TenKhachSan))
                 .ForMember(dest => dest.Phongs, opt => opt.MapFrom(src => src.Phongs));
             CreateMap<CreateLoaiPhongDto, LoaiPhong>();
             CreateMap<UpdateLoaiPhongDto, LoaiPhong>();
 
-            // Room mappings
             CreateMap<Phong, PhongDto>()
                 .ForMember(dest => dest.TenLoaiPhong, opt => opt.MapFrom(src => src.LoaiPhong.TenLoaiPhong))
                 .ForMember(dest => dest.GiaMotDem, opt => opt.MapFrom(src => src.LoaiPhong.GiaMotDem))
@@ -40,7 +35,6 @@ namespace HotelBooking.API.Mappings
             CreateMap<CreatePhongDto, Phong>();
             CreateMap<UpdatePhongDto, Phong>();
 
-            // Booking mappings
             CreateMap<DatPhong, DatPhongDto>()
                 .ForMember(dest => dest.HoTenKhach, opt => opt.MapFrom(src => src.NguoiDung.HoTen))
                 .ForMember(dest => dest.EmailKhach, opt => opt.MapFrom(src => src.NguoiDung.Email))
@@ -58,7 +52,6 @@ namespace HotelBooking.API.Mappings
             CreateMap<UpdateDatPhongDto, DatPhong>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            // Payment mappings
             CreateMap<ThanhToan, ThanhToanDto>()
                 .ForMember(dest => dest.HoTenKhach, opt => opt.MapFrom(src => src.DatPhong.NguoiDung.HoTen))
                 .ForMember(dest => dest.TenKhachSan, opt => opt.MapFrom(src => src.DatPhong.Phong.LoaiPhong.KhachSan.TenKhachSan))
@@ -68,7 +61,6 @@ namespace HotelBooking.API.Mappings
             CreateMap<CreateThanhToanDto, ThanhToan>()
                 .ForMember(dest => dest.NgayThanhToan, opt => opt.MapFrom(src => DateTime.Now));
 
-            // Review mappings
             CreateMap<DanhGia, DanhGiaDto>()
                 .ForMember(dest => dest.HoTenNguoiDung, opt => opt.MapFrom(src => src.NguoiDung.HoTen))
                 .ForMember(dest => dest.TenKhachSan, opt => opt.MapFrom(src => src.KhachSan.TenKhachSan));

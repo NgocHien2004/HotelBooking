@@ -30,7 +30,6 @@ namespace HotelBooking.API.Models
         [Column("mo_ta")]
         public string? MoTa { get; set; }
 
-        // Navigation properties
         [ForeignKey("MaKhachSan")]
         public virtual KhachSan KhachSan { get; set; } = null!;
         public virtual ICollection<Phong> Phongs { get; set; } = new List<Phong>();

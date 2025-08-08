@@ -36,7 +36,6 @@ namespace HotelBooking.API.Models
         [Column("ngay_tao")]
         public DateTime NgayTao { get; set; } = DateTime.Now;
 
-        // Navigation properties
         public virtual ICollection<DatPhong> DatPhongs { get; set; } = new List<DatPhong>();
         public virtual ICollection<DanhGia> DanhGias { get; set; } = new List<DanhGia>();
     }

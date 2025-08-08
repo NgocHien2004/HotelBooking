@@ -10,7 +10,6 @@
     <link href="../assets/css/admin.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Admin Navigation -->
     <nav class="navbar navbar-expand-lg navbar-admin">
       <div class="container-fluid">
         <a class="navbar-brand" href="hotels.html"> <i class="fas fa-shield-alt me-2"></i>Admin Panel </a>
@@ -27,7 +26,6 @@
             "></span>
         </button>
         <div class="collapse navbar-collapse" id="adminNav">
-          <!-- Menu chính nằm bên phải -->
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
               <a class="nav-link" href="hotels.html"> <i class="fas fa-hotel me-1"></i>Khách sạn </a>
@@ -38,7 +36,6 @@
             <li class="nav-item">
               <a class="nav-link" href="bookings.html"> <i class="fas fa-calendar-check me-1"></i>Đặt phòng </a>
             </li>
-            <!-- User Dropdown -->
             <li class="nav-item">
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle admin-nav-badge" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
@@ -60,7 +57,6 @@
       </div>
     </nav>
 
-    <!-- Add Hotel Form -->
     <div class="container-fluid mt-4">
       <div class="row">
         <div class="col-md-8 mx-auto">
@@ -135,10 +131,8 @@
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/admin.js"></script>
     <script>
-      // Check if user is admin
       checkAdminAccess();
 
-      // Preview images
       document.getElementById("images").addEventListener("change", function (e) {
         const preview = document.getElementById("imagePreview");
         preview.innerHTML = "";

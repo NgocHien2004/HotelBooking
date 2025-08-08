@@ -13,6 +13,6 @@ namespace HotelBooking.API.Services.Interfaces
         Task<HinhAnhKhachSanDto> AddHotelImageAsync(CreateHinhAnhKhachSanDto createImageDto);
         Task<bool> DeleteHotelImageAsync(int imageId);
         Task<IEnumerable<HinhAnhKhachSanDto>> GetHotelImagesAsync(int hotelId);
-        Task<IEnumerable<string>> GetAvailableCitiesAsync(); // Method có thể đang thiếu
+        Task<IEnumerable<string>> GetAvailableCitiesAsync(); 
     }
 }

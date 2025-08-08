@@ -1,4 +1,3 @@
-// Home page functionality
 document.addEventListener("DOMContentLoaded", function () {
   loadFeaturedHotels();
 });
@@ -31,7 +30,6 @@ async function loadFeaturedHotels() {
     debugLog("API Response:", result);
 
     if (result.success && result.data) {
-      // Hiển thị 6 khách sạn đầu tiên (có thể sắp xếp theo rating)
       const featuredHotels = result.data.sort((a, b) => b.danhGiaTrungBinh - a.danhGiaTrungBinh).slice(0, 6);
 
       debugLog("Featured hotels loaded successfully:", featuredHotels.length);
@@ -68,7 +66,6 @@ function displayFeaturedHotels(hotels) {
 }
 
 function createFeaturedHotelCard(hotel) {
-  // Lấy ảnh đầu tiên hoặc ảnh placeholder - SỬA ĐỔI QUAN TRỌNG
   let imageUrl = `${API_BASE_URL}/uploads/temp/hotel-placeholder.jpg`;
 
   if (hotel.hinhAnhs && hotel.hinhAnhs.length > 0) {
@@ -85,14 +82,11 @@ function createFeaturedHotelCard(hotel) {
     console.log("No images for featured hotel:", hotel.tenKhachSan); // Debug
   }
 
-  // Tính số loại phòng
   const roomTypesCount = hotel.loaiPhongs ? hotel.loaiPhongs.length : 0;
 
-  // Hiển thị rating
   const rating = hotel.danhGiaTrungBinh || 0;
   const ratingStars = generateStarRating(rating);
 
-  // Giá thấp nhất từ các loại phòng
   let minPrice = null;
   if (hotel.loaiPhongs && hotel.loaiPhongs.length > 0) {
     minPrice = Math.min(...hotel.loaiPhongs.map((room) => room.giaMotDem));
@@ -177,17 +171,14 @@ function generateStarRating(rating) {
 
   let starsHtml = "";
 
-  // Full stars
   for (let i = 0; i < fullStars; i++) {
     starsHtml += '<i class="fas fa-star text-warning"></i>';
   }
 
-  // Half star
   if (hasHalfStar) {
     starsHtml += '<i class="fas fa-star-half-alt text-warning"></i>';
   }
 
-  // Empty stars
   for (let i = 0; i < emptyStars; i++) {
     starsHtml += '<i class="far fa-star text-warning"></i>';
   }
@@ -208,7 +199,6 @@ function formatCurrency(amount) {
 }
 
 function viewHotelDetails(hotelId) {
-  // Chuyển đến trang chi tiết khách sạn
   window.location.href = `hotel-details.html?id=${hotelId}`;
 }
 
@@ -238,10 +228,8 @@ function showError(message) {
   }
 }
 
-// Add debugLog function if not defined elsewhere
 function debugLog(message, data = null) {
   console.log(`[DEBUG] ${message}`, data || "");
 }
 
-// Add API_BASE_URL if not defined elsewhere
 const API_BASE_URL = "http://localhost:5233";

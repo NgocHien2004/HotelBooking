@@ -29,7 +29,6 @@ namespace HotelBooking.API.Controllers
                     return BadRequest(new { success = false, message = "Không có ảnh nào được chọn" });
                 }
 
-                // Kiểm tra khách sạn có tồn tại không
                 using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
                 await connection.OpenAsync();
 
@@ -45,7 +44,6 @@ namespace HotelBooking.API.Controllers
 
                 var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "hotels");
                 
-                // Tạo thư mục nếu chưa tồn tại
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
@@ -57,18 +55,15 @@ namespace HotelBooking.API.Controllers
                 {
                     if (image.Length > 0)
                     {
-                        // Tạo tên file unique
                         var fileName = $"{hotelId}_{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
                         var filePath = Path.Combine(uploadsFolder, fileName);
                         var relativePath = $"/uploads/hotels/{fileName}";
 
-                        // Lưu file
                         using (var stream = new FileStream(filePath, FileMode.Create))
                         {
                             await image.CopyToAsync(stream);
                         }
 
-                        // Lưu thông tin ảnh vào database
                         var insertImageQuery = @"
                             INSERT INTO HinhAnhKhachSan (ma_khach_san, duong_dan_anh, mo_ta) 
                             VALUES (@HotelId, @ImagePath, @Description);
@@ -117,7 +112,6 @@ namespace HotelBooking.API.Controllers
                 using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
                 await connection.OpenAsync();
 
-                // Xóa record trong database
                 var deleteQuery = "DELETE FROM HinhAnhKhachSan WHERE ma_khach_san = @HotelId AND duong_dan_anh = @ImagePath";
                 using var deleteCmd = new SqlCommand(deleteQuery, connection);
                 deleteCmd.Parameters.AddWithValue("@HotelId", hotelId);
@@ -127,7 +121,6 @@ namespace HotelBooking.API.Controllers
 
                 if (rowsAffected > 0)
                 {
-                    // Xóa file vật lý
                     var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, request.ImagePath.TrimStart('/'));
                     if (System.IO.File.Exists(fullPath))
                     {

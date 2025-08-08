@@ -9,7 +9,6 @@
     <link href="../assets/css/admin.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
         <a class="navbar-brand" href="hotels.html">
@@ -52,18 +51,14 @@
       </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="container-fluid mt-4">
-      <!-- Page Header -->
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Quản lý khách sạn</h2>
         <a href="add-hotel.html" class="btn btn-primary"> <i class="bi bi-plus-circle"></i> Thêm khách sạn mới </a>
       </div>
 
-      <!-- Alert Message -->
       <div id="alertMessage"></div>
 
-      <!-- Search and View Toggle -->
       <div class="row mb-3">
         <div class="col-md-6">
           <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm khách sạn..." />
@@ -71,23 +66,15 @@
         <div class="col-md-6 text-end">
           <div class="btn-group" role="group">
             <button type="button" class="btn btn-outline-primary active" id="gridViewBtn"><i class="bi bi-grid-3x3-gap"></i> Grid View</button>
-            <!-- Table view button removed -->
           </div>
         </div>
       </div>
-
-      <!-- Hotels Grid View -->
-      <div id="hotelsGridView" class="row">
-        <!-- Hotels cards will be loaded here -->
-      </div>
-
-      <!-- Pagination -->
+      <div id="hotelsGridView" class="row"></div>
       <nav aria-label="Page navigation" class="mt-4">
         <ul class="pagination justify-content-center" id="pagination"></ul>
       </nav>
     </div>
 
-    <!-- Hotel Details Modal -->
     <div class="modal fade" id="hotelDetailsModal" tabindex="-1">
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -96,15 +83,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <div id="hotelDetailsContent">
-              <!-- Hotel details will be loaded here -->
-            </div>
+            <div id="hotelDetailsContent"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Edit Hotel Modal -->
     <div class="modal fade" id="editHotelModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -155,7 +139,6 @@
       </div>
     </div>
 
-    <!-- Add Room Type Modal -->
     <div class="modal fade" id="addRoomTypeModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -202,7 +185,6 @@
       </div>
     </div>
 
-    <!-- Edit Room Type Modal -->
     <div class="modal fade" id="editRoomTypeModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -250,7 +232,6 @@
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/admin-hotels.js"></script>
     <script>
-      // Check if user is admin
       checkAdminAccess();
     </script>
   </body>

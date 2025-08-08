@@ -50,7 +50,6 @@ namespace HotelBooking.API.Controllers
                     return NotFound(new { success = false, message = "Không tìm thấy đặt phòng" });
                 }
 
-                // Users can only access their own bookings unless they're admin
                 if (currentUserId != booking.MaNguoiDung && currentUserRole != "Admin")
                 {
                     return Forbid();
@@ -73,7 +72,6 @@ namespace HotelBooking.API.Controllers
                 var currentUserId = GetCurrentUserId();
                 var currentUserRole = GetCurrentUserRole();
 
-                // Users can only get their own bookings unless they're admin
                 if (currentUserId != userId && currentUserRole != "Admin")
                 {
                     return Forbid();
@@ -165,20 +163,17 @@ namespace HotelBooking.API.Controllers
                 var currentUserId = GetCurrentUserId();
                 var currentUserRole = GetCurrentUserRole();
 
-                // Get existing booking to check ownership
                 var existingBooking = await _bookingService.GetBookingByIdAsync(id);
                 if (existingBooking == null)
                 {
                     return NotFound(new { success = false, message = "Không tìm thấy đặt phòng" });
                 }
 
-                // Users can only update their own bookings unless they're admin
                 if (currentUserId != existingBooking.MaNguoiDung && currentUserRole != "Admin")
                 {
                     return Forbid();
                 }
 
-                // Users can only update if booking is still pending
                 if (currentUserRole != "Admin" && existingBooking.TrangThai != "Pending")
                 {
                     return BadRequest(new { success = false, message = "Chỉ có thể sửa đặt phòng khi còn chờ xác nhận" });
@@ -242,20 +237,17 @@ namespace HotelBooking.API.Controllers
                 var currentUserId = GetCurrentUserId();
                 var currentUserRole = GetCurrentUserRole();
 
-                // Get existing booking to check ownership
                 var existingBooking = await _bookingService.GetBookingByIdAsync(id);
                 if (existingBooking == null)
                 {
                     return NotFound(new { success = false, message = "Không tìm thấy đặt phòng" });
                 }
 
-                // Users can only cancel their own bookings unless they're admin
                 if (currentUserId != existingBooking.MaNguoiDung && currentUserRole != "Admin")
                 {
                     return Forbid();
                 }
 
-                // Check if user can cancel this booking
                 if (currentUserRole != "Admin")
                 {
                     var canCancel = await _bookingService.CanCancelBookingAsync(id, currentUserId);

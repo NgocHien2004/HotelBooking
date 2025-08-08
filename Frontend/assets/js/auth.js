@@ -1,8 +1,3 @@
-// Auth.js - Authentication handling
-// API_URL được định nghĩa trong utils.js
-
-// Check authentication status
-// Check authentication status
 function checkAuth() {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -14,23 +9,19 @@ function checkAuth() {
   const userDropdownMenu = document.getElementById("userDropdownMenu");
 
   if (token && user.email) {
-    // User is logged in
     if (loginMenu) loginMenu.style.display = "none";
     if (userMenu) {
       userMenu.style.display = "block";
       if (username) username.textContent = user.hoTen || user.email;
     }
 
-    // Show admin menu ONLY for admin users
     if (adminMenu && user.vaiTro === "Admin") {
       adminMenu.style.display = "block";
     } else if (adminMenu) {
       adminMenu.style.display = "none";
     }
 
-    // Update dropdown menu based on role
     if (userDropdownMenu && user.vaiTro === "Admin") {
-      // Admin user dropdown
       userDropdownMenu.innerHTML = `
         <li><h6 class="dropdown-header">Quản lý</h6></li>
         <li><a class="dropdown-item" href="admin/hotels.html"><i class="fas fa-hotel me-2"></i> Quản lý khách sạn</a></li>
@@ -42,7 +33,6 @@ function checkAuth() {
         <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
       `;
     } else if (userDropdownMenu) {
-      // Regular user dropdown
       userDropdownMenu.innerHTML = `
         <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i> Thông tin cá nhân</a></li>
         <li><a class="dropdown-item" href="my-bookings.html"><i class="fas fa-calendar-check me-2"></i> Đặt phòng của tôi</a></li>
@@ -51,14 +41,12 @@ function checkAuth() {
       `;
     }
   } else {
-    // User is not logged in
     if (loginMenu) loginMenu.style.display = "block";
     if (userMenu) userMenu.style.display = "none";
     if (adminMenu) adminMenu.style.display = "none";
   }
 }
 
-// Login function
 async function login(email, password) {
   try {
     console.log("Attempting login to:", `${API_URL}/auth/login`);
@@ -78,13 +66,11 @@ async function login(email, password) {
     console.log("Login response:", data);
 
     if (response.ok && data.success) {
-      // Save token and user info - Chú ý: data nằm trong data.data
       localStorage.setItem("token", data.data.token);
       localStorage.setItem("user", JSON.stringify(data.data.user));
 
       showAlert("Đăng nhập thành công!", "success");
 
-      // Redirect based on role - UPDATED: Admin goes to hotels instead of dashboard
       setTimeout(() => {
         if (data.data.user.vaiTro === "Admin") {
           window.location.href = "admin/hotels.html";
@@ -101,7 +87,6 @@ async function login(email, password) {
   }
 }
 
-// Register function
 async function register(userData) {
   try {
     console.log("Attempting register to:", `${API_URL}/auth/register`);
@@ -132,7 +117,6 @@ async function register(userData) {
   }
 }
 
-// Logout function
 function logout() {
   if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
     localStorage.removeItem("token");
@@ -141,7 +125,6 @@ function logout() {
   }
 }
 
-// Check admin access
 function checkAdminAccess() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   if (!user.vaiTro || user.vaiTro !== "Admin") {
@@ -150,7 +133,6 @@ function checkAdminAccess() {
   }
 }
 
-// Login form handler
 if (document.getElementById("loginForm")) {
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -160,7 +142,6 @@ if (document.getElementById("loginForm")) {
   });
 }
 
-// Register form handler
 if (document.getElementById("registerForm")) {
   document.getElementById("registerForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -185,5 +166,4 @@ if (document.getElementById("registerForm")) {
   });
 }
 
-// Initialize authentication check on page load
 document.addEventListener("DOMContentLoaded", checkAuth);
