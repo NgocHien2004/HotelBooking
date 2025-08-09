@@ -387,20 +387,33 @@ async function showPaymentModal() {
     return;
   }
 
+  console.log("=== PAYMENT MODAL DEBUG ===");
+  console.log("Current booking data:", currentBookingData);
+  console.log("Current booking ID:", currentBookingId);
+
   try {
     // Load payment info
     let totalPaid = 0;
 
     try {
       const paymentsResponse = await apiCall(`/api/payments/booking/${currentBookingId}`, "GET");
-      if (paymentsResponse.success) {
+      console.log("Payments response:", paymentsResponse);
+      if (paymentsResponse && paymentsResponse.success) {
         totalPaid = paymentsResponse.data.reduce((sum, payment) => sum + payment.soTien, 0);
       }
     } catch (error) {
-      console.log("No payments found");
+      console.log("No payments found:", error);
     }
 
     const remainingAmount = currentBookingData.tongTien - totalPaid;
+
+    console.log("Total paid:", totalPaid);
+    console.log("Remaining amount:", remainingAmount);
+
+    if (remainingAmount <= 0) {
+      showAlert("Đặt phòng này đã được thanh toán đủ", "info");
+      return;
+    }
 
     const paymentInfoHtml = `
       <div class="alert alert-info">
@@ -415,6 +428,10 @@ async function showPaymentModal() {
     document.getElementById("paymentInfo").innerHTML = paymentInfoHtml;
     document.getElementById("paymentAmount").max = remainingAmount;
     document.getElementById("paymentAmount").value = remainingAmount;
+
+    // Clear any existing alerts in payment modal (chỉ xóa alert, không xóa form)
+    const existingAlerts = document.querySelectorAll("#paymentModal .payment-alert");
+    existingAlerts.forEach((alert) => alert.remove());
 
     // Close detail modal if open
     const detailModal = bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal"));
@@ -432,45 +449,123 @@ async function submitPayment() {
   const amount = parseFloat(document.getElementById("paymentAmount").value);
   const method = document.getElementById("paymentMethod").value;
 
+  console.log("=== PAYMENT SUBMIT DEBUG START ===");
+  console.log("Current booking ID:", currentBookingId);
+  console.log("Current booking data:", currentBookingData);
+  console.log("Payment amount (raw):", document.getElementById("paymentAmount").value);
+  console.log("Payment amount (parsed):", amount);
+  console.log("Payment method:", method);
+
+  // Clear previous error messages in payment modal (chỉ xóa alert)
+  const existingAlerts = document.querySelectorAll("#paymentModal .payment-alert");
+  existingAlerts.forEach((alert) => alert.remove());
+
   if (!amount || amount <= 0) {
-    showAlert("Vui lòng nhập số tiền hợp lệ", "warning");
+    showPaymentAlert("Vui lòng nhập số tiền hợp lệ", "warning");
     return;
   }
 
   if (!method) {
-    showAlert("Vui lòng chọn phương thức thanh toán", "warning");
+    showPaymentAlert("Vui lòng chọn phương thức thanh toán", "warning");
     return;
   }
 
   if (amount < 1000) {
-    showAlert("Số tiền thanh toán tối thiểu là 1,000 VNĐ", "warning");
+    showPaymentAlert("Số tiền thanh toán tối thiểu là 1,000 VNĐ", "warning");
     return;
   }
 
+  // Disable submit button and show loading
+  const submitBtn = document.querySelector("#paymentModal .btn-success");
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
+
   try {
     const paymentData = {
-      maDatPhong: currentBookingId,
-      soTien: amount,
+      maDatPhong: parseInt(currentBookingId), // Đảm bảo là integer
+      soTien: parseFloat(amount), // Đảm bảo là decimal
       phuongThuc: method,
     };
 
+    console.log("Sending payment data:", paymentData);
+    console.log("API endpoint:", "/api/payments/user-payment");
+    console.log("Request headers will include Authorization token");
+
     const response = await apiCall("/api/payments/user-payment", "POST", paymentData);
 
-    if (response.success) {
-      showAlert("Thanh toán thành công! Chờ admin xác nhận đơn đặt phòng.", "success");
+    console.log("Payment response:", response);
+    console.log("Response type:", typeof response);
+    console.log("Response success:", response?.success);
+    console.log("=== PAYMENT SUBMIT DEBUG END ===");
 
-      // Close modal and reload bookings
-      bootstrap.Modal.getInstance(document.getElementById("paymentModal")).hide();
-      await loadMyBookings();
+    if (response && response.success) {
+      showPaymentAlert("Thanh toán thành công! Chờ admin xác nhận đơn đặt phòng.", "success");
 
-      // Reset form
-      document.getElementById("paymentForm").reset();
+      // Wait 2 seconds then close modal and reload
+      setTimeout(async () => {
+        bootstrap.Modal.getInstance(document.getElementById("paymentModal")).hide();
+        await loadMyBookings();
+
+        // Reset form
+        document.getElementById("paymentForm").reset();
+      }, 2000);
     } else {
-      showAlert(response.message || "Lỗi thanh toán", "danger");
+      const errorMessage = response?.message || "Có lỗi xảy ra khi thanh toán";
+      console.error("Payment failed:", errorMessage);
+      showPaymentAlert(errorMessage, "danger");
     }
   } catch (error) {
     console.error("Error submitting payment:", error);
-    showAlert("Lỗi thanh toán", "danger");
+    console.log("Full error object:", error);
+    console.log("Error message:", error.message);
+    console.log("Error stack:", error.stack);
+
+    // Parse error message if it's from API
+    let errorMessage = "Lỗi kết nối. Vui lòng thử lại.";
+    if (error.message) {
+      if (error.message.includes("500")) {
+        errorMessage = "Lỗi server (HTTP 500). Vui lòng kiểm tra dữ liệu và thử lại.";
+      } else {
+        errorMessage = error.message;
+      }
+    }
+
+    showPaymentAlert(errorMessage, "danger");
+  } finally {
+    // Re-enable submit button
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+  }
+}
+
+// NEW FUNCTION: Show alert inside payment modal - DƯỚI FORM
+function showPaymentAlert(message, type = "danger") {
+  // Tìm vị trí để chèn alert - sau form payment
+  const paymentForm = document.querySelector("#paymentModal form");
+
+  // Remove existing alerts
+  const existingAlerts = document.querySelectorAll("#paymentModal .payment-alert");
+  existingAlerts.forEach((alert) => alert.remove());
+
+  // Create new alert
+  const alertElement = document.createElement("div");
+  alertElement.className = `alert alert-${type} alert-dismissible fade show payment-alert`;
+  alertElement.innerHTML = `
+   ${message}
+   <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+ `;
+
+  // Insert AFTER payment form (không xóa form)
+  paymentForm.parentNode.insertBefore(alertElement, paymentForm.nextSibling);
+
+  // Auto-remove success messages after 3 seconds
+  if (type === "success") {
+    setTimeout(() => {
+      if (alertElement.parentNode) {
+        alertElement.remove();
+      }
+    }, 3000);
   }
 }
 
@@ -519,11 +614,11 @@ function getStatusText(status) {
 function showAlert(message, type = "danger") {
   const alertDiv = document.getElementById("alertMessage");
   alertDiv.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
+       <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+           ${message}
+           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+       </div>
+   `;
 
   setTimeout(() => {
     alertDiv.innerHTML = "";
