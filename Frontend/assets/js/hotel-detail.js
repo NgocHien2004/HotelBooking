@@ -1,7 +1,7 @@
 // Hotel Detail Page JavaScript
 let currentHotelId = null;
 let hotelImageSwiper = null;
-let currentUserRating = 0; // THÊM MỚI cho reviews
+let currentUserRating = 0;
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", function () {
@@ -83,7 +83,7 @@ function getImageUrl(image) {
   return placeholderUrl;
 }
 
-// Load hotel details - SỬA ĐỔI: Thêm error handling tốt hơn
+// Load hotel details
 async function loadHotelDetails(hotelId) {
   showLoading(true);
   currentHotelId = hotelId;
@@ -114,7 +114,7 @@ async function loadHotelDetails(hotelId) {
 
     await displayHotelDetails(hotel);
 
-    // THÊM MỚI: Load reviews nếu có elements
+    // Load reviews nếu có elements
     await loadReviews(hotelId);
     await loadReviewSummary(hotelId);
     await checkCanReview(hotelId);
@@ -386,7 +386,7 @@ function showAlert(message, type = "danger") {
   }
 }
 
-// ========== THÊM MỚI: REVIEWS FUNCTIONS ==========
+// ========== REVIEWS FUNCTIONS ==========
 
 // Format date function
 function formatDate(dateString) {
@@ -405,7 +405,6 @@ async function loadReviews(hotelId) {
     const reviewsList = document.getElementById("reviewsList");
     const noReviews = document.getElementById("noReviews");
 
-    // Kiểm tra nếu không có elements reviews thì skip
     if (!reviewsLoading || !reviewsList || !noReviews) {
       console.log("Reviews elements not found - skipping reviews load");
       return;
@@ -415,21 +414,14 @@ async function loadReviews(hotelId) {
     reviewsList.innerHTML = "";
     noReviews.style.display = "none";
 
-    // SỬA: Sử dụng API_URL pattern như code gốc
+    console.log("Loading reviews for hotel:", hotelId);
     const response = await fetch(`${API_URL}/reviews/hotel/${hotelId}`);
     console.log("Reviews response status:", response.status);
 
     if (!response.ok) {
-      console.log("Reviews endpoint failed, trying alternative...");
-      // Thử endpoint khác nếu cần
-      const altResponse = await fetch(`${API_URL}/hotels/${hotelId}/reviews`);
-      if (!altResponse.ok) {
-        throw new Error("Failed to load reviews from both endpoints");
-      }
-      const altResult = await altResponse.json();
-      const altReviews = altResult.success ? altResult.data : altResult;
-      displayReviews(altReviews, reviewsList, noReviews);
-      return;
+      const errorText = await response.text();
+      console.error("Reviews error response:", errorText);
+      throw new Error(`Failed to load reviews: ${response.status}`);
     }
 
     const result = await response.json();
@@ -499,23 +491,19 @@ async function loadReviewSummary(hotelId) {
     const totalReviews = document.getElementById("totalReviews");
     const ratingBreakdown = document.getElementById("ratingBreakdown");
 
-    // Kiểm tra nếu không có elements thì skip
     if (!averageRating || !averageStars || !totalReviews || !ratingBreakdown) {
       console.log("Review summary elements not found - skipping summary load");
       return;
     }
 
-    // SỬA: Thử các endpoint khác nhau
-    let response = await fetch(`${API_URL}/reviews/hotel/${hotelId}/summary`);
+    console.log("Loading review summary for hotel:", hotelId);
+    const response = await fetch(`${API_URL}/reviews/hotel/${hotelId}/summary`);
     console.log("Review summary response status:", response.status);
 
     if (!response.ok) {
-      console.log("Summary endpoint failed, trying alternative...");
-      response = await fetch(`${API_URL}/hotels/${hotelId}/reviews/summary`);
-    }
-
-    if (!response.ok) {
-      throw new Error("Failed to load review summary");
+      const errorText = await response.text();
+      console.error("Review summary error response:", errorText);
+      throw new Error(`Failed to load review summary: ${response.status}`);
     }
 
     const result = await response.json();
@@ -549,7 +537,7 @@ async function loadReviewSummary(hotelId) {
     }
   } catch (error) {
     console.error("Error loading review summary:", error);
-    // Set default values nếu không load được
+    // Set default values
     const averageRating = document.getElementById("averageRating");
     const averageStars = document.getElementById("averageStars");
     const totalReviews = document.getElementById("totalReviews");
@@ -574,8 +562,8 @@ async function checkCanReview(hotelId) {
       return;
     }
 
-    // SỬA: Thử các endpoint khác nhau
-    let response = await fetch(`${API_URL}/reviews/can-review/${hotelId}`, {
+    console.log("Checking if user can review hotel:", hotelId);
+    const response = await fetch(`${API_URL}/reviews/can-review/${hotelId}`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -583,16 +571,6 @@ async function checkCanReview(hotelId) {
     });
 
     console.log("Can review response status:", response.status);
-
-    if (!response.ok) {
-      console.log("Can review endpoint failed, trying alternative...");
-      response = await fetch(`${API_URL}/hotels/${hotelId}/can-review`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-    }
 
     if (!response.ok) {
       console.log("Cannot check review permission");
@@ -609,78 +587,6 @@ async function checkCanReview(hotelId) {
     }
   } catch (error) {
     console.error("Error checking review permission:", error);
-  }
-}
-
-// Submit review function - SỬA API ENDPOINT
-async function submitReview(event) {
-  event.preventDefault();
-
-  const ratingInput = document.getElementById("ratingInput");
-  const reviewComment = document.getElementById("reviewComment");
-
-  if (!ratingInput || !reviewComment) {
-    console.error("Review form elements not found");
-    return;
-  }
-
-  const rating = ratingInput.value;
-  const comment = reviewComment.value.trim();
-
-  if (!rating) {
-    showAlert("Vui lòng chọn số sao đánh giá!", "warning");
-    return;
-  }
-
-  try {
-    const reviewData = {
-      maKhachSan: parseInt(currentHotelId),
-      diemDanhGia: parseInt(rating),
-      binhLuan: comment || null,
-    };
-
-    console.log("Submitting review data:", reviewData);
-
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${API_URL}/reviews`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(reviewData),
-    });
-
-    console.log("Submit review response status:", response.status);
-
-    const result = await response.json();
-    console.log("Submit review result:", result);
-
-    if (!response.ok || !result.success) {
-      throw new Error(result.message || "Không thể gửi đánh giá");
-    }
-
-    showAlert("Đánh giá của bạn đã được gửi thành công!", "success");
-
-    // Reset form and hide it
-    const reviewForm = document.getElementById("reviewForm");
-    const reviewFormContainer = document.getElementById("reviewFormContainer");
-
-    if (reviewForm) reviewForm.reset();
-    if (reviewFormContainer) reviewFormContainer.style.display = "none";
-
-    currentUserRating = 0;
-    highlightStars(0);
-
-    // Reload reviews and summary
-    await loadReviews(currentHotelId);
-    await loadReviewSummary(currentHotelId);
-
-    // Reload hotel details to update average rating
-    location.reload();
-  } catch (error) {
-    console.error("Error submitting review:", error);
-    showAlert("Không thể gửi đánh giá: " + error.message, "danger");
   }
 }
 
@@ -756,6 +662,8 @@ async function submitReview(event) {
       binhLuan: comment || null,
     };
 
+    console.log("Submitting review data:", reviewData);
+
     const token = localStorage.getItem("token");
     const response = await fetch(`${API_URL}/reviews`, {
       method: "POST",
@@ -766,7 +674,10 @@ async function submitReview(event) {
       body: JSON.stringify(reviewData),
     });
 
+    console.log("Submit review response status:", response.status);
+
     const result = await response.json();
+    console.log("Submit review result:", result);
 
     if (!response.ok || !result.success) {
       throw new Error(result.message || "Không thể gửi đánh giá");

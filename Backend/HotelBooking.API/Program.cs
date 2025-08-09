@@ -33,7 +33,8 @@ builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>(); // THÊM DÒNG NÀY
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IReviewService, ReviewService>(); // THÊM DÒNG NÀY
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -50,72 +51,33 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddAuthorization();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
-var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
-var tempPath = Path.Combine(uploadsPath, "temp");
-var hotelsPath = Path.Combine(uploadsPath, "hotels");
-var roomsPath = Path.Combine(uploadsPath, "rooms");
-
-Console.WriteLine($"Uploads path: {uploadsPath}");
-
-if (!Directory.Exists(uploadsPath))
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    Directory.CreateDirectory(uploadsPath);
-    Console.WriteLine("Created uploads directory");
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
-if (!Directory.Exists(tempPath))
-{
-    Directory.CreateDirectory(tempPath);
-    Console.WriteLine("Created temp directory");
-}
-if (!Directory.Exists(hotelsPath))
-{
-    Directory.CreateDirectory(hotelsPath);
-    Console.WriteLine("Created hotels directory");
-}
-if (!Directory.Exists(roomsPath))
-{
-    Directory.CreateDirectory(roomsPath);
-    Console.WriteLine("Created rooms directory");
-}
-
-var placeholderPath = Path.Combine(tempPath, "hotel-placeholder.jpg");
-Console.WriteLine($"Checking placeholder at: {placeholderPath}");
-Console.WriteLine($"Placeholder exists: {File.Exists(placeholderPath)}");
-
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/uploads"
-});
-
-app.UseRouting();
 
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
-
-app.MapGet("/", () => "API is running!");
-
-app.MapGet("/test-image", () => 
+// Serve static files for uploads
+app.UseStaticFiles(new StaticFileOptions
 {
-    var placeholderExists = File.Exists(Path.Combine(uploadsPath, "temp", "hotel-placeholder.jpg"));
-    var files = Directory.Exists(tempPath) ? Directory.GetFiles(tempPath) : new string[0];
-    
-    return new { 
-        message = "Image test", 
-        uploadsPath = uploadsPath,
-        tempPath = tempPath,
-        placeholderExists = placeholderExists,
-        placeholderPath = Path.Combine(tempPath, "hotel-placeholder.jpg"),
-        filesInTemp = files.Select(f => Path.GetFileName(f)).ToArray()
-    };
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "uploads")),
+    RequestPath = "/uploads"
 });
 
-app.UseStaticFiles();
+app.MapControllers();
 
 app.Run();
