@@ -87,7 +87,7 @@ namespace HotelBooking.API.Services.Implementations
 
             await UpdateHotelAverageRatingAsync(createReviewDto.MaKhachSan);
 
-            return await GetReviewByIdAsync(review.MaDanhGia) ?? 
+            return await GetReviewByIdAsync(review.MaDanhGia) ??
                    throw new InvalidOperationException("Không thể tạo đánh giá");
         }
 
@@ -181,4 +181,6 @@ namespace HotelBooking.API.Services.Implementations
             await _context.SaveChangesAsync();
         }
     }
+    
+    
 }
