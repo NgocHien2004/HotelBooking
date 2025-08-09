@@ -38,6 +38,32 @@ namespace HotelBooking.API.Controllers
             }
         }
 
+        // THÊM ENDPOINT MỚI
+        [HttpGet("my-payments")]
+        public async Task<ActionResult<IEnumerable<ThanhToanDto>>> GetMyPayments()
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+                var userBookings = await _bookingService.GetBookingsByUserAsync(currentUserId);
+                var allPayments = new List<ThanhToanDto>();
+
+                foreach (var booking in userBookings)
+                {
+                    var payments = await _paymentService.GetPaymentsByBookingAsync(booking.MaDatPhong);
+                    allPayments.AddRange(payments);
+                }
+
+                var sortedPayments = allPayments.OrderByDescending(p => p.NgayThanhToan);
+                return Ok(new { success = true, data = sortedPayments });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user payments");
+                return StatusCode(500, new { success = false, message = "Lỗi tải lịch sử thanh toán" });
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<ThanhToanDto>> GetPayment(int id)
         {
@@ -67,106 +93,32 @@ namespace HotelBooking.API.Controllers
             }
         }
 
-        [HttpGet("booking/{bookingId}")]
-        public async Task<ActionResult<IEnumerable<ThanhToanDto>>> GetPaymentsByBooking(int bookingId)
-        {
-            try
-            {
-                var currentUserId = GetCurrentUserId();
-                var currentUserRole = GetCurrentUserRole();
-
-                var booking = await _bookingService.GetBookingByIdAsync(bookingId);
-                if (booking == null)
-                {
-                    return NotFound(new { success = false, message = "Không tìm thấy đặt phòng" });
-                }
-
-                if (currentUserId != booking.MaNguoiDung && currentUserRole != "Admin")
-                {
-                    return Forbid();
-                }
-
-                var payments = await _paymentService.GetPaymentsByBookingAsync(bookingId);
-                return Ok(new { success = true, data = payments });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting payments for booking {BookingId}", bookingId);
-                return StatusCode(500, new { success = false, message = ex.Message });
-            }
-        }
-
-        [HttpGet("my-payments")]
-        public async Task<ActionResult<IEnumerable<ThanhToanDto>>> GetMyPayments()
-        {
-            try
-            {
-                var currentUserId = GetCurrentUserId();
-                var userBookings = await _bookingService.GetBookingsByUserAsync(currentUserId);
-                
-                var allPayments = new List<ThanhToanDto>();
-                foreach (var booking in userBookings)
-                {
-                    var payments = await _paymentService.GetPaymentsByBookingAsync(booking.MaDatPhong);
-                    allPayments.AddRange(payments);
-                }
-
-                var sortedPayments = allPayments.OrderByDescending(p => p.NgayThanhToan);
-                return Ok(new { success = true, data = sortedPayments });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting payments for user {UserId}", GetCurrentUserId());
-                return StatusCode(500, new { success = false, message = ex.Message });
-            }
-        }
-
         [HttpPost("user-payment")]
         public async Task<ActionResult<ThanhToanDto>> CreateUserPayment(CreateThanhToanDto createPaymentDto)
         {
             try
             {
-                _logger.LogInformation("Starting user payment creation for booking {BookingId} with amount {Amount}", 
-                    createPaymentDto.MaDatPhong, createPaymentDto.SoTien);
-
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Model state invalid: {Errors}", ModelState);
                     return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
                 }
 
                 var currentUserId = GetCurrentUserId();
-                _logger.LogInformation("Current user ID: {UserId}", currentUserId);
-
-                if (currentUserId <= 0)
-                {
-                    _logger.LogError("Invalid user ID from token: {UserId}", currentUserId);
-                    return Unauthorized(new { success = false, message = "Token không hợp lệ" });
-                }
 
                 var booking = await _bookingService.GetBookingByIdAsync(createPaymentDto.MaDatPhong);
                 if (booking == null)
                 {
-                    _logger.LogWarning("Booking not found: {BookingId}", createPaymentDto.MaDatPhong);
                     return BadRequest(new { success = false, message = "Không tìm thấy đặt phòng" });
                 }
 
-                _logger.LogInformation("Booking found: {BookingId}, User: {BookingUserId}, Current: {CurrentUserId}", 
-                    booking.MaDatPhong, booking.MaNguoiDung, currentUserId);
-
                 if (booking.MaNguoiDung != currentUserId)
                 {
-                    _logger.LogWarning("User {UserId} trying to pay for booking {BookingId} owned by {OwnerId}", 
-                        currentUserId, createPaymentDto.MaDatPhong, booking.MaNguoiDung);
                     return Forbid();
                 }
 
                 var existingPayments = await _paymentService.GetPaymentsByBookingAsync(createPaymentDto.MaDatPhong);
                 var totalPaid = existingPayments.Sum(p => p.SoTien);
                 var remainingAmount = booking.TongTien - totalPaid;
-
-                _logger.LogInformation("Payment validation - Total: {Total}, Paid: {Paid}, Remaining: {Remaining}, New: {New}", 
-                    booking.TongTien, totalPaid, remainingAmount, createPaymentDto.SoTien);
 
                 if (createPaymentDto.SoTien > remainingAmount)
                 {
@@ -178,19 +130,15 @@ namespace HotelBooking.API.Controllers
                     return BadRequest(new { success = false, message = "Số tiền thanh toán phải lớn hơn 0" });
                 }
 
-                _logger.LogInformation("Creating payment with data: {@PaymentData}", createPaymentDto);
                 var payment = await _paymentService.CreatePaymentAsync(createPaymentDto);
-                _logger.LogInformation("Payment created successfully: {PaymentId}", payment.MaThanhToan);
                 
                 return CreatedAtAction(nameof(GetPayment), new { id = payment.MaThanhToan }, 
                     new { success = true, data = payment });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating user payment for booking {BookingId}: {Message}", 
-                    createPaymentDto?.MaDatPhong, ex.Message);
-                _logger.LogError("Full exception: {Exception}", ex);
-                return StatusCode(500, new { success = false, message = "Lỗi tạo thanh toán: " + ex.Message });
+                _logger.LogError(ex, "Error creating user payment");
+                return StatusCode(500, new { success = false, message = "Lỗi tạo thanh toán" });
             }
         }
 
@@ -308,34 +256,14 @@ namespace HotelBooking.API.Controllers
 
         private int GetCurrentUserId()
         {
-            try
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    return userId;
-                }
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting current user ID");
-                return 0;
-            }
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            return userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
         }
 
         private string GetCurrentUserRole()
         {
-            try
-            {
-                var roleClaim = User.FindFirst(ClaimTypes.Role);
-                return roleClaim?.Value ?? "";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting current user role");
-                return "";
-            }
+            var roleClaim = User.FindFirst(ClaimTypes.Role);
+            return roleClaim?.Value ?? "";
         }
     }
 }

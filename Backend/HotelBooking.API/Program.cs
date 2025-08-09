@@ -27,11 +27,13 @@ builder.Services.AddDbContext<HotelBookingContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(Program));
 
+// Service Registration
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IBookingService, BookingService>(); // Thêm dòng này
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>(); // THÊM DÒNG NÀY
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
