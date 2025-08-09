@@ -11,9 +11,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const urlParams = new URLSearchParams(window.location.search);
-  // SỬA: Đọc đúng tham số từ URL
-  currentHotelId = urlParams.get("hotelId");
-  currentRoomTypeId = urlParams.get("roomTypeId");
+  currentHotelId = urlParams.get("hotel");
+  currentRoomTypeId = urlParams.get("roomType");
   currentRoomId = urlParams.get("room");
 
   console.log("Booking page parameters:", { currentHotelId, currentRoomTypeId, currentRoomId });
@@ -68,8 +67,6 @@ async function loadBookingData() {
     if (roomTypeResponse.success) {
       currentRoomType = roomTypeResponse.data;
       displayRoomTypeInfo();
-      // THÊM: Load hình ảnh phòng
-      await loadRoomTypeImages();
       calculateTotal();
     } else {
       throw new Error("Failed to load room type data");
@@ -101,59 +98,11 @@ function displayRoomTypeInfo() {
 
   document.getElementById("roomTypeName").textContent = currentRoomType.tenLoaiPhong;
   document.getElementById("roomPrice").textContent = formatCurrency(currentRoomType.giaMotDem);
-  // SỬA: Cập nhật cả giá phòng trong sidebar
-  document.getElementById("roomPrice2").textContent = formatCurrency(currentRoomType.giaMotDem);
   document.getElementById("roomCapacity").textContent = `${currentRoomType.sucChua} người`;
 
   if (currentRoomType.moTa) {
     document.getElementById("roomDescription").textContent = currentRoomType.moTa;
   }
-}
-
-// THÊM: Function để load hình ảnh phòng
-async function loadRoomTypeImages() {
-  try {
-    console.log("Loading room type images for:", currentRoomTypeId);
-
-    // Gọi API để lấy hình ảnh của room type
-    const response = await apiCall(`/api/roomtypes/${currentRoomTypeId}/images`, "GET");
-
-    if (response.success && response.data && response.data.length > 0) {
-      // Nếu có hình ảnh, hiển thị hình ảnh đầu tiên
-      const firstImage = response.data[0];
-      displayRoomImage(firstImage.duongDanAnh);
-    } else {
-      // Nếu không có hình ảnh, hiển thị hình mặc định
-      displayRoomImage(null);
-    }
-  } catch (error) {
-    console.error("Error loading room type images:", error);
-    // Nếu lỗi, hiển thị hình mặc định
-    displayRoomImage(null);
-  }
-}
-
-// THÊM: Function để hiển thị hình ảnh phòng
-function displayRoomImage(imagePath) {
-  const roomImageContainer = document.getElementById("roomImageContainer");
-  const roomImage = document.getElementById("roomImage");
-
-  if (imagePath) {
-    // Nếu có đường dẫn ảnh, sử dụng nó
-    const imageUrl = imagePath.startsWith("http") ? imagePath : `http://localhost:5233/${imagePath}`;
-    roomImage.src = imageUrl;
-  } else {
-    // Nếu không có ảnh, sử dụng ảnh placeholder
-    roomImage.src = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
-  }
-
-  // Thêm xử lý lỗi ảnh
-  roomImage.onerror = function () {
-    this.src = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
-  };
-
-  roomImage.alt = currentRoomType ? currentRoomType.tenLoaiPhong : "Room Image";
-  roomImageContainer.style.display = "block";
 }
 
 function calculateTotal() {
@@ -243,8 +192,8 @@ async function submitBooking(event) {
       showAlert(response.message || "Có lỗi xảy ra khi đặt phòng", "danger");
     }
   } catch (error) {
-    console.error("Error submitting booking:", error);
-    showAlert("Có lỗi xảy ra khi đặt phòng", "danger");
+    console.error("Error creating booking:", error);
+    showAlert("Có lỗi xảy ra khi đặt phòng: " + error.message, "danger");
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = originalText;
@@ -256,9 +205,20 @@ async function findAvailableRoom() {
     const checkInDate = document.getElementById("checkInDate").value;
     const checkOutDate = document.getElementById("checkOutDate").value;
 
-    const response = await apiCall(`/api/rooms/available?roomTypeId=${currentRoomTypeId}&checkIn=${checkInDate}&checkOut=${checkOutDate}`, "GET");
+    console.log("Searching for available rooms with params:", {
+      maLoaiPhong: currentRoomTypeId,
+      ngayNhanPhong: checkInDate,
+      ngayTraPhong: checkOutDate,
+    });
 
-    if (response.success && response.data && response.data.length > 0) {
+    const response = await apiCall(
+      `/api/rooms/available?maLoaiPhong=${currentRoomTypeId}&ngayNhanPhong=${checkInDate}&ngayTraPhong=${checkOutDate}`,
+      "GET"
+    );
+
+    console.log("Available rooms response:", response);
+
+    if (response.success && response.data.length > 0) {
       return response.data[0].maPhong;
     }
 
@@ -267,4 +227,36 @@ async function findAvailableRoom() {
     console.error("Error finding available room:", error);
     return null;
   }
+}
+
+function formatCurrency(amount) {
+  if (typeof amount !== "number") {
+    amount = parseFloat(amount) || 0;
+  }
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+}
+
+function isAuthenticated() {
+  return localStorage.getItem("token") !== null;
+}
+
+function showAlert(message, type = "info") {
+  const alertContainer = document.getElementById("alertContainer") || document.body;
+  const alertElement = document.createElement("div");
+  alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+  alertElement.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+
+  alertContainer.insertBefore(alertElement, alertContainer.firstChild);
+
+  setTimeout(() => {
+    if (alertElement.parentNode) {
+      alertElement.remove();
+    }
+  }, 5000);
 }

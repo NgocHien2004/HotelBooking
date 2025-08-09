@@ -22,17 +22,6 @@ const API_ENDPOINTS = {
     CREATE: "/api/bookings",
     GET_BY_USER: "/api/bookings/user/{userId}",
   },
-  REVIEWS: {
-    GET_ALL: "/api/reviews",
-    GET_BY_ID: "/api/reviews/{id}",
-    GET_BY_HOTEL: "/api/reviews/hotel/{hotelId}",
-    GET_SUMMARY: "/api/reviews/hotel/{hotelId}/summary",
-    GET_BY_USER: "/api/reviews/user/{userId}",
-    CREATE: "/api/reviews",
-    UPDATE: "/api/reviews/{id}",
-    DELETE: "/api/reviews/{id}",
-    CAN_REVIEW: "/api/reviews/can-review/{hotelId}",
-  },
 };
 
 function getApiUrl(endpoint, params = {}) {
