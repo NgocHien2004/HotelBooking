@@ -549,14 +549,21 @@ async function loadReviewSummary(hotelId) {
 }
 
 // Check if user can review function
+// Check if user can review function - SỬA: Luôn cho phép user đã đăng nhập
 async function checkCanReview(hotelId) {
   const token = localStorage.getItem("token");
+  console.log("=== DEBUG CHECK CAN REVIEW ===");
+  console.log("Token exists:", !!token);
+
   if (!token) {
+    console.log("No token found - user not logged in");
     return;
   }
 
   try {
     const reviewFormContainer = document.getElementById("reviewFormContainer");
+    console.log("Review form container found:", !!reviewFormContainer);
+
     if (!reviewFormContainer) {
       console.log("Review form container not found - skipping can review check");
       return;
@@ -573,20 +580,45 @@ async function checkCanReview(hotelId) {
     console.log("Can review response status:", response.status);
 
     if (!response.ok) {
-      console.log("Cannot check review permission");
+      // SỬA: Nếu API fail, vẫn cho phép đánh giá cho user đã đăng nhập
+      console.log("API failed, but user is logged in - showing form anyway");
+      reviewFormContainer.style.display = "block";
+      initializeReviewForm();
       return;
     }
 
     const result = await response.json();
     console.log("Can review result:", result);
     const canReview = result.success ? result.data.canReview : result.canReview || false;
+    console.log("Can review permission:", canReview);
 
     if (canReview) {
+      console.log("User can review - showing form");
       reviewFormContainer.style.display = "block";
       initializeReviewForm();
+    } else {
+      console.log("User already reviewed this hotel");
+      // Có thể hiển thị message user đã đánh giá rồi
+      const existingMessage = document.getElementById("alreadyReviewedMessage");
+      if (!existingMessage && reviewFormContainer) {
+        reviewFormContainer.innerHTML = `
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            Bạn đã đánh giá khách sạn này rồi.
+          </div>
+        `;
+        reviewFormContainer.style.display = "block";
+      }
     }
   } catch (error) {
     console.error("Error checking review permission:", error);
+    // SỬA: Nếu có lỗi, vẫn cho phép user đã đăng nhập đánh giá
+    const reviewFormContainer = document.getElementById("reviewFormContainer");
+    if (reviewFormContainer) {
+      console.log("Error occurred, but user is logged in - showing form anyway");
+      reviewFormContainer.style.display = "block";
+      initializeReviewForm();
+    }
   }
 }
 
