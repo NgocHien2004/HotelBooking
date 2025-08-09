@@ -208,7 +208,7 @@ namespace HotelBooking.API.Controllers
         {
             try
             {
-                var validStatuses = new[] { "Pending", "Confirmed", "Cancelled", "Completed" };
+                var validStatuses = new[] { "Pending", "Confirmed", "Cancelled", "Completed", "Waiting Payment" };
                 if (!validStatuses.Contains(status))
                 {
                     return BadRequest(new { success = false, message = "Trạng thái không hợp lệ" });

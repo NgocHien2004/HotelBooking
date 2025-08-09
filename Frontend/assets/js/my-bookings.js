@@ -1,5 +1,6 @@
 let currentBookings = [];
 let currentBookingId = null;
+let currentBookingData = null;
 
 document.addEventListener("DOMContentLoaded", function () {
   // Check authentication
@@ -65,6 +66,12 @@ function displayBookings(bookings) {
       const statusText = getStatusText(booking.trangThai);
       const canEdit = booking.trangThai === "Pending";
       const canCancel = booking.trangThai === "Pending" || booking.trangThai === "Confirmed";
+      const canPay = booking.trangThai === "Pending" || booking.trangThai === "Confirmed" || booking.trangThai === "Waiting Payment";
+
+      // Calculate payment status
+      const totalPaid = booking.totalPaid || 0;
+      const remainingAmount = booking.tongTien - totalPaid;
+      const paymentStatus = totalPaid > 0 ? getPaymentStatus(totalPaid, booking.tongTien) : null;
 
       return `
             <div class="card mb-3">
@@ -80,20 +87,38 @@ function displayBookings(bookings) {
                                 <i class="bi bi-geo-alt"></i> ${booking.diaChiKhachSan}<br>
                                 <i class="bi bi-calendar"></i> ${formatDate(booking.ngayNhanPhong)} - ${formatDate(booking.ngayTraPhong)}<br>
                                 <i class="bi bi-currency-dollar"></i> ${formatCurrency(booking.tongTien)}
+                                ${totalPaid > 0 ? `<br><i class="bi bi-credit-card"></i> Đã thanh toán: ${formatCurrency(totalPaid)}` : ""}
+                                ${
+                                  remainingAmount > 0 && totalPaid > 0
+                                    ? `<br><span class="text-warning">Còn lại: ${formatCurrency(remainingAmount)}</span>`
+                                    : ""
+                                }
                             </p>
+                            ${
+                              paymentStatus
+                                ? `<span class="${paymentStatus.class}"><i class="bi bi-info-circle"></i> ${paymentStatus.text}</span>`
+                                : ""
+                            }
                         </div>
                         <div class="col-md-4 text-end">
                             <p class="text-muted small">
                                 Mã đặt phòng: #${booking.maDatPhong}<br>
                                 Đặt ngày: ${formatDate(booking.ngayDat)}
                             </p>
-                            <div class="btn-group" role="group">
+                            <div class="btn-group-vertical d-grid gap-1" role="group">
                                 <button class="btn btn-outline-primary btn-sm" onclick="viewBookingDetail(${booking.maDatPhong})">
                                     <i class="bi bi-eye"></i> Chi tiết
                                 </button>
                                 ${
+                                  canPay && remainingAmount > 0
+                                    ? `<button class="btn btn-outline-success btn-sm" onclick="showPaymentModalDirect(${booking.maDatPhong})">
+                                        <i class="bi bi-credit-card"></i> Thanh toán
+                                    </button>`
+                                    : ""
+                                }
+                                ${
                                   canEdit
-                                    ? `<button class="btn btn-outline-warning btn-sm" onclick="editBooking(${booking.maDatPhong})">
+                                    ? `<button class="btn btn-outline-warning btn-sm" onclick="editBookingDirect(${booking.maDatPhong})">
                                         <i class="bi bi-pencil"></i> Sửa
                                     </button>`
                                     : ""
@@ -141,6 +166,24 @@ async function viewBookingDetail(bookingId) {
     if (response.success) {
       const booking = response.data;
       currentBookingId = bookingId;
+      currentBookingData = booking;
+
+      // Load payment info
+      let payments = [];
+      let totalPaid = 0;
+
+      try {
+        const paymentsResponse = await apiCall(`/api/payments/booking/${bookingId}`, "GET");
+        if (paymentsResponse.success) {
+          payments = paymentsResponse.data;
+          totalPaid = payments.reduce((sum, payment) => sum + payment.soTien, 0);
+        }
+      } catch (error) {
+        console.log("No payments found or error loading payments");
+      }
+
+      const remainingAmount = booking.tongTien - totalPaid;
+      const paymentStatus = totalPaid > 0 ? getPaymentStatus(totalPaid, booking.tongTien) : null;
 
       const detailHtml = `
                 <div class="row">
@@ -166,8 +209,52 @@ async function viewBookingDetail(bookingId) {
                         <p><strong>Trạng thái:</strong> <span class="badge ${getStatusClass(booking.trangThai)}">${getStatusText(
         booking.trangThai
       )}</span></p>
+                        
+                        ${
+                          totalPaid > 0
+                            ? `
+                        <h6 class="mt-3">Thông tin thanh toán</h6>
+                        <p><strong>Đã thanh toán:</strong> ${formatCurrency(totalPaid)}</p>
+                        <p><strong>Còn lại:</strong> ${formatCurrency(remainingAmount)}</p>
+                        <p><strong>Tình trạng:</strong> <span class="${paymentStatus.class}">${paymentStatus.text}</span></p>
+                        `
+                            : ""
+                        }
                     </div>
                 </div>
+                
+                ${
+                  payments.length > 0
+                    ? `
+                <hr>
+                <h6>Lịch sử thanh toán</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Số tiền</th>
+                                <th>Phương thức</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${payments
+                              .map(
+                                (payment) => `
+                                <tr>
+                                    <td>${formatDateTime(payment.ngayThanhToan)}</td>
+                                    <td>${formatCurrency(payment.soTien)}</td>
+                                    <td>${getPaymentMethodDisplay(payment.phuongThuc)}</td>
+                                </tr>
+                            `
+                              )
+                              .join("")}
+                        </tbody>
+                    </table>
+                </div>
+                `
+                    : ""
+                }
             `;
 
       document.getElementById("bookingDetailContent").innerHTML = detailHtml;
@@ -175,9 +262,12 @@ async function viewBookingDetail(bookingId) {
       // Show/hide action buttons
       const canEdit = booking.trangThai === "Pending";
       const canCancel = booking.trangThai === "Pending" || booking.trangThai === "Confirmed";
+      const canPay =
+        (booking.trangThai === "Pending" || booking.trangThai === "Confirmed" || booking.trangThai === "Waiting Payment") && remainingAmount > 0;
 
       document.getElementById("editBookingBtn").style.display = canEdit ? "inline-block" : "none";
       document.getElementById("cancelBookingBtn").style.display = canCancel ? "inline-block" : "none";
+      document.getElementById("paymentBtn").style.display = canPay ? "inline-block" : "none";
 
       const modal = new bootstrap.Modal(document.getElementById("bookingDetailModal"));
       modal.show();
@@ -188,6 +278,11 @@ async function viewBookingDetail(bookingId) {
     console.error("Error loading booking detail:", error);
     showAlert("Lỗi tải chi tiết đặt phòng", "danger");
   }
+}
+
+function editBookingDirect(bookingId) {
+  currentBookingId = bookingId;
+  editBooking();
 }
 
 function editBooking() {
@@ -202,7 +297,9 @@ function editBooking() {
   document.getElementById("editCheckInDate").min = today;
   document.getElementById("editCheckOutDate").min = today;
 
-  bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal")).hide();
+  // Close detail modal if open
+  const detailModal = bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal"));
+  if (detailModal) detailModal.hide();
 
   const editModal = new bootstrap.Modal(document.getElementById("editBookingModal"));
   editModal.show();
@@ -273,6 +370,110 @@ async function cancelBooking(bookingId = null) {
   }
 }
 
+// PAYMENT FUNCTIONS
+
+async function showPaymentModalDirect(bookingId) {
+  currentBookingId = bookingId;
+  const booking = currentBookings.find((b) => b.maDatPhong === bookingId);
+  if (booking) {
+    currentBookingData = booking;
+    await showPaymentModal();
+  }
+}
+
+async function showPaymentModal() {
+  if (!currentBookingData) {
+    showAlert("Không tìm thấy thông tin đặt phòng", "danger");
+    return;
+  }
+
+  try {
+    // Load payment info
+    let totalPaid = 0;
+
+    try {
+      const paymentsResponse = await apiCall(`/api/payments/booking/${currentBookingId}`, "GET");
+      if (paymentsResponse.success) {
+        totalPaid = paymentsResponse.data.reduce((sum, payment) => sum + payment.soTien, 0);
+      }
+    } catch (error) {
+      console.log("No payments found");
+    }
+
+    const remainingAmount = currentBookingData.tongTien - totalPaid;
+
+    const paymentInfoHtml = `
+      <div class="alert alert-info">
+        <h6><i class="bi bi-info-circle"></i> Thông tin thanh toán</h6>
+        <p><strong>Mã đặt phòng:</strong> #${currentBookingData.maDatPhong}</p>
+        <p><strong>Tổng tiền:</strong> ${formatCurrency(currentBookingData.tongTien)}</p>
+        <p><strong>Đã thanh toán:</strong> ${formatCurrency(totalPaid)}</p>
+        <p><strong>Số tiền còn lại:</strong> <span class="text-danger">${formatCurrency(remainingAmount)}</span></p>
+      </div>
+    `;
+
+    document.getElementById("paymentInfo").innerHTML = paymentInfoHtml;
+    document.getElementById("paymentAmount").max = remainingAmount;
+    document.getElementById("paymentAmount").value = remainingAmount;
+
+    // Close detail modal if open
+    const detailModal = bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal"));
+    if (detailModal) detailModal.hide();
+
+    const paymentModal = new bootstrap.Modal(document.getElementById("paymentModal"));
+    paymentModal.show();
+  } catch (error) {
+    console.error("Error loading payment info:", error);
+    showAlert("Lỗi tải thông tin thanh toán", "danger");
+  }
+}
+
+async function submitPayment() {
+  const amount = parseFloat(document.getElementById("paymentAmount").value);
+  const method = document.getElementById("paymentMethod").value;
+
+  if (!amount || amount <= 0) {
+    showAlert("Vui lòng nhập số tiền hợp lệ", "warning");
+    return;
+  }
+
+  if (!method) {
+    showAlert("Vui lòng chọn phương thức thanh toán", "warning");
+    return;
+  }
+
+  if (amount < 1000) {
+    showAlert("Số tiền thanh toán tối thiểu là 1,000 VNĐ", "warning");
+    return;
+  }
+
+  try {
+    const paymentData = {
+      maDatPhong: currentBookingId,
+      soTien: amount,
+      phuongThuc: method,
+    };
+
+    const response = await apiCall("/api/payments/user-payment", "POST", paymentData);
+
+    if (response.success) {
+      showAlert("Thanh toán thành công! Chờ admin xác nhận đơn đặt phòng.", "success");
+
+      // Close modal and reload bookings
+      bootstrap.Modal.getInstance(document.getElementById("paymentModal")).hide();
+      await loadMyBookings();
+
+      // Reset form
+      document.getElementById("paymentForm").reset();
+    } else {
+      showAlert(response.message || "Lỗi thanh toán", "danger");
+    }
+  } catch (error) {
+    console.error("Error submitting payment:", error);
+    showAlert("Lỗi thanh toán", "danger");
+  }
+}
+
 function calculateNights(checkIn, checkOut) {
   const checkInDate = new Date(checkIn);
   const checkOutDate = new Date(checkOut);
@@ -280,16 +481,19 @@ function calculateNights(checkIn, checkOut) {
   return Math.ceil(timeDiff / (1000 * 3600 * 24));
 }
 
+// Utility functions - updated with new statuses
 function getStatusClass(status) {
   switch (status) {
     case "Pending":
       return "bg-warning";
     case "Confirmed":
       return "bg-success";
+    case "Waiting Payment":
+      return "bg-info";
     case "Cancelled":
       return "bg-danger";
     case "Completed":
-      return "bg-info";
+      return "bg-primary";
     default:
       return "bg-secondary";
   }
@@ -301,6 +505,8 @@ function getStatusText(status) {
       return "Chờ xác nhận";
     case "Confirmed":
       return "Đã xác nhận";
+    case "Waiting Payment":
+      return "Chờ thanh toán";
     case "Cancelled":
       return "Đã hủy";
     case "Completed":

@@ -13,5 +13,7 @@ namespace HotelBooking.API.Services.Interfaces
         Task<DatPhongDto?> UpdateBookingStatusAsync(int id, string status);
         Task<decimal> CalculateBookingTotalAsync(int roomId, DateTime checkIn, DateTime checkOut);
         Task<bool> CanCancelBookingAsync(int bookingId, int userId);
+        Task<decimal> GetTotalPaidAmountAsync(int bookingId);
+        Task<DatPhongDto?> UpdateBookingStatusBasedOnPaymentAsync(int bookingId);
     }
 }

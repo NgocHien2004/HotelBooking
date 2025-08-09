@@ -23,6 +23,10 @@ namespace HotelBooking.API.Services.Implementations
             var payments = await _context.ThanhToans
                 .Include(p => p.DatPhong)
                     .ThenInclude(d => d.NguoiDung)
+                .Include(p => p.DatPhong)
+                    .ThenInclude(d => d.Phong)
+                        .ThenInclude(ph => ph.LoaiPhong)
+                            .ThenInclude(lp => lp.KhachSan)
                 .OrderByDescending(p => p.NgayThanhToan)
                 .ToListAsync();
 
@@ -34,6 +38,10 @@ namespace HotelBooking.API.Services.Implementations
             var payment = await _context.ThanhToans
                 .Include(p => p.DatPhong)
                     .ThenInclude(d => d.NguoiDung)
+                .Include(p => p.DatPhong)
+                    .ThenInclude(d => d.Phong)
+                        .ThenInclude(ph => ph.LoaiPhong)
+                            .ThenInclude(lp => lp.KhachSan)
                 .FirstOrDefaultAsync(p => p.MaThanhToan == id);
 
             return payment == null ? null : _mapper.Map<ThanhToanDto>(payment);
@@ -43,6 +51,11 @@ namespace HotelBooking.API.Services.Implementations
         {
             var payments = await _context.ThanhToans
                 .Include(p => p.DatPhong)
+                    .ThenInclude(d => d.NguoiDung)
+                .Include(p => p.DatPhong)
+                    .ThenInclude(d => d.Phong)
+                        .ThenInclude(ph => ph.LoaiPhong)
+                            .ThenInclude(lp => lp.KhachSan)
                 .Where(p => p.MaDatPhong == bookingId)
                 .OrderByDescending(p => p.NgayThanhToan)
                 .ToListAsync();
@@ -58,6 +71,7 @@ namespace HotelBooking.API.Services.Implementations
             _context.ThanhToans.Add(payment);
             await _context.SaveChangesAsync();
 
+            // Auto-update booking status based on payment
             var booking = await _context.DatPhongs.FindAsync(payment.MaDatPhong);
             if (booking != null)
             {
@@ -65,22 +79,30 @@ namespace HotelBooking.API.Services.Implementations
                     .Where(p => p.MaDatPhong == booking.MaDatPhong)
                     .SumAsync(p => p.SoTien);
 
-                if (totalPaid >= booking.TongTien)
+                // Chỉ update nếu booking ở trạng thái cho phép
+                if (booking.TrangThai == "Pending" || booking.TrangThai == "Confirmed" || booking.TrangThai == "Waiting Payment")
                 {
-                    booking.TrangThai = "Confirmed";
+                    if (totalPaid >= booking.TongTien)
+                    {
+                        booking.TrangThai = "Completed";
+                    }
+                    else if (totalPaid > 0 && booking.TrangThai == "Confirmed")
+                    {
+                        booking.TrangThai = "Waiting Payment";
+                    }
+                    
                     await _context.SaveChangesAsync();
                 }
             }
 
             return await GetPaymentByIdAsync(payment.MaThanhToan) ?? 
-                throw new InvalidOperationException("Không thể tạo thanh toán");
+                   throw new InvalidOperationException("Failed to retrieve created payment");
         }
 
         public async Task<bool> ProcessPaymentAsync(int paymentId)
         {
             var payment = await _context.ThanhToans.FindAsync(paymentId);
             if (payment == null) return false;
-
 
             return true;
         }

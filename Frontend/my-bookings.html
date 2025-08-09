@@ -50,6 +50,7 @@
             <option value="">Tất cả trạng thái</option>
             <option value="Pending">Chờ xác nhận</option>
             <option value="Confirmed">Đã xác nhận</option>
+            <option value="Waiting Payment">Chờ thanh toán</option>
             <option value="Cancelled">Đã hủy</option>
             <option value="Completed">Hoàn thành</option>
           </select>
@@ -89,6 +90,9 @@
             <button type="button" class="btn btn-warning" id="editBookingBtn" style="display: none" onclick="editBooking()">
               <i class="bi bi-pencil"></i> Sửa đặt phòng
             </button>
+            <button type="button" class="btn btn-success" id="paymentBtn" style="display: none" onclick="showPaymentModal()">
+              <i class="bi bi-credit-card"></i> Thanh toán
+            </button>
             <button type="button" class="btn btn-danger" id="cancelBookingBtn" style="display: none" onclick="cancelBooking()">
               <i class="bi bi-x-circle"></i> Hủy đặt phòng
             </button>
@@ -121,6 +125,48 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
             <button type="button" class="btn btn-primary" onclick="saveBookingChanges()"><i class="bi bi-check"></i> Lưu thay đổi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-credit-card"></i> Thanh toán đặt phòng</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="paymentInfo" class="mb-3">
+              <!-- Will be populated by JavaScript -->
+            </div>
+            <form id="paymentForm">
+              <div class="mb-3">
+                <label for="paymentAmount" class="form-label">Số tiền thanh toán (VNĐ)</label>
+                <input type="number" class="form-control" id="paymentAmount" min="1000" step="1000" required />
+                <div class="form-text">Số tiền tối thiểu: 1,000 VNĐ</div>
+              </div>
+              <div class="mb-3">
+                <label for="paymentMethod" class="form-label">Phương thức thanh toán</label>
+                <select class="form-select" id="paymentMethod" required>
+                  <option value="">Chọn phương thức</option>
+                  <option value="Cash">Tiền mặt</option>
+                  <option value="Credit Card">Thẻ tín dụng</option>
+                  <option value="Bank Transfer">Chuyển khoản ngân hàng</option>
+                  <option value="E-Wallet">Ví điện tử</option>
+                </select>
+              </div>
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                Thanh toán của bạn sẽ được ghi nhận và chờ admin xác nhận đơn đặt phòng.
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-success" onclick="submitPayment()"><i class="bi bi-check-circle"></i> Xác nhận thanh toán</button>
           </div>
         </div>
       </div>
