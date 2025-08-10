@@ -205,6 +205,9 @@ function createHotelCard(hotel) {
     imageUrl = getImageUrl(firstImage);
   }
 
+  const truncatedName = hotel.name.length > 30 ? hotel.name.substring(0, 30) + "..." : hotel.name;
+  const truncatedAddress = hotel.address.length > 50 ? hotel.address.substring(0, 50) + "..." : hotel.address;
+
   return `
     <div class="col-md-6 col-lg-4 mb-4">
       <div class="card hotel-card h-100">
@@ -218,54 +221,79 @@ function createHotelCard(hotel) {
           <!-- Rating Badge -->
           <div class="position-absolute top-0 end-0 m-2">
             <span class="badge" style="background: linear-gradient(45deg, #667eea, #764ba2); color: white;">
-              ${hotel.rating.toFixed(1)} ⭐
+              <i class="fas fa-star me-1"></i>${hotel.rating.toFixed(1)}
             </span>
           </div>
 
-          <!-- Status Badge -->
+          <!-- Image Count Badge -->
+          ${
+            hotel.images && hotel.images.length > 0
+              ? `
           <div class="position-absolute top-0 start-0 m-2">
-            <span class="badge bg-success">
-              <i class="fas fa-check-circle"></i> Hoạt động
+            <span class="badge bg-info">
+              <i class="fas fa-images me-1"></i>${hotel.images.length} ảnh
             </span>
           </div>
+          `
+              : `
+          <div class="position-absolute top-0 start-0 m-2">
+            <span class="badge bg-warning">
+              <i class="fas fa-exclamation-triangle me-1"></i>Chưa có ảnh
+            </span>
+          </div>
+          `
+          }
         </div>
 
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${hotel.name}</h5>
+          <h5 class="card-title" title="${hotel.name}">${truncatedName}</h5>
           
-          <p class="card-text text-muted mb-2">
-            <i class="fas fa-map-marker-alt"></i> ${hotel.city}
-          </p>
+          <div class="mb-2">
+            <small class="text-muted">
+              <i class="fas fa-map-marker-alt me-1"></i>${hotel.city}
+            </small>
+          </div>
           
-          <p class="card-text text-muted small mb-2" title="${hotel.address}">
-            <i class="fas fa-building"></i> ${truncateText(hotel.address, 40)}
-          </p>
+          <div class="mb-2">
+            <small class="text-muted" title="${hotel.address}">
+              <i class="fas fa-building me-1"></i>${truncatedAddress}
+            </small>
+          </div>
 
-          <p class="card-text flex-grow-1">${truncateText(hotel.description || "", 80)}</p>
-
-          <div class="mt-auto">
-            <div class="mb-3">
-              <span class="fw-bold" style="color: #28a745; font-size: 1.1rem;">
-                ${minPrice > 0 ? `Chỉ từ ${formatCurrency(minPrice)}/đêm` : "Liên hệ để biết giá"}
-              </span>
+          <div class="mb-3">
+            <div class="row">
+              <div class="col-6">
+                <small class="text-muted d-block">Giá từ:</small>
+                <span class="fw-bold" style="color: #28a745;">
+                  ${minPrice > 0 ? formatCurrency(minPrice) : "Chưa có"}
+                </span>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">Đánh giá:</small>
+                <span class="text-warning fw-bold">
+                  <i class="fas fa-star"></i> ${hotel.rating.toFixed(1)}
+                </span>
+              </div>
             </div>
+          </div>
 
-            <!-- Action Buttons -->
-            <div class="d-grid gap-2">
-              <button type="button" class="btn btn-primary btn-sm" onclick="viewHotelDetails(${hotel.id})">
-                <i class="fas fa-eye"></i> Xem Chi Tiết & Phòng
-              </button>
-              <div class="row g-1">
-                <div class="col-6">
-                  <button type="button" class="btn btn-outline-warning btn-sm w-100" onclick="editHotel(${hotel.id})">
-                    <i class="fas fa-edit"></i> Sửa
-                  </button>
-                </div>
-                <div class="col-6">
-                  <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="deleteHotel(${hotel.id})">
-                    <i class="fas fa-trash"></i> Xóa
-                  </button>
-                </div>
+          <!-- Action Buttons -->
+          <div class="mt-auto">
+            <div class="row g-2">
+              <div class="col-12">
+                <button type="button" class="btn btn-outline-info btn-sm w-100" onclick="viewHotelDetails(${hotel.id})">
+                  <i class="fas fa-eye me-1"></i>Xem Chi Tiết & Phòng
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-warning btn-sm w-100" onclick="editHotel(${hotel.id})">
+                  <i class="fas fa-edit me-1"></i>Sửa
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="deleteHotel(${hotel.id})">
+                  <i class="fas fa-trash me-1"></i>Xóa
+                </button>
               </div>
             </div>
           </div>
@@ -273,6 +301,91 @@ function createHotelCard(hotel) {
       </div>
     </div>
   `;
+}
+
+async function loadHotelImages(hotelId) {
+  try {
+    // Lấy dữ liệu khách sạn kèm ảnh từ API chính
+    let response = await fetch(`${API_URL}/hotels/${hotelId}`, {
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const hotelData = await response.json();
+    const hotel = hotelData.success && hotelData.data ? hotelData.data : hotelData;
+
+    // Backend trả về ảnh trong field 'hinhAnhs'
+    const images = hotel.hinhAnhs || [];
+
+    console.log("Hotel data:", hotel);
+    console.log("Images from backend:", images);
+
+    const container = document.getElementById("currentHotelImages");
+    container.innerHTML = "";
+
+    if (images && images.length > 0) {
+      images.forEach((image, index) => {
+        // Backend structure: { maAnh, duongDanAnh, moTa }
+        const imageId = image.maAnh || image.maHinhAnh || index;
+        const imagePath = image.duongDanAnh || "";
+        const imageDescription = image.moTa || "";
+
+        console.log("Processing image:", { imageId, imagePath, imageDescription });
+
+        if (imagePath) {
+          // Tạo URL đầy đủ từ path
+          const imageUrl = `http://localhost:5233${imagePath}`;
+
+          console.log("Final image URL:", imageUrl);
+
+          container.innerHTML += `
+            <div class="col-md-6 col-lg-4">
+              <div class="image-item position-relative">
+                <img src="${imageUrl}" class="img-fluid rounded" 
+                     style="height: 150px; object-fit: cover; width: 100%; cursor: pointer;"
+                     onclick="previewImage('${imageUrl}', '${imageId}')"
+                     onerror="console.error('Image load failed:', '${imageUrl}'); this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
+                <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
+                        onclick="deleteHotelImage('${imageId}', '${imageUrl}')">
+                  <i class="fas fa-times"></i>
+                </button>
+                ${
+                  imageDescription
+                    ? `<div class="position-absolute bottom-0 start-0 m-1"><span class="badge bg-dark bg-opacity-75 small">${imageDescription}</span></div>`
+                    : ""
+                }
+              </div>
+            </div>
+          `;
+        }
+      });
+    } else {
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>Khách sạn này chưa có ảnh nào.
+          </div>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error("Error loading hotel images:", error);
+    document.getElementById("currentHotelImages").innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Không thể tải ảnh khách sạn: ${error.message}
+        </div>
+      </div>
+    `;
+  }
+}
+
+function manageHotelImages(hotelId) {
+  // Redirect đến trang quản lý ảnh với hotel ID
+  window.location.href = `manage-hotel-images.html?hotelId=${hotelId}`;
 }
 
 function getMinPriceFromHotel(hotel) {
@@ -292,60 +405,58 @@ function getImageUrl(image) {
   const baseUrl = "http://localhost:5233";
   const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
 
-  console.log("Processing image:", image);
-
   if (!image) {
-    console.log("No image provided, using placeholder");
     return placeholderUrl;
   }
 
+  let imagePath = "";
+
   if (typeof image === "string") {
-    if (!image.trim()) {
-      return placeholderUrl;
-    }
-
-    if (image.startsWith("http")) {
-      console.log("Full URL detected:", image);
-      return image;
-    }
-
-    if (image.startsWith("/uploads")) {
-      const url = `${baseUrl}${image}`;
-      console.log("Uploads path detected, generated:", url);
-      return url;
-    }
-
-    const url = `${baseUrl}/uploads/hotels/${image}`;
-    console.log("Filename only, generated:", url);
-    return url;
+    imagePath = image.trim();
+  } else if (typeof image === "object") {
+    imagePath = image.duongDanAnh || image.url || image.path || "";
   }
 
-  if (image && image.duongDanAnh) {
-    const imagePath = image.duongDanAnh;
-    console.log("Object with duongDanAnh:", imagePath);
-
-    if (!imagePath || !imagePath.trim()) {
-      return placeholderUrl;
-    }
-
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
-
-    if (imagePath.startsWith("/uploads")) {
-      return `${baseUrl}${imagePath}`;
-    }
-
-    return `${baseUrl}/uploads/hotels/${imagePath}`;
+  if (!imagePath) {
+    return placeholderUrl;
   }
 
-  console.log("Fallback to placeholder");
-  return placeholderUrl;
+  // SỬA ĐỔI: Xử lý đường dẫn từ backend
+  // Nếu đã là URL đầy đủ
+  if (imagePath.startsWith("http")) {
+    return imagePath;
+  }
+
+  // Nếu bắt đầu bằng /uploads, bỏ dấu / đầu
+  if (imagePath.startsWith("/uploads/")) {
+    return `${baseUrl}/${imagePath.substring(1)}`;
+  }
+
+  // Nếu bắt đầu bằng uploads
+  if (imagePath.startsWith("uploads/")) {
+    return `${baseUrl}/${imagePath}`;
+  }
+
+  // Nếu không có uploads trong path, thêm uploads/hotels/
+  return `${baseUrl}/uploads/hotels/${imagePath}`;
+}
+
+function debugHotelData(hotelId) {
+  fetch(`${API_URL}/hotels/${hotelId}`, {
+    headers: getAuthHeaders(),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("=== DEBUG HOTEL DATA ===");
+      console.log("Raw response:", data);
+      console.log("Hotel images:", data.hinhAnhs || data.images);
+      console.log("========================");
+    })
+    .catch((error) => console.error("Debug error:", error));
 }
 
 async function viewHotelDetails(hotelId) {
-  console.log("Viewing hotel details for ID:", hotelId);
-  currentHotelId = hotelId;
+  console.log("Viewing details for hotel ID:", hotelId);
 
   try {
     const response = await fetch(`${API_URL}/hotels/${hotelId}`, {
@@ -360,6 +471,7 @@ async function viewHotelDetails(hotelId) {
     const hotel = data.success && data.data ? data.data : data;
     const hotelData = mapHotelData(hotel);
 
+    // Load room types
     const roomTypesResponse = await fetch(`${API_URL}/roomtypes/hotel/${hotelId}`, {
       headers: getAuthHeaders(),
     });
@@ -370,10 +482,127 @@ async function viewHotelDetails(hotelId) {
       roomTypes = roomTypesData.success && roomTypesData.data ? roomTypesData.data : roomTypesData;
     }
 
-    showHotelDetailsModal(hotelData, roomTypes);
+    const modal = new bootstrap.Modal(document.getElementById("hotelDetailsModal"));
+
+    let imagesHtml = "";
+    if (hotelData.images && hotelData.images.length > 0) {
+      imagesHtml = `
+      <div class="mb-4">
+        <h6>Hình ảnh (${hotelData.images.length})</h6>
+        <div class="row g-2">
+          ${hotelData.images
+            .slice(0, 6)
+            .map((image) => {
+              const imageUrl = getImageUrl(image);
+              return `
+            <div class="col-md-4">
+              <img src="${imageUrl}" class="img-fluid rounded" 
+                   style="height: 120px; object-fit: cover; width: 100%; cursor: pointer;"
+                   onclick="window.open('${imageUrl}', '_blank')"
+                   onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
+            </div>
+          `;
+            })
+            .join("")}
+        </div>
+        ${hotelData.images.length > 6 ? `<small class="text-muted">Và ${hotelData.images.length - 6} ảnh khác...</small>` : ""}
+      </div>
+    `;
+    } else {
+      imagesHtml = `
+      <div class="mb-4">
+        <h6>Hình ảnh</h6>
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle me-2"></i>Khách sạn này chưa có hình ảnh
+        </div>
+      </div>
+    `;
+    }
+
+    let roomTypesHtml = "";
+    if (roomTypes && roomTypes.length > 0) {
+      roomTypesHtml = `
+      <div class="mb-4">
+        <h6>Loại phòng (${roomTypes.length})</h6>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Tên loại phòng</th>
+                <th>Giá/đêm</th>
+                <th>Sức chứa</th>
+                <th>Số phòng</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${roomTypes
+                .map(
+                  (roomType) => `
+                <tr>
+                  <td>${roomType.tenLoaiPhong || roomType.name}</td>
+                  <td class="text-success fw-bold">${formatCurrency(roomType.giaMotDem || roomType.price)}</td>
+                  <td>${roomType.sucChua || roomType.capacity || "N/A"} người</td>
+                  <td>${roomType.soPhong || roomType.roomCount || "N/A"} phòng</td>
+                </tr>
+              `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    } else {
+      roomTypesHtml = `
+      <div class="mb-4">
+        <h6>Loại phòng</h6>
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle me-2"></i>Khách sạn này chưa có loại phòng nào
+        </div>
+      </div>
+    `;
+    }
+
+    const content = `
+    <div class="row">
+      <div class="col-md-6">
+        <p><strong>Tên khách sạn:</strong> ${hotelData.name}</p>
+        <p><strong>Thành phố:</strong> ${hotelData.city}</p>
+        <p><strong>Địa chỉ:</strong> ${hotelData.address}</p>
+        <p><strong>Đánh giá:</strong> ${hotelData.rating.toFixed(1)} ⭐</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Tiện ích:</strong> ${hotelData.amenities || "Chưa cập nhật"}</p>
+        <p><strong>Ngày tạo:</strong> ${new Date(hotelData.createdAt).toLocaleDateString("vi-VN")}</p>
+      </div>
+    </div>
+    
+    ${
+      hotelData.description
+        ? `
+      <div class="mb-4">
+        <h6>Mô tả</h6>
+        <p>${hotelData.description}</p>
+      </div>
+    `
+        : ""
+    }
+    
+    ${imagesHtml}
+    ${roomTypesHtml}
+    
+    <div class="text-end">
+      <button class="btn btn-primary" onclick="editHotel(${hotelData.id})">
+        <i class="fas fa-edit me-1"></i>Sửa thông tin khách sạn
+      </button>
+    </div>
+  `;
+
+    document.getElementById("hotelDetailsContent").innerHTML = content;
+    modal.show();
   } catch (error) {
     console.error("Error loading hotel details:", error);
-    showAlert("Không thể tải thông tin khách sạn", "danger");
+    showAlert("Không thể tải chi tiết khách sạn", "danger");
   }
 }
 
@@ -510,10 +739,149 @@ function showHotelDetailsModal(hotel, roomTypes) {
   modal.show();
 }
 
+function setupImageUpload(hotelId) {
+  const uploadZone = document.getElementById("uploadZone");
+  const imageInput = document.getElementById("imageInput");
+  const uploadBtn = document.getElementById("uploadBtn");
+  let selectedFiles = [];
+
+  uploadZone.onclick = () => imageInput.click();
+
+  imageInput.onchange = (e) => {
+    selectedFiles = Array.from(e.target.files);
+    displayUploadPreview(selectedFiles);
+    uploadBtn.disabled = selectedFiles.length === 0;
+  };
+
+  uploadBtn.onclick = async () => {
+    if (selectedFiles.length === 0) return;
+
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang upload...';
+
+    try {
+      // Upload từng file một để đảm bảo đúng format
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+
+        // SỬA ĐỔI: Sử dụng 'images' như backend expect
+        formData.append("images", file);
+
+        const response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            // Không set Content-Type cho FormData
+          },
+          body: formData,
+        });
+
+        console.log("Upload response status:", response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Upload error:", errorText);
+          throw new Error(`Upload failed for ${file.name}: ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log("Upload result:", result);
+      }
+
+      showAlert("Upload ảnh thành công!", "success");
+      selectedFiles = [];
+      imageInput.value = "";
+      document.getElementById("uploadPreview").innerHTML = "";
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload ảnh';
+
+      // Reload images và hotels list
+      await loadHotelImages(hotelId);
+      await loadHotels();
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      showAlert(`Có lỗi khi upload ảnh: ${error.message}`, "danger");
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload ảnh';
+    }
+  };
+}
+
+function previewImage(imageUrl, imageId) {
+  const previewImg = document.getElementById("previewImage");
+  const deleteBtn = document.getElementById("deleteImageBtn");
+
+  if (previewImg && deleteBtn) {
+    previewImg.src = imageUrl;
+    deleteBtn.onclick = () => deleteHotelImage(imageId);
+
+    const modal = new bootstrap.Modal(document.getElementById("imagePreviewModal"));
+    modal.show();
+  }
+}
+
+async function deleteHotelImage(imageId, imageUrl) {
+  if (!confirm("Bạn có chắc chắn muốn xóa ảnh này?")) return;
+
+  try {
+    const hotelId = document.getElementById("editHotelId").value;
+
+    // Thử xóa bằng ID trước
+    let response = await fetch(`${API_URL}/hotels/${hotelId}/images/${imageId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+
+    // Nếu không thành công, thử xóa bằng URL/path
+    if (!response.ok && imageUrl) {
+      const imagePath = imageUrl.replace("http://localhost:5233", "");
+      response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ imagePath: imagePath }),
+      });
+    }
+
+    // Nếu vẫn không thành công, thử endpoint khác
+    if (!response.ok) {
+      response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ imageId: imageId, imageUrl: imageUrl }),
+      });
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    showAlert("Xóa ảnh thành công!", "success");
+
+    // Đóng modal preview nếu đang mở
+    const previewModal = bootstrap.Modal.getInstance(document.getElementById("imagePreviewModal"));
+    if (previewModal) {
+      previewModal.hide();
+    }
+
+    // Reload lại danh sách ảnh và hotels
+    setTimeout(async () => {
+      await loadHotelImages(hotelId);
+      await loadHotels();
+    }, 500);
+  } catch (error) {
+    console.error("Error deleting image:", error);
+    showAlert(`Có lỗi khi xóa ảnh: ${error.message}`, "danger");
+  }
+}
+
 async function editHotel(hotelId) {
   console.log("Editing hotel ID:", hotelId);
 
   try {
+    // Debug data trước
+    debugHotelData(hotelId);
+
     const response = await fetch(`${API_URL}/hotels/${hotelId}`, {
       headers: getAuthHeaders(),
     });
@@ -533,6 +901,10 @@ async function editHotel(hotelId) {
     document.getElementById("editRating").value = hotelData.rating;
     document.getElementById("editDescription").value = hotelData.description;
     document.getElementById("editAmenities").value = hotelData.amenities;
+
+    // Load images khi mở modal
+    await loadHotelImages(hotelData.id);
+    setupImageUpload(hotelData.id);
 
     const modal = new bootstrap.Modal(document.getElementById("editHotelModal"));
     modal.show();

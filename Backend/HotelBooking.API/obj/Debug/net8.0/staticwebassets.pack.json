@@ -1,44 +1,24 @@
 {
   "Files": [
     {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\25_0d42769c-184d-4d25-958d-94b914fb01db.jpg",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\25_0d42769c-184d-4d25-958d-94b914fb01db.jpg"
+      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\36_20656451-a185-4def-a8e5-02756156e6a4.jpg",
+      "PackagePath": "staticwebassets\\uploads\\hotels\\36_20656451-a185-4def-a8e5-02756156e6a4.jpg"
     },
     {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\32_0ce79b3e-053d-482e-9b7f-4d852aac18bb.jpg",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\32_0ce79b3e-053d-482e-9b7f-4d852aac18bb.jpg"
+      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\36_87c9b3eb-85ad-4cd2-9d27-6cfeef7388be.jpg",
+      "PackagePath": "staticwebassets\\uploads\\hotels\\36_87c9b3eb-85ad-4cd2-9d27-6cfeef7388be.jpg"
     },
     {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\32_16aad23d-8619-440d-9066-9f1dbfe62290.jpg",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\32_16aad23d-8619-440d-9066-9f1dbfe62290.jpg"
+      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\37_4ec1c0ad-6db4-4677-b3bf-492cf44fc5aa.jpg",
+      "PackagePath": "staticwebassets\\uploads\\hotels\\37_4ec1c0ad-6db4-4677-b3bf-492cf44fc5aa.jpg"
     },
     {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\32_ab242399-adf7-41a8-adb7-ca2ca9eeb60e.jpg",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\32_ab242399-adf7-41a8-adb7-ca2ca9eeb60e.jpg"
+      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\37_acd5f605-8ca5-4176-b30c-5cdab6945fba.jpg",
+      "PackagePath": "staticwebassets\\uploads\\hotels\\37_acd5f605-8ca5-4176-b30c-5cdab6945fba.jpg"
     },
     {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\32_bd689564-ec85-4efe-84de-67982177834f.gif",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\32_bd689564-ec85-4efe-84de-67982177834f.gif"
-    },
-    {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\32_f740d313-dc13-48f8-b74b-6ed94f685c9c.jpg",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\32_f740d313-dc13-48f8-b74b-6ed94f685c9c.jpg"
-    },
-    {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\33_64d8b815-ca17-451c-80b5-e037db6e0156.jpg",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\33_64d8b815-ca17-451c-80b5-e037db6e0156.jpg"
-    },
-    {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\33_7e456870-04fa-40bb-a354-cd9dbdb0e340.gif",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\33_7e456870-04fa-40bb-a354-cd9dbdb0e340.gif"
-    },
-    {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\33_a98e0322-d078-4103-900a-45305ab34276.jpg",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\33_a98e0322-d078-4103-900a-45305ab34276.jpg"
-    },
-    {
-      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\33_dd454c68-548e-47e9-98e2-99e98a3362d8.jpg",
-      "PackagePath": "staticwebassets\\uploads\\hotels\\33_dd454c68-548e-47e9-98e2-99e98a3362d8.jpg"
+      "Id": "D:\\Temp\\HotelBooking\\Backend\\HotelBooking.API\\wwwroot\\uploads\\hotels\\37_e0c919d8-0be8-4732-a91a-9d1cb2740461.jpg",
+      "PackagePath": "staticwebassets\\uploads\\hotels\\37_e0c919d8-0be8-4732-a91a-9d1cb2740461.jpg"
     },
     {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.HotelBooking.API.Microsoft.AspNetCore.StaticWebAssets.props",

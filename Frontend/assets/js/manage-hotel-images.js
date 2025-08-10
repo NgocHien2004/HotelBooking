@@ -5,8 +5,12 @@ let hotelImages = [];
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", function () {
-  // Check admin authentication
-  if (!checkAdminAuth()) {
+  // Check admin authentication - SỬA ĐỔI: Sử dụng isAdmin() thay vì checkAdminAuth()
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const token = localStorage.getItem("token");
+
+  if (!token || !user.vaiTro || user.vaiTro !== "Admin") {
+    alert("Bạn không có quyền truy cập trang này!");
     window.location.href = "../login.html";
     return;
   }
