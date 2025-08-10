@@ -29,23 +29,9 @@ function checkAuth() {
       adminMenu.style.display = "none";
     }
 
-    if (userDropdownMenu && user.vaiTro === "Admin") {
+    // SỬA ĐỔI: Chỉ hiển thị nút đăng xuất cho tất cả user (bao gồm admin)
+    if (userDropdownMenu) {
       userDropdownMenu.innerHTML = `
-        <li><h6 class="dropdown-header">Quản lý</h6></li>
-        <li><a class="dropdown-item" href="admin/hotels.html"><i class="fas fa-hotel me-2"></i> Quản lý khách sạn</a></li>
-        <li><a class="dropdown-item" href="admin/users.html"><i class="fas fa-users me-2"></i> Quản lý người dùng</a></li>
-        <li><a class="dropdown-item" href="admin/bookings.html"><i class="fas fa-calendar-check me-2"></i> Quản lý đặt phòng</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><h6 class="dropdown-header">Tài khoản</h6></li>
-        <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i> Thông tin cá nhân</a></li>
-        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
-      `;
-    } else if (userDropdownMenu) {
-      userDropdownMenu.innerHTML = `
-        <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i> Thông tin cá nhân</a></li>
-        <li><a class="dropdown-item" href="my-bookings.html"><i class="fas fa-calendar-check me-2"></i> Đặt phòng của tôi</a></li>
-        <li><a class="dropdown-item" href="payment-history.html"><i class="fas fa-credit-card me-2"></i> Lịch sử thanh toán</a></li>
-        <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
       `;
     }
