@@ -134,11 +134,23 @@ function getImageUrl(image) {
   return placeholderUrl;
 }
 
-// Create hotel card HTML
+// Thêm function tính giá phòng thấp nhất
+function getMinPriceFromHotel(hotel) {
+  // Tính giá phòng thấp nhất từ các loại phòng
+  if (hotel.loaiPhongs && hotel.loaiPhongs.length > 0) {
+    const prices = hotel.loaiPhongs.map((room) => room.giaMotDem).filter((price) => price > 0);
+    return prices.length > 0 ? Math.min(...prices) : 0;
+  }
+
+  // Fallback cho các property khác
+  return hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0;
+}
+
+// Create hotel card HTML - SỬA ĐỔI: Chỉ thay đổi màu sắc
 function createHotelCard(hotel) {
   const rating = hotel.danhGiaTrungBinh || 0;
   const city = hotel.thanhPho || "";
-  const price = hotel.giaMotDem || 0;
+  const minPrice = getMinPriceFromHotel(hotel);
 
   // Get the main image
   let imageUrl = getImageUrl(null); // Default placeholder
@@ -154,7 +166,9 @@ function createHotelCard(hotel) {
                          style="height: 250px; object-fit: cover;"
                          onerror="this.src='${getImageUrl(null)}'">
                     <div class="position-absolute top-0 end-0 m-2">
-                        <span class="badge bg-primary">${rating.toFixed(1)} ⭐</span>
+                        <span class="badge" style="background: linear-gradient(45deg, #667eea, #764ba2); color: white;">
+                          ${rating.toFixed(1)} ⭐
+                        </span>
                     </div>
                 </div>
                 <div class="card-body d-flex flex-column">
@@ -165,7 +179,9 @@ function createHotelCard(hotel) {
                     <p class="card-text">${truncateText(hotel.moTa || "", 100)}</p>
                     <div class="mt-auto">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="h5 text-primary mb-0">${formatCurrency(price)}/đêm</span>
+                            <span class="fw-bold" style="color: #28a745; font-size: 1.1rem;">
+                                ${minPrice > 0 ? `Chỉ từ ${formatCurrency(minPrice)}/đêm` : "Liên hệ để biết giá"}
+                            </span>
                             <button class="btn btn-outline-primary" onclick="viewHotelDetails(${hotel.maKhachSan})">
                                 Xem chi tiết
                             </button>
@@ -269,25 +285,24 @@ function checkAuth() {
       adminMenu.style.display = "none";
     }
 
-    if (userDropdownMenu && user.vaiTro === "Admin") {
-      userDropdownMenu.innerHTML = `
-        <li><h6 class="dropdown-header">Quản lý</h6></li>
-        <li><a class="dropdown-item" href="admin/hotels.html"><i class="fas fa-hotel me-2"></i> Quản lý khách sạn</a></li>
-        <li><a class="dropdown-item" href="admin/users.html"><i class="fas fa-users me-2"></i> Quản lý người dùng</a></li>
-        <li><a class="dropdown-item" href="admin/bookings.html"><i class="fas fa-calendar-check me-2"></i> Quản lý đặt phòng</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><h6 class="dropdown-header">Tài khoản</h6></li>
-        <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i> Thông tin cá nhân</a></li>
-        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
-      `;
-    } else if (userDropdownMenu) {
-      userDropdownMenu.innerHTML = `
-        <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i> Thông tin cá nhân</a></li>
-        <li><a class="dropdown-item" href="my-bookings.html"><i class="fas fa-calendar-check me-2"></i> Đặt phòng của tôi</a></li>
-        <li><a class="dropdown-item" href="payment-history.html"><i class="fas fa-credit-card me-2"></i> Lịch sử thanh toán</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
-      `;
+    if (userDropdownMenu) {
+      if (user.vaiTro === "Admin") {
+        userDropdownMenu.innerHTML = `
+                    <li><a class="dropdown-item" href="admin/dashboard.html">Dashboard</a></li>
+                    <li><a class="dropdown-item" href="admin/hotels.html">Quản lý khách sạn</a></li>
+                    <li><a class="dropdown-item" href="admin/users.html">Quản lý người dùng</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="profile.html">Thông tin cá nhân</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="logout()">Đăng xuất</a></li>
+                `;
+      } else {
+        userDropdownMenu.innerHTML = `
+                    <li><a class="dropdown-item" href="profile.html">Thông tin cá nhân</a></li>
+                    <li><a class="dropdown-item" href="my-bookings.html">Đặt phòng của tôi</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="logout()">Đăng xuất</a></li>
+                `;
+      }
     }
   } else {
     if (loginMenu) loginMenu.style.display = "block";
@@ -296,139 +311,12 @@ function checkAuth() {
   }
 }
 
-// Logout function
 function logout() {
-  if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/index.html";
-  }
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href = "index.html";
 }
 
-// Date validation functions
-function validateDateRange(checkInDate, checkOutDate) {
-  const checkIn = new Date(checkInDate);
-  const checkOut = new Date(checkOutDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  if (checkIn < today) {
-    return { valid: false, message: "Ngày nhận phòng không thể là ngày quá khứ" };
-  }
-
-  if (checkOut <= checkIn) {
-    return { valid: false, message: "Ngày trả phòng phải sau ngày nhận phòng" };
-  }
-
-  const maxAdvanceDays = 365;
-  const maxDate = new Date();
-  maxDate.setDate(maxDate.getDate() + maxAdvanceDays);
-
-  if (checkInDate > maxDate) {
-    return { valid: false, message: "Không thể đặt phòng quá 1 năm trước" };
-  }
-
-  return { valid: true };
-}
-
-// Get booking status badge class - UPDATED với Waiting Payment
-function getBookingStatusBadge(status) {
-  const statusClasses = {
-    Pending: "badge bg-warning text-dark",
-    Confirmed: "badge bg-success",
-    "Waiting Payment": "badge bg-info",
-    Cancelled: "badge bg-danger",
-    Completed: "badge bg-primary",
-  };
-  return statusClasses[status] || "badge bg-secondary";
-}
-
-// Get payment method display text
-function getPaymentMethodDisplay(method) {
-  const methods = {
-    Cash: "Tiền mặt",
-    "Credit Card": "Thẻ tín dụng",
-    "Bank Transfer": "Chuyển khoản ngân hàng",
-    "E-Wallet": "Ví điện tử",
-  };
-  return methods[method] || method;
-}
-
-// NEW FUNCTIONS FOR PAYMENT FEATURE
-
-// Get payment status display text
-function getPaymentStatus(totalPaid, totalAmount) {
-  if (totalPaid >= totalAmount) {
-    return { status: "Completed", text: "Đã thanh toán đủ", class: "text-success" };
-  } else if (totalPaid > 0) {
-    return { status: "Partial", text: "Thanh toán một phần", class: "text-warning" };
-  } else {
-    return { status: "Unpaid", text: "Chưa thanh toán", class: "text-danger" };
-  }
-}
-
-// Get payment status class
-function getPaymentStatusClass(totalPaid, totalAmount) {
-  if (totalPaid >= totalAmount) {
-    return "badge bg-success";
-  } else if (totalPaid > 0) {
-    return "badge bg-warning";
-  } else {
-    return "badge bg-danger";
-  }
-}
-
-// Utility to get status text in Vietnamese - UPDATED với Waiting Payment
-function getStatusText(status) {
-  const statusMap = {
-    Pending: "Chờ xác nhận",
-    Confirmed: "Đã xác nhận",
-    "Waiting Payment": "Chờ thanh toán",
-    Cancelled: "Đã hủy",
-    Completed: "Hoàn thành",
-  };
-  return statusMap[status] || status;
-}
-
-// Utility to get status class for badges - UPDATED với Waiting Payment
-function getStatusClass(status) {
-  const statusClasses = {
-    Pending: "bg-warning",
-    Confirmed: "bg-success",
-    "Waiting Payment": "bg-info",
-    Cancelled: "bg-danger",
-    Completed: "bg-primary",
-  };
-  return statusClasses[status] || "bg-secondary";
-}
-
-// Show loading spinner
-function showLoading(elementId) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    element.innerHTML = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">Đang tải...</p>
-            </div>
-        `;
-  }
-}
-
-// Hide loading spinner
-function hideLoading(elementId) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    element.innerHTML = "";
-  }
-}
-
-// Clear an element's content
-function clearElement(elementId) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    element.innerHTML = "";
-  }
+function isAuthenticated() {
+  return localStorage.getItem("token") !== null;
 }
