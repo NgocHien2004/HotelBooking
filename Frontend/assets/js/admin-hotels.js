@@ -59,6 +59,11 @@ function switchView(view) {
   displayHotels();
 }
 
+function truncateText(text, maxLength) {
+  if (!text || text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + "...";
+}
+
 async function loadHotels() {
   console.log("Loading hotels...");
   console.log("API_URL:", API_URL);
@@ -192,6 +197,7 @@ function mapHotelData(hotel) {
 }
 
 function createHotelCard(hotel) {
+  const minPrice = getMinPriceFromHotel(hotel);
   let imageUrl = "http://localhost:5233/uploads/temp/hotel-placeholder.jpg";
 
   if (hotel.images && hotel.images.length > 0) {
@@ -199,94 +205,83 @@ function createHotelCard(hotel) {
     imageUrl = getImageUrl(firstImage);
   }
 
-  const truncatedName = hotel.name.length > 30 ? hotel.name.substring(0, 30) + "..." : hotel.name;
-  const truncatedAddress = hotel.address.length > 50 ? hotel.address.substring(0, 50) + "..." : hotel.address;
-
   return `
     <div class="col-md-6 col-lg-4 mb-4">
-      <div class="card hotel-admin-card fade-in">
-        <!-- Image Container - NO CROP -->
+      <div class="card hotel-card h-100">
         <div class="position-relative">
           <img src="${imageUrl}" 
                class="card-img-top" 
                alt="${hotel.name}" 
+               style="height: 250px; object-fit: cover;"
                onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg';">
           
-          <!-- Status Badge -->
+          <!-- Rating Badge -->
           <div class="position-absolute top-0 end-0 m-2">
-            <span class="badge bg-success">
-              <i class="bi bi-check-circle"></i> Hoạt động
+            <span class="badge" style="background: linear-gradient(45deg, #667eea, #764ba2); color: white;">
+              ${hotel.rating.toFixed(1)} ⭐
             </span>
           </div>
 
-          <!-- Image Count Badge -->
-          ${
-            hotel.images && hotel.images.length > 0
-              ? `
-          <div class="position-absolute bottom-0 start-0 m-2">
-            <span class="badge bg-dark bg-opacity-75">
-              <i class="bi bi-images"></i> ${hotel.images.length}
+          <!-- Status Badge -->
+          <div class="position-absolute top-0 start-0 m-2">
+            <span class="badge bg-success">
+              <i class="fas fa-check-circle"></i> Hoạt động
             </span>
           </div>
-          `
-              : ""
-          }
         </div>
 
-        <div class="card-body">
-          <h5 class="card-title" title="${hotel.name}">${truncatedName}</h5>
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${hotel.name}</h5>
           
-          <div class="mb-2">
-            <small class="text-muted">
-              <i class="bi bi-geo-alt-fill"></i> ${hotel.city}
-            </small>
-          </div>
+          <p class="card-text text-muted mb-2">
+            <i class="fas fa-map-marker-alt"></i> ${hotel.city}
+          </p>
           
-          <div class="mb-2">
-            <small class="text-muted" title="${hotel.address}">
-              <i class="bi bi-building"></i> ${truncatedAddress}
-            </small>
-          </div>
+          <p class="card-text text-muted small mb-2" title="${hotel.address}">
+            <i class="fas fa-building"></i> ${truncateText(hotel.address, 40)}
+          </p>
 
-          <div class="mb-3">
-            <div class="row">
-              <div class="col-6">
-                <small class="text-muted d-block">Giá từ:</small>
-                <span class="text-success fw-bold">
-                  ${hotel.price > 0 ? formatCurrency(hotel.price) : "Chưa có"}
-                </span>
-              </div>
-              <div class="col-6">
-                <small class="text-muted d-block">Đánh giá:</small>
-                <span class="text-warning fw-bold">
-                  <i class="bi bi-star-fill"></i> ${hotel.rating.toFixed(1)}
-                </span>
-              </div>
-            </div>
-          </div>
+          <p class="card-text flex-grow-1">${truncateText(hotel.description || "", 80)}</p>
 
-          <!-- Action Buttons -->
-          <div class="row g-2">
-            <div class="col-12">
-              <button type="button" class="btn btn-outline-info btn-sm w-100" onclick="viewHotelDetails(${hotel.id})">
-                <i class="bi bi-eye"></i> Xem Chi Tiết & Phòng
-              </button>
+          <div class="mt-auto">
+            <div class="mb-3">
+              <span class="fw-bold" style="color: #28a745; font-size: 1.1rem;">
+                ${minPrice > 0 ? `Chỉ từ ${formatCurrency(minPrice)}/đêm` : "Liên hệ để biết giá"}
+              </span>
             </div>
-            <div class="col-6">
-              <button type="button" class="btn btn-outline-warning btn-sm w-100" onclick="editHotel(${hotel.id})">
-                <i class="bi bi-pencil-square"></i> Sửa
+
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-primary btn-sm" onclick="viewHotelDetails(${hotel.id})">
+                <i class="fas fa-eye"></i> Xem Chi Tiết & Phòng
               </button>
-            </div>
-            <div class="col-6">
-              <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="deleteHotel(${hotel.id})">
-                <i class="bi bi-trash3"></i> Xóa
-              </button>
+              <div class="row g-1">
+                <div class="col-6">
+                  <button type="button" class="btn btn-outline-warning btn-sm w-100" onclick="editHotel(${hotel.id})">
+                    <i class="fas fa-edit"></i> Sửa
+                  </button>
+                </div>
+                <div class="col-6">
+                  <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="deleteHotel(${hotel.id})">
+                    <i class="fas fa-trash"></i> Xóa
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   `;
+}
+
+function getMinPriceFromHotel(hotel) {
+  if (hotel.roomTypes && hotel.roomTypes.length > 0) {
+    const prices = hotel.roomTypes.map((room) => room.giaMotDem || room.price).filter((price) => price > 0);
+    return prices.length > 0 ? Math.min(...prices) : 0;
+  }
+
+  return hotel.price || 0;
 }
 
 function filterHotels() {
