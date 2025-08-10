@@ -93,9 +93,10 @@ function showAlert(message, type = "danger") {
   }
 }
 
-// SỬA ĐỔI: Get image URL helper function - Phiên bản chuẩn và ổn định
+// SỬA ĐỔI: Get image URL helper function - Sửa đường dẫn placeholder
 function getImageUrl(image) {
   const baseUrl = "http://localhost:5233";
+  // SỬA ĐỔI: Placeholder nằm trong wwwroot/uploads/temp/
   const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
 
   console.log("[getImageUrl] Input:", image);
@@ -120,10 +121,18 @@ function getImageUrl(image) {
       return image;
     }
 
-    // Nếu bắt đầu bằng /uploads thì thêm base URL
+    // SỬA ĐỔI: Xử lý path từ database
+    // Nếu bắt đầu bằng /uploads thì dùng trực tiếp với baseUrl
     if (image.startsWith("/uploads")) {
       const finalUrl = baseUrl + image;
       console.log("[getImageUrl] Uploads path detected, final URL:", finalUrl);
+      return finalUrl;
+    }
+
+    // Nếu bắt đầu bằng uploads (không có /) thì thêm /
+    if (image.startsWith("uploads")) {
+      const finalUrl = `${baseUrl}/${image}`;
+      console.log("[getImageUrl] Uploads path without slash, final URL:", finalUrl);
       return finalUrl;
     }
 
@@ -155,8 +164,7 @@ function getMinPriceFromHotel(hotel) {
     return prices.length > 0 ? Math.min(...prices) : 0;
   }
 
-  // Fallback cho các property khác
-  return hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0;
+  return hotel.price || 0;
 }
 
 // Create hotel card HTML

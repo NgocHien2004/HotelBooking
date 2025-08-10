@@ -305,7 +305,6 @@ function createHotelCard(hotel) {
 
 async function loadHotelImages(hotelId) {
   try {
-    // Lấy dữ liệu khách sạn kèm ảnh từ API chính
     let response = await fetch(`${API_URL}/hotels/${hotelId}`, {
       headers: getAuthHeaders(),
     });
@@ -316,19 +315,15 @@ async function loadHotelImages(hotelId) {
 
     const hotelData = await response.json();
     const hotel = hotelData.success && hotelData.data ? hotelData.data : hotelData;
-
-    // Backend trả về ảnh trong field 'hinhAnhs'
     const images = hotel.hinhAnhs || [];
 
-    console.log("Hotel data:", hotel);
-    console.log("Images from backend:", images);
+    console.log("Hotel images from API:", images);
 
     const container = document.getElementById("currentHotelImages");
     container.innerHTML = "";
 
     if (images && images.length > 0) {
       images.forEach((image, index) => {
-        // Backend structure: { maAnh, duongDanAnh, moTa }
         const imageId = image.maAnh || image.maHinhAnh || index;
         const imagePath = image.duongDanAnh || "";
         const imageDescription = image.moTa || "";
@@ -336,20 +331,36 @@ async function loadHotelImages(hotelId) {
         console.log("Processing image:", { imageId, imagePath, imageDescription });
 
         if (imagePath) {
-          // Tạo URL đầy đủ từ path
-          const imageUrl = `http://localhost:5233${imagePath}`;
+          // SỬA ĐỔI: Thử nhiều cách tạo URL
+          let imageUrls = [];
 
-          console.log("Final image URL:", imageUrl);
+          // Cách 1: URL đầy đủ như backend trả về
+          imageUrls.push(`http://localhost:5233${imagePath}`);
+
+          // Cách 2: Nếu path không có /uploads
+          if (!imagePath.startsWith("/uploads")) {
+            imageUrls.push(`http://localhost:5233/uploads/hotels/${imagePath}`);
+          }
+
+          // Cách 3: Với _content prefix (cho static files)
+          imageUrls.push(`http://localhost:5233/_content/HotelBooking.API${imagePath}`);
+
+          // Cách 4: Trực tiếp từ wwwroot
+          const filename = imagePath.split("/").pop();
+          imageUrls.push(`http://localhost:5233/uploads/hotels/${filename}`);
+
+          console.log("Trying URLs:", imageUrls);
 
           container.innerHTML += `
             <div class="col-md-6 col-lg-4">
               <div class="image-item position-relative">
-                <img src="${imageUrl}" class="img-fluid rounded" 
+                <img src="${imageUrls[0]}" class="img-fluid rounded" 
                      style="height: 150px; object-fit: cover; width: 100%; cursor: pointer;"
-                     onclick="previewImage('${imageUrl}', '${imageId}')"
-                     onerror="console.error('Image load failed:', '${imageUrl}'); this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
+                     onclick="previewImage('${imageUrls[0]}', '${imageId}')"
+                     onerror="this.onerror=null; this.src='${imageUrls[1] || imageUrls[0]}'; console.log('Trying fallback URL:', this.src);"
+                     onload="console.log('Image loaded successfully:', this.src);">
                 <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
-                        onclick="deleteHotelImage('${imageId}', '${imageUrl}')">
+                        onclick="deleteHotelImage('${imageId}', '${imageUrls[0]}')">
                   <i class="fas fa-times"></i>
                 </button>
                 ${
@@ -357,6 +368,10 @@ async function loadHotelImages(hotelId) {
                     ? `<div class="position-absolute bottom-0 start-0 m-1"><span class="badge bg-dark bg-opacity-75 small">${imageDescription}</span></div>`
                     : ""
                 }
+                <!-- Debug info -->
+                <div class="position-absolute bottom-0 end-0 m-1">
+                  <span class="badge bg-info small">ID: ${imageId}</span>
+                </div>
               </div>
             </div>
           `;
