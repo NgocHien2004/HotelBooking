@@ -156,7 +156,6 @@ function getImageUrl(image) {
   return placeholderUrl;
 }
 
-// Thêm function tính giá phòng thấp nhất
 function getMinPriceFromHotel(hotel) {
   // Tính giá phòng thấp nhất từ các loại phòng
   if (hotel.loaiPhongs && hotel.loaiPhongs.length > 0) {
@@ -164,7 +163,8 @@ function getMinPriceFromHotel(hotel) {
     return prices.length > 0 ? Math.min(...prices) : 0;
   }
 
-  return hotel.price || 0;
+  // Fallback cho các property khác
+  return hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0;
 }
 
 // Create hotel card HTML
