@@ -222,6 +222,94 @@
       </div>
     </div>
 
+    <!-- Add Room Type Modal -->
+    <!-- Add Room Type Modal -->
+    <div class="modal fade" id="addRoomTypeModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-bed me-2"></i>Thêm loại phòng mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Alert sẽ được chèn vào đây -->
+            <form id="addRoomTypeForm">
+              <input type="hidden" id="roomTypeHotelId" />
+              <div class="mb-3">
+                <label for="roomTypeName" class="form-label">Tên loại phòng <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="roomTypeName" required placeholder="VD: Deluxe Room, Standard Room..." />
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="roomTypePrice" class="form-label">Giá một đêm (VNĐ) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="roomTypePrice" required min="0" step="1000" placeholder="500000" />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="roomTypeCapacity" class="form-label">Sức chứa (người) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="roomTypeCapacity" required min="1" max="10" placeholder="2" />
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="roomTypeDescription" class="form-label">Mô tả</label>
+                <textarea class="form-control" id="roomTypeDescription" rows="4" placeholder="Mô tả về loại phòng này..."></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="addRoomType()">Thêm loại phòng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Room Type Modal -->
+    <div class="modal fade" id="editRoomTypeModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Chỉnh sửa loại phòng</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editRoomTypeForm">
+              <input type="hidden" id="editRoomTypeId" />
+              <div class="mb-3">
+                <label for="editRoomTypeName" class="form-label">Tên loại phòng <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="editRoomTypeName" required />
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="editRoomTypePrice" class="form-label">Giá một đêm (VNĐ) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="editRoomTypePrice" required min="0" step="1000" />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="editRoomTypeCapacity" class="form-label">Sức chứa (người) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="editRoomTypeCapacity" required min="1" max="10" />
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="editRoomTypeDescription" class="form-label">Mô tả</label>
+                <textarea class="form-control" id="editRoomTypeDescription" rows="4"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="updateRoomType()">Cập nhật</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/utils.js"></script>
     <script src="../assets/js/auth.js"></script>
