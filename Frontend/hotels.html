@@ -9,35 +9,54 @@
     <link href="assets/css/style.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <!-- Modern Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-modern">
       <div class="container">
-        <a class="navbar-brand" href="index.html">Hotel Booking</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
+        <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel me-2"></i>Hotel Booking </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          style="border: 1px solid rgba(255, 255, 255, 0.3)">
+          <span
+            class="navbar-toggler-icon"
+            style="
+              background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 30 30%27%3e%3cpath stroke=%27rgba%28255, 255, 255, 0.8%29%27 stroke-linecap=%27round%27 stroke-miterlimit=%2710%27 stroke-width=%272%27 d=%27M4 7h22M4 15h22M4 23h22%27/%3e%3c/svg%3e');
+            "></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
+          <ul class="navbar-nav me-auto">
             <li class="nav-item">
               <a class="nav-link" href="index.html">Trang chủ</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active" href="hotels.html">Khách sạn</a>
+              <a class="nav-link" href="hotels.html">Khách sạn</a>
             </li>
+            <!-- Menu chỉ hiển thị khi đã đăng nhập -->
+            <li class="nav-item" id="bookingsMenu" style="display: none">
+              <a class="nav-link" href="my-bookings.html">Đơn đặt phòng</a>
+            </li>
+            <li class="nav-item" id="paymentHistoryMenu" style="display: none">
+              <a class="nav-link" href="payment-history.html">Lịch sử thanh toán</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav">
+            <!-- Admin Menu - Chỉ hiện cho admin -->
             <li class="nav-item" id="adminMenu" style="display: none">
-              <a class="nav-link" href="admin/hotels.html">Quản lí</a>
+              <a class="nav-link admin-badge" href="admin/hotels.html"> <i class="fas fa-cog me-1"></i>Quản lý </a>
             </li>
+            <!-- Login Menu -->
             <li class="nav-item" id="loginMenu">
-              <a class="nav-link" href="login.html">Đăng nhập</a>
+              <a class="nav-link" href="login.html"> <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập </a>
             </li>
+            <!-- User Menu -->
             <li class="nav-item" id="userMenu" style="display: none">
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                  <i class="bi bi-person-circle"></i> <span id="username"></span>
+                  <i class="fas fa-user-circle me-1"></i><span id="username"></span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end" id="userDropdownMenu">
-                  <!-- Menu items will be populated by auth.js based on user role -->
-                </ul>
+                <ul class="dropdown-menu dropdown-menu-end" id="userDropdownMenu"></ul>
               </div>
             </li>
           </ul>
