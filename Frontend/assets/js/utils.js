@@ -93,44 +93,57 @@ function showAlert(message, type = "danger") {
   }
 }
 
-// Get image URL helper function - SỬAẠ ĐỔI: Cải thiện logic xử lý đường dẫn
+// SỬA ĐỔI: Get image URL helper function - Phiên bản chuẩn và ổn định
 function getImageUrl(image) {
   const baseUrl = "http://localhost:5233";
   const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
 
+  console.log("[getImageUrl] Input:", image);
+
   // Nếu không có ảnh, trả về placeholder
   if (!image) {
+    console.log("[getImageUrl] No image, using placeholder");
     return placeholderUrl;
   }
 
+  // Xử lý chuỗi
   if (typeof image === "string") {
     // Nếu là chuỗi rỗng, trả về placeholder
     if (!image.trim()) {
+      console.log("[getImageUrl] Empty string, using placeholder");
       return placeholderUrl;
     }
 
     // Nếu đã là URL đầy đủ thì dùng trực tiếp
     if (image.startsWith("http")) {
+      console.log("[getImageUrl] Full URL detected:", image);
       return image;
     }
 
     // Nếu bắt đầu bằng /uploads thì thêm base URL
     if (image.startsWith("/uploads")) {
-      return baseUrl + image;
+      const finalUrl = baseUrl + image;
+      console.log("[getImageUrl] Uploads path detected, final URL:", finalUrl);
+      return finalUrl;
     }
 
     // Nếu không có prefix thì thêm path uploads/hotels/
-    return `${baseUrl}/uploads/hotels/${image}`;
+    const finalUrl = `${baseUrl}/uploads/hotels/${image}`;
+    console.log("[getImageUrl] Filename only, final URL:", finalUrl);
+    return finalUrl;
   }
 
-  // Nếu là object (có thể từ API response)
-  if (typeof image === "object") {
-    const imagePath = image.duongDanAnh || image.path || image.url;
+  // Xử lý object (từ API response)
+  if (typeof image === "object" && image !== null) {
+    const imagePath = image.duongDanAnh || image.path || image.url || image.fileName;
+    console.log("[getImageUrl] Object detected, path:", imagePath);
+
     if (imagePath) {
       return getImageUrl(imagePath); // Recursive call với string path
     }
   }
 
+  console.log("[getImageUrl] Fallback to placeholder");
   return placeholderUrl;
 }
 
@@ -146,7 +159,7 @@ function getMinPriceFromHotel(hotel) {
   return hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0;
 }
 
-// Create hotel card HTML - SỬA ĐỔI: Chỉ thay đổi màu sắc
+// Create hotel card HTML
 function createHotelCard(hotel) {
   const rating = hotel.danhGiaTrungBinh || 0;
   const city = hotel.thanhPho || "";
@@ -164,7 +177,7 @@ function createHotelCard(hotel) {
                 <div class="position-relative">
                     <img src="${imageUrl}" class="card-img-top" alt="${hotel.tenKhachSan}" 
                          style="height: 250px; object-fit: cover;"
-                         onerror="this.src='${getImageUrl(null)}'">
+                         onerror="this.src='http://localhost:5233/uploads/temp/hotel-placeholder.jpg'">
                     <div class="position-absolute top-0 end-0 m-2">
                         <span class="badge" style="background: linear-gradient(45deg, #667eea, #764ba2); color: white;">
                           ${rating.toFixed(1)} ⭐
