@@ -153,7 +153,80 @@ function isAuthenticated() {
   return token !== null;
 }
 
-// Load khi trang được tải
+// ===== QUAN TRỌNG: Thêm Event Listeners cho Form Submit =====
 document.addEventListener("DOMContentLoaded", function () {
+  // Check auth trước
   checkAuth();
+
+  // Setup Login Form
+  const loginForm = document.getElementById("loginForm");
+  if (loginForm) {
+    loginForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        showAlert("Vui lòng nhập đầy đủ thông tin!", "warning");
+        return;
+      }
+
+      await login(email, password);
+    });
+  }
+
+  // Setup Register Form
+  const registerForm = document.getElementById("registerForm");
+  if (registerForm) {
+    registerForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const fullName = document.getElementById("fullName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+      // Validation
+      if (!fullName || !email || !phone || !password || !confirmPassword) {
+        showAlert("Vui lòng nhập đầy đủ thông tin!", "warning");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showAlert("Mật khẩu xác nhận không khớp!", "warning");
+        return;
+      }
+
+      if (password.length < 6) {
+        showAlert("Mật khẩu phải có ít nhất 6 ký tự!", "warning");
+        return;
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showAlert("Email không hợp lệ!", "warning");
+        return;
+      }
+
+      // Phone validation
+      const phoneRegex = /^[0-9]{10,11}$/;
+      if (!phoneRegex.test(phone)) {
+        showAlert("Số điện thoại phải có 10-11 chữ số!", "warning");
+        return;
+      }
+
+      const userData = {
+        hoTen: fullName,
+        email: email,
+        soDienThoai: phone,
+        matKhau: password,
+        vaiTro: "Customer", // Mặc định là Customer
+      };
+
+      await register(userData);
+    });
+  }
 });
