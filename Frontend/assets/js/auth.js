@@ -8,12 +8,20 @@ function checkAuth() {
   const username = document.getElementById("username");
   const userDropdownMenu = document.getElementById("userDropdownMenu");
 
+  // Thêm các menu mới cho user đã đăng nhập
+  const bookingsMenu = document.getElementById("bookingsMenu");
+  const paymentHistoryMenu = document.getElementById("paymentHistoryMenu");
+
   if (token && user.email) {
     if (loginMenu) loginMenu.style.display = "none";
     if (userMenu) {
       userMenu.style.display = "block";
       if (username) username.textContent = user.hoTen || user.email;
     }
+
+    // Hiển thị menu đặt phòng và lịch sử thanh toán cho user đã đăng nhập
+    if (bookingsMenu) bookingsMenu.style.display = "block";
+    if (paymentHistoryMenu) paymentHistoryMenu.style.display = "block";
 
     if (adminMenu && user.vaiTro === "Admin") {
       adminMenu.style.display = "block";
@@ -36,6 +44,7 @@ function checkAuth() {
       userDropdownMenu.innerHTML = `
         <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i> Thông tin cá nhân</a></li>
         <li><a class="dropdown-item" href="my-bookings.html"><i class="fas fa-calendar-check me-2"></i> Đặt phòng của tôi</a></li>
+        <li><a class="dropdown-item" href="payment-history.html"><i class="fas fa-credit-card me-2"></i> Lịch sử thanh toán</a></li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
       `;
@@ -44,6 +53,10 @@ function checkAuth() {
     if (loginMenu) loginMenu.style.display = "block";
     if (userMenu) userMenu.style.display = "none";
     if (adminMenu) adminMenu.style.display = "none";
+
+    // Ẩn các menu đặt phòng và lịch sử thanh toán khi chưa đăng nhập
+    if (bookingsMenu) bookingsMenu.style.display = "none";
+    if (paymentHistoryMenu) paymentHistoryMenu.style.display = "none";
   }
 }
 
@@ -129,41 +142,18 @@ function checkAdminAccess() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   if (!user.vaiTro || user.vaiTro !== "Admin") {
     alert("Bạn không có quyền truy cập trang này!");
-    window.location.href = "../index.html";
+    window.location.href = "/index.html";
+    return false;
   }
+  return true;
 }
 
-if (document.getElementById("loginForm")) {
-  document.getElementById("loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    await login(email, password);
-  });
+function isAuthenticated() {
+  const token = localStorage.getItem("token");
+  return token !== null;
 }
 
-if (document.getElementById("registerForm")) {
-  document.getElementById("registerForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const password = document.getElementById("password").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
-
-    if (password !== confirmPassword) {
-      showAlert("Mật khẩu xác nhận không khớp!", "danger");
-      return;
-    }
-
-    const userData = {
-      hoTen: document.getElementById("fullName").value,
-      email: document.getElementById("email").value,
-      matKhau: password,
-      soDienThoai: document.getElementById("phone").value,
-      vaiTro: "Customer",
-    };
-
-    await register(userData);
-  });
-}
-
-document.addEventListener("DOMContentLoaded", checkAuth);
+// Load khi trang được tải
+document.addEventListener("DOMContentLoaded", function () {
+  checkAuth();
+});

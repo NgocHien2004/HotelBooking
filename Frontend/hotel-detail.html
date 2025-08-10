@@ -202,7 +202,7 @@
 
   <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-modern fixed-top">
       <div class="container">
         <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel me-2"></i>Hotel Booking </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -215,6 +215,13 @@
             </li>
             <li class="nav-item">
               <a class="nav-link" href="hotels.html">Khách sạn</a>
+            </li>
+            <!-- Menu chỉ hiển thị khi đã đăng nhập -->
+            <li class="nav-item" id="bookingsMenu" style="display: none">
+              <a class="nav-link" href="my-bookings.html">Đơn đặt phòng</a>
+            </li>
+            <li class="nav-item" id="paymentHistoryMenu" style="display: none">
+              <a class="nav-link" href="payment-history.html">Lịch sử thanh toán</a>
             </li>
           </ul>
           <ul class="navbar-nav">

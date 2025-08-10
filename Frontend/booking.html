@@ -9,23 +9,42 @@
     <link href="assets/css/style.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-modern fixed-top">
       <div class="container">
-        <a class="navbar-brand" href="index.html"> <i class="bi bi-building"></i> Hotel Booking </a>
+        <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel me-2"></i>Hotel Booking </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
+          <ul class="navbar-nav me-auto">
             <li class="nav-item">
-              <a class="nav-link" href="index.html"><i class="bi bi-house"></i> Trang chủ</a>
+              <a class="nav-link" href="index.html">Trang chủ</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="my-bookings.html"><i class="bi bi-calendar-check"></i> Đặt phòng của tôi</a>
+              <a class="nav-link" href="hotels.html">Khách sạn</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
+            <!-- Menu chỉ hiển thị khi đã đăng nhập -->
+            <li class="nav-item" id="bookingsMenu" style="display: none">
+              <a class="nav-link" href="my-bookings.html">Đơn đặt phòng</a>
+            </li>
+            <li class="nav-item" id="paymentHistoryMenu" style="display: none">
+              <a class="nav-link" href="payment-history.html">Lịch sử thanh toán</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav">
+            <li class="nav-item" id="adminMenu" style="display: none">
+              <a class="nav-link" href="admin/hotels.html"> <i class="fas fa-cog me-1"></i>Quản lý </a>
+            </li>
+            <li class="nav-item" id="loginMenu">
+              <a class="nav-link" href="login.html"> <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập </a>
+            </li>
+            <li class="nav-item" id="userMenu" style="display: none">
+              <div class="dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-user-circle me-1"></i><span id="username"></span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" id="userDropdownMenu"></ul>
+              </div>
             </li>
           </ul>
         </div>
