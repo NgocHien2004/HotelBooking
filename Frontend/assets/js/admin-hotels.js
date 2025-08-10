@@ -754,11 +754,76 @@ function showHotelDetailsModal(hotel, roomTypes) {
   modal.show();
 }
 
+function displayUploadPreview(files) {
+  const previewContainer = document.getElementById("uploadPreview");
+
+  if (!previewContainer) {
+    console.error("Upload preview container not found");
+    return;
+  }
+
+  previewContainer.innerHTML = "";
+
+  if (files.length === 0) {
+    return;
+  }
+
+  previewContainer.innerHTML = `<h6 class="mt-3">Ảnh đã chọn (${files.length}):</h6>`;
+
+  files.forEach((file, index) => {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const previewDiv = document.createElement("div");
+      previewDiv.className = "d-flex align-items-center mb-2 p-2 border rounded";
+      previewDiv.innerHTML = `
+        <img src="${e.target.result}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded me-2">
+        <div class="flex-grow-1">
+          <small class="text-muted">${file.name}</small><br>
+          <small class="text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeUploadFile(${index})">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      previewContainer.appendChild(previewDiv);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeUploadFile(index) {
+  const imageInput = document.getElementById("imageInput");
+  const uploadBtn = document.getElementById("uploadBtn");
+
+  if (imageInput && imageInput.files) {
+    // Tạo DataTransfer mới để xóa file
+    const dt = new DataTransfer();
+    const files = Array.from(imageInput.files);
+
+    files.forEach((file, i) => {
+      if (i !== index) {
+        dt.items.add(file);
+      }
+    });
+
+    imageInput.files = dt.files;
+
+    // Trigger change event để cập nhật preview
+    const changeEvent = new Event("change", { bubbles: true });
+    imageInput.dispatchEvent(changeEvent);
+  }
+}
+
 function setupImageUpload(hotelId) {
   const uploadZone = document.getElementById("uploadZone");
   const imageInput = document.getElementById("imageInput");
   const uploadBtn = document.getElementById("uploadBtn");
   let selectedFiles = [];
+
+  if (!uploadZone || !imageInput || !uploadBtn) {
+    console.error("Upload elements not found");
+    return;
+  }
 
   uploadZone.onclick = () => imageInput.click();
 
@@ -771,44 +836,46 @@ function setupImageUpload(hotelId) {
   uploadBtn.onclick = async () => {
     if (selectedFiles.length === 0) return;
 
+    const originalText = uploadBtn.innerHTML;
     uploadBtn.disabled = true;
     uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang upload...';
 
     try {
-      // Upload từng file một để đảm bảo đúng format
-      for (const file of selectedFiles) {
-        const formData = new FormData();
+      // SỬA ĐỔI: Upload tất cả ảnh cùng lúc thay vì từng cái một
+      const formData = new FormData();
 
-        // SỬA ĐỔI: Sử dụng 'images' như backend expect
+      selectedFiles.forEach((file) => {
         formData.append("images", file);
+      });
 
-        const response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            // Không set Content-Type cho FormData
-          },
-          body: formData,
-        });
+      const response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          // Không set Content-Type cho FormData
+        },
+        body: formData,
+      });
 
-        console.log("Upload response status:", response.status);
+      console.log("Upload response status:", response.status);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Upload error:", errorText);
-          throw new Error(`Upload failed for ${file.name}: ${errorText}`);
-        }
-
-        const result = await response.json();
-        console.log("Upload result:", result);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Upload error:", errorText);
+        throw new Error(`Upload failed: ${errorText}`);
       }
 
-      showAlert("Upload ảnh thành công!", "success");
+      const result = await response.json();
+      console.log("Upload result:", result);
+
+      showAlert(`Upload thành công ${result.count || selectedFiles.length} ảnh!`, "success");
+
+      // Reset form
       selectedFiles = [];
       imageInput.value = "";
       document.getElementById("uploadPreview").innerHTML = "";
       uploadBtn.disabled = true;
-      uploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload ảnh';
+      uploadBtn.innerHTML = originalText;
 
       // Reload images và hotels list
       await loadHotelImages(hotelId);
@@ -816,8 +883,8 @@ function setupImageUpload(hotelId) {
     } catch (error) {
       console.error("Error uploading images:", error);
       showAlert(`Có lỗi khi upload ảnh: ${error.message}`, "danger");
-      uploadBtn.disabled = true;
-      uploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload ảnh';
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = originalText;
     }
   };
 }
