@@ -10,7 +10,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Modern Navigation -->
     <nav class="navbar navbar-expand-lg navbar-modern">
       <div class="container">
         <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel me-2"></i>Hotel Booking </a>
@@ -34,7 +33,6 @@
             <li class="nav-item">
               <a class="nav-link active" href="hotels.html">Khách sạn</a>
             </li>
-            <!-- Menu chỉ hiển thị khi đã đăng nhập -->
             <li class="nav-item" id="bookingsMenu" style="display: none">
               <a class="nav-link" href="my-bookings.html">Đơn đặt phòng</a>
             </li>
@@ -43,15 +41,12 @@
             </li>
           </ul>
           <ul class="navbar-nav">
-            <!-- Admin Menu - Chỉ hiện cho admin -->
             <li class="nav-item" id="adminMenu" style="display: none">
               <a class="nav-link admin-badge" href="admin/hotels.html"> <i class="fas fa-cog me-1"></i>Quản lý </a>
             </li>
-            <!-- Login Menu -->
             <li class="nav-item" id="loginMenu">
               <a class="nav-link" href="login.html"> <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập </a>
             </li>
-            <!-- User Menu -->
             <li class="nav-item" id="userMenu" style="display: none">
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -65,15 +60,10 @@
       </div>
     </nav>
 
-    <!-- Hotels List -->
     <section class="py-5">
       <div class="container">
         <h2 class="mb-4">Danh sách khách sạn</h2>
-
-        <!-- Alert Message -->
         <div id="alertMessage"></div>
-
-        <!-- Search and Filter -->
         <div class="row mb-4">
           <div class="col-md-6">
             <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm khách sạn..." />
@@ -93,20 +83,13 @@
             </select>
           </div>
         </div>
-
-        <!-- Hotels Grid -->
-        <div class="row" id="hotelsList">
-          <!-- Hotels will be loaded here -->
-        </div>
-
-        <!-- Pagination -->
+        <div class="row" id="hotelsList"></div>
         <nav aria-label="Page navigation" class="mt-4">
           <ul class="pagination justify-content-center" id="pagination"></ul>
         </nav>
       </div>
     </section>
 
-    <!-- Footer -->
     <footer class="bg-dark text-white py-4 mt-5">
       <div class="container text-center">
         <p class="mb-0">&copy; 2025 Hotel Booking. Tất cả quyền được bảo lưu.</p>
@@ -114,7 +97,6 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Quan trọng: Load các file JS theo đúng thứ tự -->
     <script src="assets/js/utils.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/hotel.js"></script>

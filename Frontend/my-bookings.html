@@ -10,7 +10,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Modern Navigation -->
     <nav class="navbar navbar-expand-lg navbar-modern">
       <div class="container">
         <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel me-2"></i>Hotel Booking </a>
@@ -34,7 +33,6 @@
             <li class="nav-item">
               <a class="nav-link" href="hotels.html">Khách sạn</a>
             </li>
-            <!-- Menu chỉ hiển thị khi đã đăng nhập -->
             <li class="nav-item" id="bookingsMenu" style="display: none">
               <a class="nav-link active" href="my-bookings.html">Đơn đặt phòng</a>
             </li>
@@ -43,15 +41,12 @@
             </li>
           </ul>
           <ul class="navbar-nav">
-            <!-- Admin Menu - Chỉ hiện cho admin -->
             <li class="nav-item" id="adminMenu" style="display: none">
               <a class="nav-link admin-badge" href="admin/hotels.html"> <i class="fas fa-cog me-1"></i>Quản lý </a>
             </li>
-            <!-- Login Menu -->
             <li class="nav-item" id="loginMenu">
               <a class="nav-link" href="login.html"> <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập </a>
             </li>
-            <!-- User Menu -->
             <li class="nav-item" id="userMenu" style="display: none">
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -70,10 +65,8 @@
         <h2><i class="bi bi-calendar-check"></i> Đơn đặt phòng của tôi</h2>
       </div>
 
-      <!-- Alert Message -->
       <div id="alertMessage"></div>
 
-      <!-- Filters -->
       <div class="row mb-3">
         <div class="col-md-4">
           <select class="form-select" id="statusFilter">
@@ -89,13 +82,7 @@
           <input type="date" class="form-control" id="dateFilter" title="Lọc theo ngày nhận phòng" />
         </div>
       </div>
-
-      <!-- Bookings List -->
-      <div id="bookingsList">
-        <!-- Will be populated by JavaScript -->
-      </div>
-
-      <!-- Empty State -->
+      <div id="bookingsList"></div>
       <div id="emptyState" class="text-center py-5" style="display: none">
         <i class="bi bi-calendar-x display-1 text-muted"></i>
         <h4 class="mt-3">Chưa có đặt phòng nào</h4>
@@ -104,7 +91,6 @@
       </div>
     </div>
 
-    <!-- Booking Detail Modal -->
     <div class="modal fade" id="bookingDetailModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -112,9 +98,7 @@
             <h5 class="modal-title">Chi tiết đặt phòng</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body" id="bookingDetailContent">
-            <!-- Will be populated by JavaScript -->
-          </div>
+          <div class="modal-body" id="bookingDetailContent"></div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             <button type="button" class="btn btn-warning" id="editBookingBtn" style="display: none" onclick="editBooking()">
@@ -131,7 +115,6 @@
       </div>
     </div>
 
-    <!-- Edit Booking Modal -->
     <div class="modal fade" id="editBookingModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -160,7 +143,6 @@
       </div>
     </div>
 
-    <!-- Payment Modal -->
     <div class="modal fade" id="paymentModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -169,9 +151,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <div id="paymentInfo" class="mb-3">
-              <!-- Will be populated by JavaScript -->
-            </div>
+            <div id="paymentInfo" class="mb-3"></div>
             <form id="paymentForm">
               <div class="mb-3">
                 <label for="paymentAmount" class="form-label">Số tiền thanh toán (VNĐ)</label>
@@ -193,7 +173,6 @@
                 Thanh toán của bạn sẽ được ghi nhận và chờ admin xác nhận đơn đặt phòng.
               </div>
             </form>
-            <!-- Alert sẽ được chèn vào đây bởi JavaScript -->
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>

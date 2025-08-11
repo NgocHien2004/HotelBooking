@@ -8,7 +8,6 @@ function checkAuth() {
   const username = document.getElementById("username");
   const userDropdownMenu = document.getElementById("userDropdownMenu");
 
-  // Thêm các menu mới cho user đã đăng nhập
   const bookingsMenu = document.getElementById("bookingsMenu");
   const paymentHistoryMenu = document.getElementById("paymentHistoryMenu");
 
@@ -19,7 +18,6 @@ function checkAuth() {
       if (username) username.textContent = user.hoTen || user.email;
     }
 
-    // Hiển thị menu đặt phòng và lịch sử thanh toán cho user đã đăng nhập
     if (bookingsMenu) bookingsMenu.style.display = "block";
     if (paymentHistoryMenu) paymentHistoryMenu.style.display = "block";
 
@@ -29,7 +27,6 @@ function checkAuth() {
       adminMenu.style.display = "none";
     }
 
-    // SỬA ĐỔI: Chỉ hiển thị nút đăng xuất cho tất cả user (bao gồm admin)
     if (userDropdownMenu) {
       userDropdownMenu.innerHTML = `
         <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
@@ -40,7 +37,6 @@ function checkAuth() {
     if (userMenu) userMenu.style.display = "none";
     if (adminMenu) adminMenu.style.display = "none";
 
-    // Ẩn các menu đặt phòng và lịch sử thanh toán khi chưa đăng nhập
     if (bookingsMenu) bookingsMenu.style.display = "none";
     if (paymentHistoryMenu) paymentHistoryMenu.style.display = "none";
   }
@@ -139,12 +135,9 @@ function isAuthenticated() {
   return token !== null;
 }
 
-// ===== QUAN TRỌNG: Thêm Event Listeners cho Form Submit =====
 document.addEventListener("DOMContentLoaded", function () {
-  // Check auth trước
   checkAuth();
 
-  // Setup Login Form
   const loginForm = document.getElementById("loginForm");
   if (loginForm) {
     loginForm.addEventListener("submit", async function (e) {
@@ -162,7 +155,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Setup Register Form
   const registerForm = document.getElementById("registerForm");
   if (registerForm) {
     registerForm.addEventListener("submit", async function (e) {
@@ -174,7 +166,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const password = document.getElementById("password").value.trim();
       const confirmPassword = document.getElementById("confirmPassword").value.trim();
 
-      // Validation
       if (!fullName || !email || !phone || !password || !confirmPassword) {
         showAlert("Vui lòng nhập đầy đủ thông tin!", "warning");
         return;
@@ -190,14 +181,12 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         showAlert("Email không hợp lệ!", "warning");
         return;
       }
 
-      // Phone validation
       const phoneRegex = /^[0-9]{10,11}$/;
       if (!phoneRegex.test(phone)) {
         showAlert("Số điện thoại phải có 10-11 chữ số!", "warning");
@@ -209,7 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
         email: email,
         soDienThoai: phone,
         matKhau: password,
-        vaiTro: "Customer", // Mặc định là Customer
+        vaiTro: "Customer",
       };
 
       await register(userData);

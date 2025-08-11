@@ -1,7 +1,3 @@
-// Hotel.js - Hotel listing page functions
-// API_URL được định nghĩa trong utils.js
-
-// Load hotels list
 let allHotels = [];
 let currentPage = 1;
 const itemsPerPage = 6;
@@ -11,14 +7,12 @@ async function loadHotels() {
     const response = await fetch(`${API_URL}/hotels`);
     const data = await response.json();
 
-    // Kiểm tra response format từ backend
     if (data.success && data.data) {
       allHotels = data.data;
     } else {
-      allHotels = data; // Fallback nếu response trực tiếp là array
+      allHotels = data;
     }
 
-    // Extract unique locations for filter
     const locations = [...new Set(allHotels.map((h) => h.thanhPho || h.city))];
     const locationFilter = document.getElementById("locationFilter");
     locationFilter.innerHTML = '<option value="">Tất cả địa điểm</option>';
@@ -39,15 +33,12 @@ async function loadHotels() {
   }
 }
 
-// SỬA ĐỔI: Thêm function tính giá phòng thấp nhất
 function getMinPriceFromHotel(hotel) {
-  // Tính giá phòng thấp nhất từ các loại phòng
   if (hotel.loaiPhongs && hotel.loaiPhongs.length > 0) {
     const prices = hotel.loaiPhongs.map((room) => room.giaMotDem).filter((price) => price > 0);
     return prices.length > 0 ? Math.min(...prices) : 0;
   }
 
-  // Fallback cho các property khác
   return hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0;
 }
 
@@ -56,14 +47,11 @@ function displayHotels() {
   const selectedLocation = document.getElementById("locationFilter").value;
   const priceRange = document.getElementById("priceFilter").value;
 
-  // Filter hotels
   let filteredHotels = allHotels.filter((hotel) => {
-    // Xử lý cả tên property tiếng Việt và tiếng Anh
     const hotelName = hotel.tenKhachSan || hotel.name || "";
     const hotelCity = hotel.thanhPho || hotel.city || "";
     const hotelAddress = hotel.diaChi || hotel.address || "";
 
-    // SỬA ĐỔI: Sử dụng function tính giá thấp nhất
     const minPrice = getMinPriceFromHotel(hotel);
 
     const matchSearch =
@@ -79,7 +67,6 @@ function displayHotels() {
     return matchSearch && matchLocation && matchPrice;
   });
 
-  // Pagination
   const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -107,14 +94,12 @@ function displayHotelList(hotels) {
   });
 }
 
-// SỬA ĐỔI: Function tạo hotel card cho trang listing với style mới
 function createHotelCardForListing(hotel) {
   const rating = hotel.danhGiaTrungBinh || hotel.rating || 0;
   const city = hotel.thanhPho || hotel.city || "";
   const minPrice = getMinPriceFromHotel(hotel);
 
-  // Get the main image
-  let imageUrl = getImageUrl(null); // Default placeholder
+  let imageUrl = getImageUrl(null);
   if (hotel.hinhAnhs && hotel.hinhAnhs.length > 0) {
     imageUrl = getImageUrl(hotel.hinhAnhs[0]);
   }
@@ -160,14 +145,12 @@ function displayPagination(totalPages) {
 
   if (totalPages <= 1) return;
 
-  // Previous button
   container.innerHTML += `
         <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Trước</a>
         </li>
     `;
 
-  // Page numbers
   for (let i = 1; i <= totalPages; i++) {
     container.innerHTML += `
             <li class="page-item ${currentPage === i ? "active" : ""}">
@@ -176,7 +159,6 @@ function displayPagination(totalPages) {
         `;
   }
 
-  // Next button
   container.innerHTML += `
         <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
             <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Sau</a>
@@ -194,7 +176,6 @@ function viewHotelDetails(hotelId) {
   window.location.href = `hotel-detail.html?id=${hotelId}`;
 }
 
-// Event listeners
 document.addEventListener("DOMContentLoaded", function () {
   loadHotels();
 

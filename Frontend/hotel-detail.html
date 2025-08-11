@@ -102,7 +102,6 @@
         border-radius: 12px 12px 0 0;
       }
 
-      /* CSS cho Reviews Section */
       .rating-input {
         font-size: 1.5rem;
         cursor: pointer;
@@ -201,7 +200,6 @@
   </head>
 
   <body>
-    <!-- Modern Navigation -->
     <nav class="navbar navbar-expand-lg navbar-modern">
       <div class="container">
         <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel me-2"></i>Hotel Booking </a>
@@ -225,7 +223,6 @@
             <li class="nav-item">
               <a class="nav-link" href="hotels.html">Khách sạn</a>
             </li>
-            <!-- Menu chỉ hiển thị khi đã đăng nhập -->
             <li class="nav-item" id="bookingsMenu" style="display: none">
               <a class="nav-link" href="my-bookings.html">Đơn đặt phòng</a>
             </li>
@@ -234,15 +231,12 @@
             </li>
           </ul>
           <ul class="navbar-nav">
-            <!-- Admin Menu - Chỉ hiện cho admin -->
             <li class="nav-item" id="adminMenu" style="display: none">
               <a class="nav-link admin-badge" href="admin/hotels.html"> <i class="fas fa-cog me-1"></i>Quản lý </a>
             </li>
-            <!-- Login Menu -->
             <li class="nav-item" id="loginMenu">
               <a class="nav-link" href="login.html"> <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập </a>
             </li>
-            <!-- User Menu -->
             <li class="nav-item" id="userMenu" style="display: none">
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -256,10 +250,8 @@
       </div>
     </nav>
 
-    <!-- Alert Container -->
     <div id="alertMessage" class="container mt-5 pt-4"></div>
 
-    <!-- Loading Spinner -->
     <div id="loadingSpinner" class="container text-center py-5 mt-5">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -267,20 +259,13 @@
       <p class="mt-2">Đang tải thông tin khách sạn...</p>
     </div>
 
-    <!-- Hotel Details Section -->
     <div id="hotelDetailsSection" style="display: none">
-      <!-- Hero Section with Image Slider -->
       <section class="py-4">
         <div class="container">
           <div class="hotel-image-slider">
-            <!-- Image Counter -->
             <div class="image-counter"><span id="currentImageIndex">1</span> / <span id="totalImages">1</span></div>
-
-            <!-- Swiper -->
             <div class="swiper hotelImageSwiper">
-              <div class="swiper-wrapper" id="imageSliderWrapper">
-                <!-- Images will be loaded here -->
-              </div>
+              <div class="swiper-wrapper" id="imageSliderWrapper"></div>
               <div class="swiper-button-next"></div>
               <div class="swiper-button-prev"></div>
               <div class="swiper-pagination"></div>
@@ -289,7 +274,6 @@
         </div>
       </section>
 
-      <!-- Hotel Information -->
       <section>
         <div class="container">
           <div class="hotel-info-card">
@@ -328,24 +312,19 @@
         </div>
       </section>
 
-      <!-- Room Types Section -->
       <section class="py-5" id="roomTypesSection">
         <div class="container">
           <h3 class="mb-4">Phòng có sẵn</h3>
-          <div class="row" id="roomTypesContainer">
-            <!-- Room types will be loaded here -->
-          </div>
+          <div class="row" id="roomTypesContainer"></div>
         </div>
       </section>
 
-      <!-- Reviews Section -->
       <section class="py-5 bg-light" id="reviewsSection">
         <div class="container">
           <div class="row">
             <div class="col-lg-8">
               <h3 class="mb-4">Đánh giá khách hàng</h3>
 
-              <!-- Review Form (Only for logged in users who can review) -->
               <div id="reviewFormContainer" style="display: none">
                 <div class="card mb-4">
                   <div class="card-header">
@@ -378,7 +357,6 @@
                 </div>
               </div>
 
-              <!-- Reviews List -->
               <div id="reviewsContainer">
                 <div id="reviewsLoading" class="text-center py-4">
                   <div class="spinner-border text-primary" role="status">
@@ -394,7 +372,6 @@
               </div>
             </div>
 
-            <!-- Review Summary Sidebar -->
             <div class="col-lg-4">
               <div class="card">
                 <div class="card-header">
@@ -408,9 +385,7 @@
                       <p class="text-muted mb-0">Dựa trên <span id="totalReviews">0</span> đánh giá</p>
                     </div>
 
-                    <div id="ratingBreakdown">
-                      <!-- Rating distribution will be loaded here -->
-                    </div>
+                    <div id="ratingBreakdown"></div>
                   </div>
                 </div>
               </div>
@@ -420,7 +395,6 @@
       </section>
     </div>
 
-    <!-- Error Section -->
     <div id="errorSection" class="container py-5" style="display: none">
       <div class="text-center">
         <div class="alert alert-danger">
@@ -432,18 +406,14 @@
       </div>
     </div>
 
-    <!-- Footer -->
     <footer class="bg-dark text-white py-4 mt-5">
       <div class="container text-center">
         <p class="mb-0">&copy; 2025 Hotel Booking. Tất cả quyền được bảo lưu.</p>
       </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Swiper JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <!-- Custom JS -->
     <script src="assets/js/config.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/hotel-detail.js"></script>

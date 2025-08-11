@@ -101,5 +101,6 @@ namespace HotelBooking.API.Services.Implementations
         {
             return await _context.NguoiDungs.AnyAsync(u => u.Email == email);
         }
+        
     }
 }

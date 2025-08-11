@@ -1,11 +1,8 @@
-// Manage Hotel Images JavaScript
 let currentHotelId = null;
 let selectedFiles = [];
 let hotelImages = [];
 
-// Initialize page
 document.addEventListener("DOMContentLoaded", function () {
-  // Check admin authentication - SỬA ĐỔI: Sử dụng isAdmin() thay vì checkAdminAuth()
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const token = localStorage.getItem("token");
 
@@ -15,7 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  // Get hotel ID from URL
   const urlParams = new URLSearchParams(window.location.search);
   currentHotelId = urlParams.get("hotelId");
 
@@ -32,9 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
   setupEventListeners();
 });
 
-// Setup event listeners
 function setupEventListeners() {
-  // Upload zone
   const uploadZone = document.getElementById("uploadZone");
   const imageInput = document.getElementById("imageInput");
 
@@ -63,11 +57,9 @@ function setupEventListeners() {
     handleFileSelection(files);
   });
 
-  // Upload button
   document.getElementById("uploadBtn").addEventListener("click", uploadImages);
 }
 
-// Load hotel info
 async function loadHotelInfo() {
   try {
     const response = await fetch(`${API_URL}/hotels/${currentHotelId}`, {
@@ -110,7 +102,6 @@ async function loadHotelImages() {
   }
 }
 
-// Display images
 function displayImages() {
   const grid = document.getElementById("imagesGrid");
   const emptyState = document.getElementById("emptyState");
@@ -130,7 +121,6 @@ function displayImages() {
   grid.innerHTML = hotelImages.map((image) => createImageCard(image)).join("");
 }
 
-// Create image card
 function createImageCard(image) {
   const imageUrl = getImageUrl(image);
   const isMainImage = image.isMainImage || false;
@@ -160,7 +150,6 @@ function createImageCard(image) {
     `;
 }
 
-// Handle file selection
 function handleFileSelection(files) {
   selectedFiles = [];
   const validFiles = [];
@@ -168,7 +157,6 @@ function handleFileSelection(files) {
   files.forEach((file) => {
     if (file.type.startsWith("image/")) {
       if (file.size <= 5 * 1024 * 1024) {
-        // 5MB limit
         validFiles.push(file);
       } else {
         showAlert(`File ${file.name} quá lớn. Tối đa 5MB.`, "warning");
@@ -185,7 +173,6 @@ function handleFileSelection(files) {
   uploadBtn.disabled = selectedFiles.length === 0;
 }
 
-// Display preview
 function displayPreview() {
   const previewGrid = document.getElementById("previewGrid");
 
@@ -212,7 +199,6 @@ function displayPreview() {
   });
 }
 
-// Remove preview
 function removePreview(index) {
   selectedFiles.splice(index, 1);
   displayPreview();
@@ -221,7 +207,6 @@ function removePreview(index) {
   uploadBtn.disabled = selectedFiles.length === 0;
 }
 
-// Upload images
 async function uploadImages() {
   if (selectedFiles.length === 0) return;
 
@@ -244,7 +229,7 @@ async function uploadImages() {
 
       const response = await fetch(`${API_URL}/hotels/${currentHotelId}/images`, {
         method: "POST",
-        headers: getAuthHeaders(false), // Don't include Content-Type for FormData
+        headers: getAuthHeaders(false),
         body: formData,
       });
 
@@ -255,12 +240,10 @@ async function uploadImages() {
 
     showAlert("Upload ảnh thành công!", "success");
 
-    // Reset form
     selectedFiles = [];
     document.getElementById("imageDescription").value = "";
     displayPreview();
 
-    // Close modal and reload images
     const modal = bootstrap.Modal.getInstance(document.getElementById("uploadModal"));
     modal.hide();
 
@@ -274,7 +257,6 @@ async function uploadImages() {
   }
 }
 
-// Edit image
 function editImage(imageId) {
   const image = hotelImages.find((img) => img.maHinhAnh === imageId);
   if (!image) return;
@@ -288,7 +270,6 @@ function editImage(imageId) {
   modal.show();
 }
 
-// Update image
 async function updateImage() {
   const imageId = document.getElementById("editImageId").value;
   const description = document.getElementById("editImageDescription").value.trim();
@@ -320,14 +301,12 @@ async function updateImage() {
   }
 }
 
-// Delete image
 function deleteImage(imageId) {
   document.getElementById("deleteImageId").value = imageId;
   const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
   modal.show();
 }
 
-// Confirm delete image
 async function confirmDeleteImage() {
   const imageId = document.getElementById("deleteImageId").value;
 
@@ -353,12 +332,10 @@ async function confirmDeleteImage() {
   }
 }
 
-// View image fullsize
 function viewImageFullsize(imageUrl) {
   window.open(imageUrl, "_blank");
 }
 
-// Get image URL helper
 function getImageUrl(image) {
   const baseUrl = "http://localhost:5233";
   const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
@@ -383,7 +360,6 @@ function getImageUrl(image) {
   return placeholderUrl;
 }
 
-// Get auth headers
 function getAuthHeaders(includeContentType = true) {
   const token = localStorage.getItem("token");
   const headers = {
@@ -397,7 +373,6 @@ function getAuthHeaders(includeContentType = true) {
   return headers;
 }
 
-// Check admin authentication
 function checkAdminAuth() {
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("userRole");
@@ -405,7 +380,6 @@ function checkAdminAuth() {
   return token && userRole === "Admin";
 }
 
-// Show alert message
 function showAlert(message, type = "danger") {
   const alertDiv = document.getElementById("alertMessage");
   if (alertDiv) {
@@ -422,7 +396,6 @@ function showAlert(message, type = "danger") {
   }
 }
 
-// Logout function
 function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("userRole");

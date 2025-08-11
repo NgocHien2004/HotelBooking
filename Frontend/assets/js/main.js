@@ -1,18 +1,13 @@
-// Main.js - Common functions for the application
-// API_URL được định nghĩa trong utils.js
-
-// Load featured hotels on homepage
 async function loadFeaturedHotels() {
   try {
     const response = await fetch(`${API_URL}/hotels`);
     const data = await response.json();
 
-    // Kiểm tra response format từ backend
     let hotels = [];
     if (data.success && data.data) {
-      hotels = data.data.slice(0, 3); // Lấy 3 khách sạn đầu tiên
+      hotels = data.data.slice(0, 3);
     } else if (Array.isArray(data)) {
-      hotels = data.slice(0, 3); // Fallback nếu response trực tiếp là array
+      hotels = data.slice(0, 3);
     }
 
     const container = document.getElementById("featuredHotels");
@@ -45,12 +40,9 @@ async function loadFeaturedHotels() {
   }
 }
 
-// Initialize on page load
 document.addEventListener("DOMContentLoaded", function () {
-  // Check authentication
   checkAuth();
 
-  // Load featured hotels if on homepage
   if (document.getElementById("featuredHotels")) {
     loadFeaturedHotels();
   }

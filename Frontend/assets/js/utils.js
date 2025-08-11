@@ -1,8 +1,6 @@
-// API Base URL - Sử dụng port 5233 theo backend của bạn
 const API_URL = "http://localhost:5233/api";
 const API_BASE_URL = "http://localhost:5233";
 
-// Format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -10,34 +8,29 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
-// Format date
 function formatDate(dateString) {
   if (!dateString) return "";
   const date = new Date(dateString);
   return date.toLocaleDateString("vi-VN");
 }
 
-// Format datetime for display
 function formatDateTime(dateString) {
   if (!dateString) return "";
   const date = new Date(dateString);
   return date.toLocaleString("vi-VN");
 }
 
-// Check if user is authenticated
 function isAuthenticated() {
   const token = localStorage.getItem("token");
   const user = localStorage.getItem("user");
   return token && user;
 }
 
-// Check if user is admin
 function isAdmin() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   return user && user.vaiTro === "Admin";
 }
 
-// Get current user from token
 function getCurrentUser() {
   const token = localStorage.getItem("token");
   if (!token) return null;
@@ -55,7 +48,6 @@ function getCurrentUser() {
   }
 }
 
-// Get auth headers
 function getAuthHeaders(includeContentType = true) {
   const token = localStorage.getItem("token");
   const headers = {
@@ -69,7 +61,6 @@ function getAuthHeaders(includeContentType = true) {
   return headers;
 }
 
-// Show alert message
 function showAlert(message, type = "danger") {
   const alertDiv = document.getElementById("alertMessage");
   if (alertDiv) {
@@ -80,7 +71,6 @@ function showAlert(message, type = "danger") {
             </div>
         `;
 
-    // Auto dismiss after 5 seconds
     setTimeout(() => {
       const alert = alertDiv.querySelector(".alert");
       if (alert) {
@@ -93,62 +83,51 @@ function showAlert(message, type = "danger") {
   }
 }
 
-// SỬA ĐỔI: Get image URL helper function - Sửa đường dẫn placeholder
 function getImageUrl(image) {
   const baseUrl = "http://localhost:5233";
-  // SỬA ĐỔI: Placeholder nằm trong wwwroot/uploads/temp/
   const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
 
   console.log("[getImageUrl] Input:", image);
 
-  // Nếu không có ảnh, trả về placeholder
   if (!image) {
     console.log("[getImageUrl] No image, using placeholder");
     return placeholderUrl;
   }
 
-  // Xử lý chuỗi
   if (typeof image === "string") {
-    // Nếu là chuỗi rỗng, trả về placeholder
     if (!image.trim()) {
       console.log("[getImageUrl] Empty string, using placeholder");
       return placeholderUrl;
     }
 
-    // Nếu đã là URL đầy đủ thì dùng trực tiếp
     if (image.startsWith("http")) {
       console.log("[getImageUrl] Full URL detected:", image);
       return image;
     }
 
-    // SỬA ĐỔI: Xử lý path từ database
-    // Nếu bắt đầu bằng /uploads thì dùng trực tiếp với baseUrl
     if (image.startsWith("/uploads")) {
       const finalUrl = baseUrl + image;
       console.log("[getImageUrl] Uploads path detected, final URL:", finalUrl);
       return finalUrl;
     }
 
-    // Nếu bắt đầu bằng uploads (không có /) thì thêm /
     if (image.startsWith("uploads")) {
       const finalUrl = `${baseUrl}/${image}`;
       console.log("[getImageUrl] Uploads path without slash, final URL:", finalUrl);
       return finalUrl;
     }
 
-    // Nếu không có prefix thì thêm path uploads/hotels/
     const finalUrl = `${baseUrl}/uploads/hotels/${image}`;
     console.log("[getImageUrl] Filename only, final URL:", finalUrl);
     return finalUrl;
   }
 
-  // Xử lý object (từ API response)
   if (typeof image === "object" && image !== null) {
     const imagePath = image.duongDanAnh || image.path || image.url || image.fileName;
     console.log("[getImageUrl] Object detected, path:", imagePath);
 
     if (imagePath) {
-      return getImageUrl(imagePath); // Recursive call với string path
+      return getImageUrl(imagePath);
     }
   }
 
@@ -157,24 +136,20 @@ function getImageUrl(image) {
 }
 
 function getMinPriceFromHotel(hotel) {
-  // Tính giá phòng thấp nhất từ các loại phòng
   if (hotel.loaiPhongs && hotel.loaiPhongs.length > 0) {
     const prices = hotel.loaiPhongs.map((room) => room.giaMotDem).filter((price) => price > 0);
     return prices.length > 0 ? Math.min(...prices) : 0;
   }
 
-  // Fallback cho các property khác
   return hotel.giaPhongThapNhat || hotel.giaMotDem || hotel.price || 0;
 }
 
-// Create hotel card HTML
 function createHotelCard(hotel) {
   const rating = hotel.danhGiaTrungBinh || 0;
   const city = hotel.thanhPho || "";
   const minPrice = getMinPriceFromHotel(hotel);
 
-  // Get the main image
-  let imageUrl = getImageUrl(null); // Default placeholder
+  let imageUrl = getImageUrl(null);
   if (hotel.hinhAnhs && hotel.hinhAnhs.length > 0) {
     imageUrl = getImageUrl(hotel.hinhAnhs[0]);
   }
@@ -214,7 +189,6 @@ function createHotelCard(hotel) {
     `;
 }
 
-// Enhanced API call with better error handling
 async function apiCall(endpoint, method = "GET", data = null, customHeaders = {}) {
   const token = localStorage.getItem("token");
 
@@ -259,7 +233,6 @@ async function apiCall(endpoint, method = "GET", data = null, customHeaders = {}
 
       return result;
     } else {
-      // Handle non-JSON responses
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -271,18 +244,15 @@ async function apiCall(endpoint, method = "GET", data = null, customHeaders = {}
   }
 }
 
-// Truncate text helper
 function truncateText(text, maxLength) {
   if (!text || text.length <= maxLength) return text;
   return text.substring(0, maxLength) + "...";
 }
 
-// View hotel details
 function viewHotelDetails(hotelId) {
   window.location.href = `hotel-detail.html?id=${hotelId}`;
 }
 
-// Check auth and update UI
 function checkAuth() {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");

@@ -147,14 +147,11 @@ namespace HotelBooking.API.Services.Implementations
             return summary;
         }
 
-        // SỬA: Luôn return true cho user đã đăng nhập
         public async Task<bool> CanUserReviewHotelAsync(int userId, int hotelId)
         {
-            // Kiểm tra user đã đánh giá chưa
             var existingReview = await _context.DanhGias
                 .AnyAsync(r => r.MaNguoiDung == userId && r.MaKhachSan == hotelId);
 
-            // Return true nếu chưa đánh giá, false nếu đã đánh giá rồi
             return !existingReview;
         }
 

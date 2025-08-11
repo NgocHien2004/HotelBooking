@@ -74,7 +74,7 @@ body {
   line-height: 1.3;
   min-height: 2.6rem;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -414,7 +414,6 @@ footer {
   }
 }
 
-/* Modern Admin Hotel Cards */
 .hotel-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   border: none;
@@ -482,7 +481,6 @@ footer {
   background: linear-gradient(45deg, #764ba2, #667eea);
 }
 
-/* Modern Navbar for Admin */
 .navbar-modern {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   backdrop-filter: blur(10px);
@@ -541,7 +539,6 @@ footer {
   transform: translateX(3px);
 }
 
-/* Responsive improvements */
 @media (max-width: 991px) {
   .navbar-modern .navbar-collapse {
     background: rgba(255, 255, 255, 0.1);

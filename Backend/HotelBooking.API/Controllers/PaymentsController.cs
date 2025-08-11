@@ -38,7 +38,6 @@ namespace HotelBooking.API.Controllers
             }
         }
 
-        // THÊM ENDPOINT MỚI
         [HttpGet("my-payments")]
         public async Task<ActionResult<IEnumerable<ThanhToanDto>>> GetMyPayments()
         {

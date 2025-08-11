@@ -9,7 +9,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Modern Navigation -->
     <nav class="navbar navbar-expand-lg navbar-modern">
       <div class="container">
         <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel me-2"></i>Hotel Booking </a>
@@ -33,7 +32,6 @@
             <li class="nav-item">
               <a class="nav-link" href="hotels.html">Khách sạn</a>
             </li>
-            <!-- Menu chỉ hiển thị khi đã đăng nhập -->
             <li class="nav-item" id="bookingsMenu" style="display: none">
               <a class="nav-link" href="my-bookings.html">Đơn đặt phòng</a>
             </li>
@@ -42,15 +40,12 @@
             </li>
           </ul>
           <ul class="navbar-nav">
-            <!-- Admin Menu - Chỉ hiện cho admin -->
             <li class="nav-item" id="adminMenu" style="display: none">
               <a class="nav-link admin-badge" href="admin/hotels.html"> <i class="fas fa-cog me-1"></i>Quản lý </a>
             </li>
-            <!-- Login Menu -->
             <li class="nav-item" id="loginMenu">
               <a class="nav-link" href="login.html"> <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập </a>
             </li>
-            <!-- User Menu -->
             <li class="nav-item" id="userMenu" style="display: none">
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -68,10 +63,8 @@
         <h2><i class="bi bi-credit-card"></i> Lịch sử thanh toán</h2>
       </div>
 
-      <!-- Alert Message -->
       <div id="alertMessage"></div>
 
-      <!-- Filters -->
       <div class="row mb-3">
         <div class="col-md-4">
           <select class="form-select" id="paymentMethodFilter">
@@ -90,7 +83,6 @@
         </div>
       </div>
 
-      <!-- Payment Statistics -->
       <div class="row mb-4">
         <div class="col-md-3">
           <div class="card bg-primary text-white">
@@ -146,7 +138,6 @@
         </div>
       </div>
 
-      <!-- Payment History Table -->
       <div class="card">
         <div class="card-header">
           <h5><i class="bi bi-list"></i> Danh sách thanh toán</h5>
@@ -166,14 +157,12 @@
                 </tr>
               </thead>
               <tbody id="paymentsTableBody">
-                <!-- Will be populated by JavaScript -->
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- Empty State -->
       <div id="emptyState" class="text-center py-5" style="display: none">
         <i class="bi bi-credit-card-2-front display-1 text-muted"></i>
         <h4 class="mt-3">Chưa có thanh toán nào</h4>
@@ -181,7 +170,6 @@
       </div>
     </div>
 
-    <!-- Payment Detail Modal -->
     <div class="modal fade" id="paymentDetailModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -190,7 +178,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body" id="paymentDetailContent">
-            <!-- Will be populated by JavaScript -->
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>

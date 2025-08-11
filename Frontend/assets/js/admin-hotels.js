@@ -331,21 +331,16 @@ async function loadHotelImages(hotelId) {
         console.log("Processing image:", { imageId, imagePath, imageDescription });
 
         if (imagePath) {
-          // SỬA ĐỔI: Thử nhiều cách tạo URL
           let imageUrls = [];
 
-          // Cách 1: URL đầy đủ như backend trả về
           imageUrls.push(`http://localhost:5233${imagePath}`);
 
-          // Cách 2: Nếu path không có /uploads
           if (!imagePath.startsWith("/uploads")) {
             imageUrls.push(`http://localhost:5233/uploads/hotels/${imagePath}`);
           }
 
-          // Cách 3: Với _content prefix (cho static files)
           imageUrls.push(`http://localhost:5233/_content/HotelBooking.API${imagePath}`);
 
-          // Cách 4: Trực tiếp từ wwwroot
           const filename = imagePath.split("/").pop();
           imageUrls.push(`http://localhost:5233/uploads/hotels/${filename}`);
 
@@ -399,7 +394,6 @@ async function loadHotelImages(hotelId) {
 }
 
 function manageHotelImages(hotelId) {
-  // Redirect đến trang quản lý ảnh với hotel ID
   window.location.href = `manage-hotel-images.html?hotelId=${hotelId}`;
 }
 
@@ -436,23 +430,18 @@ function getImageUrl(image) {
     return placeholderUrl;
   }
 
-  // SỬA ĐỔI: Xử lý đường dẫn từ backend
-  // Nếu đã là URL đầy đủ
   if (imagePath.startsWith("http")) {
     return imagePath;
   }
 
-  // Nếu bắt đầu bằng /uploads, bỏ dấu / đầu
   if (imagePath.startsWith("/uploads/")) {
     return `${baseUrl}/${imagePath.substring(1)}`;
   }
 
-  // Nếu bắt đầu bằng uploads
   if (imagePath.startsWith("uploads/")) {
     return `${baseUrl}/${imagePath}`;
   }
 
-  // Nếu không có uploads trong path, thêm uploads/hotels/
   return `${baseUrl}/uploads/hotels/${imagePath}`;
 }
 
@@ -823,7 +812,6 @@ function removeUploadFile(index) {
   const uploadBtn = document.getElementById("uploadBtn");
 
   if (imageInput && imageInput.files) {
-    // Tạo DataTransfer mới để xóa file
     const dt = new DataTransfer();
     const files = Array.from(imageInput.files);
 
@@ -835,7 +823,6 @@ function removeUploadFile(index) {
 
     imageInput.files = dt.files;
 
-    // Trigger change event để cập nhật preview
     const changeEvent = new Event("change", { bubbles: true });
     imageInput.dispatchEvent(changeEvent);
   }
@@ -868,7 +855,6 @@ function setupImageUpload(hotelId) {
     uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang upload...';
 
     try {
-      // SỬA ĐỔI: Upload tất cả ảnh cùng lúc thay vì từng cái một
       const formData = new FormData();
 
       selectedFiles.forEach((file) => {
@@ -879,7 +865,6 @@ function setupImageUpload(hotelId) {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
-          // Không set Content-Type cho FormData
         },
         body: formData,
       });
@@ -897,14 +882,12 @@ function setupImageUpload(hotelId) {
 
       showAlert(`Upload thành công ${result.count || selectedFiles.length} ảnh!`, "success");
 
-      // Reset form
       selectedFiles = [];
       imageInput.value = "";
       document.getElementById("uploadPreview").innerHTML = "";
       uploadBtn.disabled = true;
       uploadBtn.innerHTML = originalText;
 
-      // Reload images và hotels list
       await loadHotelImages(hotelId);
       await loadHotels();
     } catch (error) {
@@ -935,13 +918,11 @@ async function deleteHotelImage(imageId, imageUrl) {
   try {
     const hotelId = document.getElementById("editHotelId").value;
 
-    // Thử xóa bằng ID trước
     let response = await fetch(`${API_URL}/hotels/${hotelId}/images/${imageId}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
     });
 
-    // Nếu không thành công, thử xóa bằng URL/path
     if (!response.ok && imageUrl) {
       const imagePath = imageUrl.replace("http://localhost:5233", "");
       response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
@@ -951,7 +932,6 @@ async function deleteHotelImage(imageId, imageUrl) {
       });
     }
 
-    // Nếu vẫn không thành công, thử endpoint khác
     if (!response.ok) {
       response = await fetch(`${API_URL}/hotels/${hotelId}/images`, {
         method: "DELETE",
@@ -967,13 +947,11 @@ async function deleteHotelImage(imageId, imageUrl) {
 
     showAlert("Xóa ảnh thành công!", "success");
 
-    // Đóng modal preview nếu đang mở
     const previewModal = bootstrap.Modal.getInstance(document.getElementById("imagePreviewModal"));
     if (previewModal) {
       previewModal.hide();
     }
 
-    // Reload lại danh sách ảnh và hotels
     setTimeout(async () => {
       await loadHotelImages(hotelId);
       await loadHotels();
@@ -988,7 +966,6 @@ async function editHotel(hotelId) {
   console.log("Editing hotel ID:", hotelId);
 
   try {
-    // Debug data trước
     debugHotelData(hotelId);
 
     const response = await fetch(`${API_URL}/hotels/${hotelId}`, {
@@ -1011,7 +988,6 @@ async function editHotel(hotelId) {
     document.getElementById("editDescription").value = hotelData.description;
     document.getElementById("editAmenities").value = hotelData.amenities;
 
-    // Load images khi mở modal
     await loadHotelImages(hotelData.id);
     setupImageUpload(hotelData.id);
 
@@ -1091,19 +1067,16 @@ function showAddRoomTypeModal(hotelId) {
   modal.show();
 }
 
-// Function để hiển thị alert trong modal
 function showModalAlert(message, type = "danger", modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
 
-  // Tìm hoặc tạo div alert trong modal
   let alertDiv = modal.querySelector(".modal-alert");
   if (!alertDiv) {
     alertDiv = document.createElement("div");
     alertDiv.className = "modal-alert";
     alertDiv.id = modalId + "Alert";
 
-    // Chèn vào đầu modal-body
     const modalBody = modal.querySelector(".modal-body");
     if (modalBody) {
       modalBody.insertBefore(alertDiv, modalBody.firstChild);
@@ -1117,7 +1090,6 @@ function showModalAlert(message, type = "danger", modalId) {
     </div>
   `;
 
-  // Auto-hide sau 5 giây
   setTimeout(() => {
     if (alertDiv) {
       alertDiv.innerHTML = "";
@@ -1126,7 +1098,6 @@ function showModalAlert(message, type = "danger", modalId) {
 }
 
 async function addRoomType() {
-  // Xóa thông báo cũ trong modal
   const modalAlert = document.getElementById("addRoomTypeModalAlert");
   if (modalAlert) {
     modalAlert.innerHTML = "";
@@ -1134,7 +1105,6 @@ async function addRoomType() {
 
   const hotelId = document.getElementById("roomTypeHotelId").value;
 
-  // Validate dữ liệu trước khi gửi
   const roomTypeName = document.getElementById("roomTypeName").value.trim();
   const roomTypePrice = document.getElementById("roomTypePrice").value;
   const roomTypeCapacity = document.getElementById("roomTypeCapacity").value;
@@ -1190,7 +1160,6 @@ async function addRoomType() {
 
       showModalAlert("Thêm loại phòng thành công!", "success", "addRoomTypeModal");
 
-      // Đóng modal sau 1.5 giây
       setTimeout(() => {
         bootstrap.Modal.getInstance(document.getElementById("addRoomTypeModal")).hide();
         if (currentHotelId) {
@@ -1204,7 +1173,6 @@ async function addRoomType() {
         const errorData = JSON.parse(responseText);
         errorMessage = errorData.message || errorData.error || errorMessage;
 
-        // Log chi tiết lỗi để debug
         console.error("API Error Details:", errorData);
       } catch (e) {
         console.error("Could not parse error response:", responseText);
@@ -1237,6 +1205,8 @@ async function editRoomType(roomTypeId) {
     document.getElementById("editRoomTypePrice").value = roomType.giaMotDem;
     document.getElementById("editRoomTypeCapacity").value = roomType.sucChua;
     document.getElementById("editRoomTypeDescription").value = roomType.moTa || "";
+
+    loadRoomsList(roomTypeId);
 
     const modal = new bootstrap.Modal(document.getElementById("editRoomTypeModal"));
     modal.show();
@@ -1405,3 +1375,335 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+async function addRoomToType() {
+  const roomNumber = document.getElementById("newRoomNumber").value.trim();
+  const roomStatus = document.getElementById("newRoomStatus").value;
+  const roomTypeId = document.getElementById("editRoomTypeId").value;
+
+  if (!roomNumber) {
+    showModalAlert("Vui lòng nhập số phòng!", "danger", "editRoomTypeModal");
+    return;
+  }
+
+  const roomData = {
+    maLoaiPhong: parseInt(roomTypeId),
+    soPhong: roomNumber,
+    trangThai: roomStatus,
+  };
+
+  try {
+    const response = await fetch(`${API_URL}/rooms`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(roomData),
+    });
+
+    if (response.ok) {
+      showModalAlert("Thêm phòng thành công!", "success", "editRoomTypeModal");
+      document.getElementById("newRoomNumber").value = "";
+      loadRoomsList(roomTypeId);
+    } else {
+      const errorData = await response.json();
+      showModalAlert(errorData.message || "Có lỗi xảy ra!", "danger", "editRoomTypeModal");
+    }
+  } catch (error) {
+    console.error("Error adding room:", error);
+    showModalAlert("Có lỗi xảy ra!", "danger", "editRoomTypeModal");
+  }
+}
+
+async function loadRoomsList(roomTypeId) {
+  try {
+    const response = await fetch(`${API_URL}/rooms/type/${roomTypeId}`, {
+      headers: getAuthHeaders(),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const rooms = data.success && data.data ? data.data : [];
+      displayRoomsList(rooms);
+    }
+  } catch (error) {
+    console.error("Error loading rooms:", error);
+  }
+}
+
+function displayRoomsList(rooms) {
+  const container = document.getElementById("currentRoomsList");
+
+  if (!rooms || rooms.length === 0) {
+    container.innerHTML = '<p class="text-muted mb-0">Chưa có phòng nào.</p>';
+    return;
+  }
+
+  const roomsHtml = rooms
+    .map((room) => {
+      const statusClass = getStatusClass(room.trangThai);
+      const statusText = getStatusText(room.trangThai);
+
+      return `
+      <div class="d-flex justify-content-between align-items-center border-bottom py-2" id="room-${room.maPhong}">
+        <div>
+          <strong>Phòng ${room.soPhong}</strong>
+          <span class="badge ${statusClass} ms-2" id="status-badge-${room.maPhong}">${statusText}</span>
+        </div>
+        <div>
+          <select class="form-select form-select-sm me-1" style="width: 120px; display: inline-block;" 
+                  onchange="updateRoomStatusDirect(${room.maPhong}, this.value)" 
+                  id="status-select-${room.maPhong}">
+            <option value="Available" ${room.trangThai === "Available" ? "selected" : ""}>Có thể đặt</option>
+            <option value="Occupied" ${room.trangThai === "Occupied" ? "selected" : ""}>Đã có khách</option>
+            <option value="Maintenance" ${room.trangThai === "Maintenance" ? "selected" : ""}>Bảo trì</option>
+          </select>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${room.maPhong})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+
+  container.innerHTML = roomsHtml;
+}
+
+async function updateRoomStatusDirect(roomId, newStatus) {
+  const selectElement = document.getElementById(`status-select-${roomId}`);
+  const badgeElement = document.getElementById(`status-badge-${roomId}`);
+  const originalValue = selectElement.dataset.originalValue || selectElement.value;
+
+  if (!selectElement.dataset.originalValue) {
+    selectElement.dataset.originalValue = originalValue;
+  }
+
+  try {
+    selectElement.disabled = true;
+
+    const originalBadgeText = badgeElement.textContent;
+    const originalBadgeClass = badgeElement.className;
+    badgeElement.textContent = "Đang cập nhật...";
+    badgeElement.className = "badge bg-secondary ms-2";
+
+    const getRoomResponse = await fetch(`${API_URL}/rooms/${roomId}`, {
+      headers: getAuthHeaders(),
+    });
+
+    if (!getRoomResponse.ok) {
+      throw new Error("Không thể lấy thông tin phòng");
+    }
+
+    const roomData = await getRoomResponse.json();
+    const currentRoom = roomData.success && roomData.data ? roomData.data : roomData;
+
+    const response = await fetch(`${API_URL}/rooms/${roomId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({
+        soPhong: currentRoom.soPhong,
+        trangThai: newStatus,
+      }),
+    });
+
+    if (response.ok) {
+      badgeElement.className = `badge ${getStatusClass(newStatus)} ms-2`;
+      badgeElement.textContent = getStatusText(newStatus);
+
+      const successText = badgeElement.textContent;
+      badgeElement.textContent = "✓ Đã cập nhật";
+      badgeElement.className = "badge bg-success ms-2";
+
+      setTimeout(() => {
+        badgeElement.textContent = successText;
+        badgeElement.className = `badge ${getStatusClass(newStatus)} ms-2`;
+      }, 1500);
+
+      selectElement.dataset.originalValue = newStatus;
+    } else {
+      selectElement.value = originalValue;
+      badgeElement.textContent = originalBadgeText;
+      badgeElement.className = originalBadgeClass;
+
+      const errorData = await response.json();
+
+      badgeElement.textContent = "✗ Lỗi";
+      badgeElement.className = "badge bg-danger ms-2";
+
+      setTimeout(() => {
+        badgeElement.textContent = originalBadgeText;
+        badgeElement.className = originalBadgeClass;
+      }, 2000);
+    }
+  } catch (error) {
+    selectElement.value = originalValue;
+
+    console.error("Error updating room:", error);
+
+    const originalBadgeText = getStatusText(originalValue);
+    const originalBadgeClass = `badge ${getStatusClass(originalValue)} ms-2`;
+
+    badgeElement.textContent = "✗ Lỗi kết nối";
+    badgeElement.className = "badge bg-danger ms-2";
+
+    setTimeout(() => {
+      badgeElement.textContent = originalBadgeText;
+      badgeElement.className = originalBadgeClass;
+    }, 2000);
+  } finally {
+    selectElement.disabled = false;
+  }
+}
+
+async function editRoomStatus(roomId, currentStatus) {
+  const statusOptions = {
+    Available: "Có thể đặt",
+    Occupied: "Đã có khách",
+    Maintenance: "Bảo trì",
+  };
+
+  let optionsHtml = "";
+  for (const [value, text] of Object.entries(statusOptions)) {
+    const selected = value === currentStatus ? "selected" : "";
+    optionsHtml += `<option value="${value}" ${selected}>${text}</option>`;
+  }
+
+  const modal = document.createElement("div");
+  modal.innerHTML = `
+    <div class="modal fade" id="editRoomStatusModal" tabindex="-1" data-bs-backdrop="static">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Sửa trạng thái phòng</h5>
+            <button type="button" class="btn-close" onclick="closeStatusModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Trạng thái:</label>
+              <select class="form-select" id="newRoomStatusSelect">
+                ${optionsHtml}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeStatusModal()">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="updateRoomStatus(${roomId})">Cập nhật</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  const bootstrapModal = new bootstrap.Modal(document.getElementById("editRoomStatusModal"));
+  bootstrapModal.show();
+
+  window.currentStatusModal = {
+    element: modal,
+    bootstrap: bootstrapModal,
+  };
+}
+
+function closeStatusModal() {
+  if (window.currentStatusModal) {
+    window.currentStatusModal.bootstrap.hide();
+    document.body.removeChild(window.currentStatusModal.element);
+    window.currentStatusModal = null;
+  }
+}
+
+async function updateRoomStatus(roomId) {
+  const newStatus = document.getElementById("newRoomStatusSelect").value;
+
+  try {
+    const getRoomResponse = await fetch(`${API_URL}/rooms/${roomId}`, {
+      headers: getAuthHeaders(),
+    });
+
+    if (!getRoomResponse.ok) {
+      showModalAlert("Không thể lấy thông tin phòng!", "danger", "editRoomTypeModal");
+      return;
+    }
+
+    const roomData = await getRoomResponse.json();
+    const currentRoom = roomData.success && roomData.data ? roomData.data : roomData;
+
+    const response = await fetch(`${API_URL}/rooms/${roomId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({
+        soPhong: currentRoom.soPhong,
+        trangThai: newStatus,
+      }),
+    });
+
+    if (response.ok) {
+      showModalAlert("Cập nhật trạng thái thành công!", "success", "editRoomTypeModal");
+      closeStatusModal();
+      const roomTypeId = document.getElementById("editRoomTypeId").value;
+      loadRoomsList(roomTypeId);
+    } else {
+      const errorData = await response.json();
+      showModalAlert(errorData.message || "Có lỗi xảy ra!", "danger", "editRoomTypeModal");
+    }
+  } catch (error) {
+    console.error("Error updating room:", error);
+    showModalAlert("Có lỗi xảy ra!", "danger", "editRoomTypeModal");
+  }
+}
+
+async function deleteRoom(roomId) {
+  if (!confirm("Bạn có chắc chắn muốn xóa phòng này?")) return;
+
+  try {
+    const response = await fetch(`${API_URL}/rooms/${roomId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+
+    if (response.ok) {
+      showModalAlert("Xóa phòng thành công!", "success", "editRoomTypeModal");
+      const roomTypeId = document.getElementById("editRoomTypeId").value;
+      loadRoomsList(roomTypeId);
+    } else {
+      showModalAlert("Có lỗi xảy ra!", "danger", "editRoomTypeModal");
+    }
+  } catch (error) {
+    console.error("Error deleting room:", error);
+    showModalAlert("Có lỗi xảy ra!", "danger", "editRoomTypeModal");
+  }
+}
+
+function getStatusClass(status) {
+  switch (status) {
+    case "Available":
+      return "bg-success";
+    case "Occupied":
+      return "bg-warning text-dark";
+    case "Maintenance":
+      return "bg-info text-dark";
+    default:
+      return "bg-secondary";
+  }
+}
+
+function getStatusText(status) {
+  switch (status) {
+    case "Available":
+      return "Có thể đặt";
+    case "Occupied":
+      return "Đã có khách";
+    case "Maintenance":
+      return "Bảo trì";
+    default:
+      return status;
+  }
+}

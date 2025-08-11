@@ -3,13 +3,11 @@ let currentBookingId = null;
 let currentBookingData = null;
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Check authentication
   if (!isAuthenticated()) {
     window.location.href = "login.html";
     return;
   }
 
-  // Check if there's a new booking notification
   if (localStorage.getItem("newBookingCreated") === "true") {
     localStorage.removeItem("newBookingCreated");
     const lastBookingId = localStorage.getItem("lastBookingId");
@@ -21,11 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadMyBookings();
 
-  // Event listeners
   document.getElementById("statusFilter").addEventListener("change", filterBookings);
   document.getElementById("dateFilter").addEventListener("change", filterBookings);
 
-  // Auto refresh every 30 seconds to check for updates
   setInterval(loadMyBookings, 30000);
 });
 
@@ -37,7 +33,6 @@ async function loadMyBookings() {
       currentBookings = response.data;
       displayBookings(currentBookings);
 
-      // Update page title with booking count
       document.title = `Đặt phòng của tôi (${currentBookings.length}) - Hotel Booking`;
     } else {
       showAlert(response.message || "Lỗi tải danh sách đặt phòng", "danger");
@@ -68,7 +63,6 @@ function displayBookings(bookings) {
       const canCancel = booking.trangThai === "Pending" || booking.trangThai === "Confirmed";
       const canPay = booking.trangThai === "Pending" || booking.trangThai === "Confirmed" || booking.trangThai === "Waiting Payment";
 
-      // Calculate payment status
       const totalPaid = booking.totalPaid || 0;
       const remainingAmount = booking.tongTien - totalPaid;
       const paymentStatus = totalPaid > 0 ? getPaymentStatus(totalPaid, booking.tongTien) : null;
@@ -168,7 +162,6 @@ async function viewBookingDetail(bookingId) {
       currentBookingId = bookingId;
       currentBookingData = booking;
 
-      // Load payment info
       let payments = [];
       let totalPaid = 0;
 
@@ -259,7 +252,6 @@ async function viewBookingDetail(bookingId) {
 
       document.getElementById("bookingDetailContent").innerHTML = detailHtml;
 
-      // Show/hide action buttons
       const canEdit = booking.trangThai === "Pending";
       const canCancel = booking.trangThai === "Pending" || booking.trangThai === "Confirmed";
       const canPay =
@@ -292,12 +284,10 @@ function editBooking() {
   document.getElementById("editCheckInDate").value = booking.ngayNhanPhong.split("T")[0];
   document.getElementById("editCheckOutDate").value = booking.ngayTraPhong.split("T")[0];
 
-  // Set minimum dates
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("editCheckInDate").min = today;
   document.getElementById("editCheckOutDate").min = today;
 
-  // Close detail modal if open
   const detailModal = bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal"));
   if (detailModal) detailModal.hide();
 
@@ -331,7 +321,6 @@ async function saveBookingChanges() {
       showAlert("Cập nhật đặt phòng thành công", "success");
       bootstrap.Modal.getInstance(document.getElementById("editBookingModal")).hide();
 
-      // Force reload bookings to get fresh data
       await loadMyBookings();
     } else {
       showAlert(response.message || "Lỗi cập nhật đặt phòng", "danger");
@@ -355,11 +344,9 @@ async function cancelBooking(bookingId = null) {
     if (response.success) {
       showAlert("Hủy đặt phòng thành công", "success");
 
-      // Close modals if open
       const detailModal = bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal"));
       if (detailModal) detailModal.hide();
 
-      // Force reload bookings to get fresh data
       await loadMyBookings();
     } else {
       showAlert(response.message || "Lỗi hủy đặt phòng", "danger");
@@ -369,8 +356,6 @@ async function cancelBooking(bookingId = null) {
     showAlert("Lỗi hủy đặt phòng", "danger");
   }
 }
-
-// PAYMENT FUNCTIONS
 
 async function showPaymentModalDirect(bookingId) {
   currentBookingId = bookingId;
@@ -392,7 +377,6 @@ async function showPaymentModal() {
   console.log("Current booking ID:", currentBookingId);
 
   try {
-    // Load payment info
     let totalPaid = 0;
 
     try {
@@ -429,11 +413,9 @@ async function showPaymentModal() {
     document.getElementById("paymentAmount").max = remainingAmount;
     document.getElementById("paymentAmount").value = remainingAmount;
 
-    // Clear any existing alerts in payment modal (chỉ xóa alert, không xóa form)
     const existingAlerts = document.querySelectorAll("#paymentModal .payment-alert");
     existingAlerts.forEach((alert) => alert.remove());
 
-    // Close detail modal if open
     const detailModal = bootstrap.Modal.getInstance(document.getElementById("bookingDetailModal"));
     if (detailModal) detailModal.hide();
 
@@ -456,7 +438,6 @@ async function submitPayment() {
   console.log("Payment amount (parsed):", amount);
   console.log("Payment method:", method);
 
-  // Clear previous error messages in payment modal (chỉ xóa alert)
   const existingAlerts = document.querySelectorAll("#paymentModal .payment-alert");
   existingAlerts.forEach((alert) => alert.remove());
 
@@ -475,7 +456,6 @@ async function submitPayment() {
     return;
   }
 
-  // Disable submit button and show loading
   const submitBtn = document.querySelector("#paymentModal .btn-success");
   const originalText = submitBtn.innerHTML;
   submitBtn.disabled = true;
@@ -483,8 +463,8 @@ async function submitPayment() {
 
   try {
     const paymentData = {
-      maDatPhong: parseInt(currentBookingId), // Đảm bảo là integer
-      soTien: parseFloat(amount), // Đảm bảo là decimal
+      maDatPhong: parseInt(currentBookingId),
+      soTien: parseFloat(amount),
       phuongThuc: method,
     };
 
@@ -502,12 +482,10 @@ async function submitPayment() {
     if (response && response.success) {
       showPaymentAlert("Thanh toán thành công! Chờ admin xác nhận đơn đặt phòng.", "success");
 
-      // Wait 2 seconds then close modal and reload
       setTimeout(async () => {
         bootstrap.Modal.getInstance(document.getElementById("paymentModal")).hide();
         await loadMyBookings();
 
-        // Reset form
         document.getElementById("paymentForm").reset();
       }, 2000);
     } else {
@@ -521,7 +499,6 @@ async function submitPayment() {
     console.log("Error message:", error.message);
     console.log("Error stack:", error.stack);
 
-    // Parse error message if it's from API
     let errorMessage = "Lỗi kết nối. Vui lòng thử lại.";
     if (error.message) {
       if (error.message.includes("500")) {
@@ -533,22 +510,17 @@ async function submitPayment() {
 
     showPaymentAlert(errorMessage, "danger");
   } finally {
-    // Re-enable submit button
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;
   }
 }
 
-// NEW FUNCTION: Show alert inside payment modal - DƯỚI FORM
 function showPaymentAlert(message, type = "danger") {
-  // Tìm vị trí để chèn alert - sau form payment
   const paymentForm = document.querySelector("#paymentModal form");
 
-  // Remove existing alerts
   const existingAlerts = document.querySelectorAll("#paymentModal .payment-alert");
   existingAlerts.forEach((alert) => alert.remove());
 
-  // Create new alert
   const alertElement = document.createElement("div");
   alertElement.className = `alert alert-${type} alert-dismissible fade show payment-alert`;
   alertElement.innerHTML = `
@@ -556,10 +528,8 @@ function showPaymentAlert(message, type = "danger") {
    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
  `;
 
-  // Insert AFTER payment form (không xóa form)
   paymentForm.parentNode.insertBefore(alertElement, paymentForm.nextSibling);
 
-  // Auto-remove success messages after 3 seconds
   if (type === "success") {
     setTimeout(() => {
       if (alertElement.parentNode) {
@@ -576,7 +546,6 @@ function calculateNights(checkIn, checkOut) {
   return Math.ceil(timeDiff / (1000 * 3600 * 24));
 }
 
-// Utility functions - updated with new statuses
 function getStatusClass(status) {
   switch (status) {
     case "Pending":
@@ -625,7 +594,6 @@ function showAlert(message, type = "danger") {
   }, 5000);
 }
 
-// Utility functions
 function formatDate(dateString) {
   if (!dateString) return "";
   const date = new Date(dateString);

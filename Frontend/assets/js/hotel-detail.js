@@ -1,9 +1,7 @@
-// Hotel Detail Page JavaScript
 let currentHotelId = null;
 let hotelImageSwiper = null;
 let currentUserRating = 0;
 
-// Initialize page
 document.addEventListener("DOMContentLoaded", function () {
   const urlParams = new URLSearchParams(window.location.search);
   const hotelId = urlParams.get("id");
@@ -15,7 +13,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// Show/hide loading
 function showLoading(show = true) {
   const loading = document.getElementById("loadingSpinner");
   const content = document.getElementById("hotelDetailsSection");
@@ -30,7 +27,6 @@ function showLoading(show = true) {
   }
 }
 
-// Show error
 function showError(message) {
   showLoading(false);
   document.getElementById("errorSection").style.display = "block";
@@ -39,7 +35,6 @@ function showError(message) {
   }, 3000);
 }
 
-// Generate star rating HTML
 function generateStarRating(rating) {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating - fullStars >= 0.5;
@@ -58,7 +53,6 @@ function generateStarRating(rating) {
   return stars;
 }
 
-// Get image URL helper
 function getImageUrl(image) {
   const baseUrl = "http://localhost:5233";
   const placeholderUrl = `${baseUrl}/uploads/temp/hotel-placeholder.jpg`;
@@ -83,7 +77,6 @@ function getImageUrl(image) {
   return placeholderUrl;
 }
 
-// Load hotel details
 async function loadHotelDetails(hotelId) {
   showLoading(true);
   currentHotelId = hotelId;
@@ -107,14 +100,12 @@ async function loadHotelDetails(hotelId) {
     const hotel = data.success && data.data ? data.data : data;
     console.log("Hotel object:", hotel);
 
-    // Kiểm tra xem hotel có dữ liệu không
     if (!hotel || !hotel.maKhachSan) {
       throw new Error("Dữ liệu khách sạn không hợp lệ");
     }
 
     await displayHotelDetails(hotel);
 
-    // Load reviews nếu có elements
     await loadReviews(hotelId);
     await loadReviewSummary(hotelId);
     await checkCanReview(hotelId);
@@ -127,19 +118,16 @@ async function loadHotelDetails(hotelId) {
   }
 }
 
-// Display hotel details
 async function displayHotelDetails(hotel) {
   try {
     console.log("Displaying hotel details:", hotel);
 
-    // Update page title and breadcrumb
     document.title = `${hotel.tenKhachSan} - Hotel Booking`;
     const breadcrumb = document.getElementById("hotelBreadcrumb");
     if (breadcrumb) {
       breadcrumb.textContent = hotel.tenKhachSan;
     }
 
-    // Hotel basic info
     document.getElementById("hotelName").textContent = hotel.tenKhachSan;
     document.getElementById("hotelAddress").textContent = hotel.diaChi;
 
@@ -150,14 +138,12 @@ async function displayHotelDetails(hotel) {
       if (cityContainer) cityContainer.style.display = "block";
     }
 
-    // Rating
     const rating = hotel.danhGiaTrungBinh || 0;
     document.getElementById("hotelRating").innerHTML = `
           ${generateStarRating(rating)}
           <span class="text-muted ms-2">(${rating.toFixed(1)} sao)</span>
       `;
 
-    // Description
     if (hotel.moTa) {
       document.getElementById("hotelDescription").innerHTML = `
               <h5>Mô tả</h5>
@@ -165,7 +151,6 @@ async function displayHotelDetails(hotel) {
           `;
     }
 
-    // Amenities
     if (hotel.tienNghi) {
       const amenities = hotel.tienNghi
         .split(",")
@@ -181,13 +166,10 @@ async function displayHotelDetails(hotel) {
       }
     }
 
-    // Initialize image slider
     initializeImageSlider(hotel.hinhAnhs || []);
 
-    // Load room types
     await loadRoomTypes(hotel.maKhachSan);
 
-    // Price range from room types
     displayPriceRange();
   } catch (error) {
     console.error("Error displaying hotel details:", error);
@@ -195,12 +177,10 @@ async function displayHotelDetails(hotel) {
   }
 }
 
-// Initialize image slider
 function initializeImageSlider(images) {
   const wrapper = document.getElementById("imageSliderWrapper");
   const totalImagesSpan = document.getElementById("totalImages");
 
-  // If no images, show placeholder
   if (!images || images.length === 0) {
     wrapper.innerHTML = `
               <div class="swiper-slide">
@@ -209,7 +189,6 @@ function initializeImageSlider(images) {
           `;
     totalImagesSpan.textContent = "1";
   } else {
-    // Add images to slider
     wrapper.innerHTML = images
       .map(
         (image) => `
@@ -223,7 +202,6 @@ function initializeImageSlider(images) {
     totalImagesSpan.textContent = images.length;
   }
 
-  // Initialize Swiper
   if (hotelImageSwiper) {
     hotelImageSwiper.destroy(true, true);
   }
@@ -386,9 +364,6 @@ function showAlert(message, type = "danger") {
   }
 }
 
-// ========== REVIEWS FUNCTIONS ==========
-
-// Format date function
 function formatDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleDateString("vi-VN", {
@@ -398,7 +373,6 @@ function formatDate(dateString) {
   });
 }
 
-// Load reviews function
 async function loadReviews(hotelId) {
   try {
     const reviewsLoading = document.getElementById("reviewsLoading");
@@ -456,7 +430,6 @@ async function loadReviews(hotelId) {
   }
 }
 
-// Create review card function
 function createReviewCard(review) {
   const div = document.createElement("div");
   div.className = "card mb-3 review-card";
@@ -483,7 +456,6 @@ function createReviewCard(review) {
   return div;
 }
 
-// Load review summary function
 async function loadReviewSummary(hotelId) {
   try {
     const averageRating = document.getElementById("averageRating");
@@ -510,12 +482,10 @@ async function loadReviewSummary(hotelId) {
     console.log("Review summary data:", result);
     const summary = result.success ? result.data : result;
 
-    // Update average rating
     averageRating.textContent = summary.danhGiaTrungBinh ? summary.danhGiaTrungBinh.toFixed(1) : "0.0";
     averageStars.innerHTML = generateStarRating(summary.danhGiaTrungBinh || 0);
     totalReviews.textContent = summary.tongSoDanhGia || 0;
 
-    // Update rating breakdown
     ratingBreakdown.innerHTML = "";
 
     if (summary.phanBoSao) {
@@ -537,7 +507,6 @@ async function loadReviewSummary(hotelId) {
     }
   } catch (error) {
     console.error("Error loading review summary:", error);
-    // Set default values
     const averageRating = document.getElementById("averageRating");
     const averageStars = document.getElementById("averageStars");
     const totalReviews = document.getElementById("totalReviews");
@@ -548,8 +517,6 @@ async function loadReviewSummary(hotelId) {
   }
 }
 
-// Check if user can review function
-// Check if user can review function - SỬA: Luôn cho phép user đã đăng nhập
 async function checkCanReview(hotelId) {
   const token = localStorage.getItem("token");
   console.log("=== DEBUG CHECK CAN REVIEW ===");
@@ -580,7 +547,6 @@ async function checkCanReview(hotelId) {
     console.log("Can review response status:", response.status);
 
     if (!response.ok) {
-      // SỬA: Nếu API fail, vẫn cho phép đánh giá cho user đã đăng nhập
       console.log("API failed, but user is logged in - showing form anyway");
       reviewFormContainer.style.display = "block";
       initializeReviewForm();
@@ -598,7 +564,7 @@ async function checkCanReview(hotelId) {
       initializeReviewForm();
     } else {
       console.log("User already reviewed this hotel");
-      // Có thể hiển thị message user đã đánh giá rồi
+
       const existingMessage = document.getElementById("alreadyReviewedMessage");
       if (!existingMessage && reviewFormContainer) {
         reviewFormContainer.innerHTML = `
@@ -612,7 +578,7 @@ async function checkCanReview(hotelId) {
     }
   } catch (error) {
     console.error("Error checking review permission:", error);
-    // SỬA: Nếu có lỗi, vẫn cho phép user đã đăng nhập đánh giá
+
     const reviewFormContainer = document.getElementById("reviewFormContainer");
     if (reviewFormContainer) {
       console.log("Error occurred, but user is logged in - showing form anyway");
@@ -622,7 +588,6 @@ async function checkCanReview(hotelId) {
   }
 }
 
-// Initialize review form function
 function initializeReviewForm() {
   const stars = document.querySelectorAll(".rating-input i");
   if (stars.length === 0) return;
@@ -655,7 +620,6 @@ function initializeReviewForm() {
   }
 }
 
-// Highlight stars function
 function highlightStars(rating) {
   const stars = document.querySelectorAll(".rating-input i");
   stars.forEach((star, index) => {
@@ -667,7 +631,6 @@ function highlightStars(rating) {
   });
 }
 
-// Submit review function
 async function submitReview(event) {
   event.preventDefault();
 
@@ -717,7 +680,6 @@ async function submitReview(event) {
 
     showAlert("Đánh giá của bạn đã được gửi thành công!", "success");
 
-    // Reset form and hide it
     const reviewForm = document.getElementById("reviewForm");
     const reviewFormContainer = document.getElementById("reviewFormContainer");
 
@@ -727,11 +689,9 @@ async function submitReview(event) {
     currentUserRating = 0;
     highlightStars(0);
 
-    // Reload reviews and summary
     await loadReviews(currentHotelId);
     await loadReviewSummary(currentHotelId);
 
-    // Reload hotel details to update average rating
     location.reload();
   } catch (error) {
     console.error("Error submitting review:", error);

@@ -27,7 +27,6 @@ builder.Services.AddDbContext<HotelBookingContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(Program));
 
-// Service Registration
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
@@ -58,7 +57,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -70,8 +69,7 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// SỬA ĐỔI: Serve static files từ wwwroot (default)
-// Điều này sẽ serve tất cả files trong wwwroot, bao gồm wwwroot/uploads/
+
 app.UseStaticFiles();
 
 app.MapControllers();

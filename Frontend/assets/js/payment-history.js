@@ -1,7 +1,6 @@
 let currentPayments = [];
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Check authentication
   if (!isAuthenticated()) {
     window.location.href = "login.html";
     return;
@@ -9,7 +8,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadPaymentHistory();
 
-  // Event listeners
   document.getElementById("paymentMethodFilter").addEventListener("change", filterPayments);
   document.getElementById("dateFromFilter").addEventListener("change", filterPayments);
   document.getElementById("dateToFilter").addEventListener("change", filterPayments);
@@ -73,7 +71,6 @@ function updateStatistics(payments) {
   const totalAmount = payments.reduce((sum, payment) => sum + payment.soTien, 0);
   const totalCount = payments.length;
 
-  // Calculate this month's payments
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   const thisMonthPayments = payments.filter((payment) => {
@@ -181,7 +178,6 @@ async function viewPaymentDetail(paymentId) {
 }
 
 function printReceipt() {
-  // Create a printable receipt
   const paymentDetail = document.getElementById("paymentDetailContent").innerHTML;
 
   const printWindow = window.open("", "_blank");

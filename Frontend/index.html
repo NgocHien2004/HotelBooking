@@ -9,7 +9,6 @@
     <link href="assets/css/style.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- Modern Navigation -->
     <nav class="navbar navbar-expand-lg navbar-modern">
       <div class="container">
         <a class="navbar-brand" href="index.html"> <i class="fas fa-hotel me-2"></i>Hotel Booking </a>
@@ -33,7 +32,6 @@
             <li class="nav-item">
               <a class="nav-link" href="hotels.html">Khách sạn</a>
             </li>
-            <!-- Menu chỉ hiển thị khi đã đăng nhập -->
             <li class="nav-item" id="bookingsMenu" style="display: none">
               <a class="nav-link" href="my-bookings.html">Đơn đặt phòng</a>
             </li>
@@ -42,23 +40,18 @@
             </li>
           </ul>
           <ul class="navbar-nav">
-            <!-- Admin Menu - Chỉ hiện cho admin -->
             <li class="nav-item" id="adminMenu" style="display: none">
               <a class="nav-link admin-badge" href="admin/hotels.html"> <i class="fas fa-cog me-1"></i>Quản lý </a>
             </li>
-            <!-- Login Menu -->
             <li class="nav-item" id="loginMenu">
               <a class="nav-link" href="login.html"> <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập </a>
             </li>
-            <!-- User Menu -->
             <li class="nav-item" id="userMenu" style="display: none">
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                   <i class="fas fa-user-circle me-1"></i><span id="username"></span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end" id="userDropdownMenu">
-                  <!-- Menu items sẽ được tạo bởi auth.js -->
-                </ul>
+                <ul class="dropdown-menu dropdown-menu-end" id="userDropdownMenu"></ul>
               </div>
             </li>
           </ul>
@@ -66,7 +59,6 @@
       </div>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero-section">
       <div class="container">
         <div class="row">
@@ -79,24 +71,19 @@
       </div>
     </section>
 
-    <!-- Featured Hotels -->
     <section class="py-5">
       <div class="container">
         <h2 class="text-center mb-5">Khách sạn nổi bật</h2>
-        <div class="row" id="featuredHotels">
-          <!-- Hotels will be loaded here -->
-        </div>
+        <div class="row" id="featuredHotels"></div>
       </div>
     </section>
 
-    <!-- Footer -->
     <footer class="bg-dark text-white py-4 mt-5">
       <div class="container text-center">
         <p class="mb-0">&copy; 2025 Hotel Booking. Tất cả quyền được bảo lưu.</p>
       </div>
     </footer>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/utils.js"></script>
     <script src="assets/js/auth.js"></script>
